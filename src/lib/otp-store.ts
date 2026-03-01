@@ -2,16 +2,17 @@
  * In-memory OTP store. No DB.
  * Note: In serverless (e.g. Vercel) each instance has its own memory; for production multi-instance consider Redis.
  */
-const otpStore = new Map<
-  string,
-  {
-    code: string;
-    expiresAt: number;
-    designerCode: string;
-    fullName: string | null;
-    commissionCertificates: unknown[];
-  }
->();
+type OtpEntry = {
+  code: string;
+  expiresAt: number;
+  designerCode: string;
+  fullName: string | null;
+  commissionCertificates: unknown[];
+};
+
+const g = globalThis as typeof globalThis & { __otpStore?: Map<string, OtpEntry> };
+if (!g.__otpStore) g.__otpStore = new Map();
+const otpStore = g.__otpStore;
 
 const TTL_MS = 5 * 60 * 1000; // 5 minutes
 
