@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
+import { erpGetDeals } from "@/lib/erp";
 
 interface TInvoice {
   IVNUM?: string;
@@ -31,7 +32,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rawGroups = (session.deals ?? []) as Array<{ value: TInvoice[] }>;
+    const rawGroups = await erpGetDeals(session.designerCode) as Array<{ value: TInvoice[] }>;
     const tinvoices = rawGroups.flatMap((g) => g.value ?? []);
     const deals = tinvoices.map(mapTInvoiceToDealRow);
 

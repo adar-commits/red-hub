@@ -38,8 +38,8 @@ export function getAndConsumeOtp(
   const entry = otpStore.get(phone);
   if (!entry) return null;
   const bypass = code === "00000";
-  const validCode = bypass || (entry.code === code);
-  if (!validCode || Date.now() > entry.expiresAt) return null;
+  const validCode = bypass || (entry.code === code && Date.now() <= entry.expiresAt);
+  if (!validCode) return null;
   otpStore.delete(phone);
   return {
     designerCode: entry.designerCode,

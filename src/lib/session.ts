@@ -7,7 +7,6 @@ export interface DesignerSession {
   fullName: string | null;
   expiresAt: number;
   commissionCertificates?: unknown[];
-  deals?: unknown[];
 }
 
 const sessionOptions: SessionOptions = {
