@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (!phone || !code) {
       return NextResponse.json({ error: "טלפון או קוד חסרים" }, { status: 400 });
     }
-    if (code.length !== 6) {
+    if (code.length !== 5) {
       return NextResponse.json({ error: "קוד לא תקין" }, { status: 400 });
     }
 

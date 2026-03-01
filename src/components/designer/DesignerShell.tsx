@@ -76,7 +76,7 @@ export function DesignerShell({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 md:mr-64 md:rtl:mr-0 md:rtl:ml-64 min-h-screen flex flex-col pb-20 md:pb-0">
+      <main className="flex-1 md:ml-64 md:rtl:ml-0 md:rtl:mr-64 min-h-screen flex flex-col pb-20 md:pb-0">
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-3 flex items-center justify-between md:hidden">
           <span className="font-semibold text-[var(--brand-red)]">Red Hub</span>
           <div className="flex items-center gap-2">
