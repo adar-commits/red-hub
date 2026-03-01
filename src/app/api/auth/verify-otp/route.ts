@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAndConsumeOtp } from "@/lib/otp-store";
 import { getDesignerSession } from "@/lib/session";
+import { erpGetDeals } from "@/lib/erp";
 
 export async function POST(request: Request) {
   try {
@@ -20,13 +21,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "קוד לא תקין או שפג תוקפו" }, { status: 401 });
     }
 
+    // Fetch deals now that OTP is verified (non-fatal if it fails)
+    let deals: unknown[] = [];
+    try {
+      deals = await erpGetDeals(payload.designerCode);
+    } catch (e) {
+      console.warn("deals fetch failed (non-fatal):", e);
+    }
+
     const session = await getDesignerSession();
     session.designerCode = payload.designerCode;
     session.phone = phone;
     session.fullName = payload.fullName;
     session.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     session.commissionCertificates = payload.commissionCertificates;
-    session.deals = payload.deals;
+    session.deals = deals;
     await session.save();
 
     return NextResponse.json({ success: true });

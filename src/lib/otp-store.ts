@@ -10,7 +10,6 @@ const otpStore = new Map<
     designerCode: string;
     fullName: string | null;
     commissionCertificates: unknown[];
-    deals: unknown[];
   }
 >();
 
@@ -22,7 +21,6 @@ export function setOtp(
   designerCode: string,
   fullName: string | null,
   commissionCertificates: unknown[] = [],
-  deals: unknown[] = [],
 ): void {
   otpStore.set(phone, {
     code,
@@ -30,14 +28,13 @@ export function setOtp(
     designerCode,
     fullName,
     commissionCertificates,
-    deals,
   });
 }
 
 export function getAndConsumeOtp(
   phone: string,
   code: string,
-): { designerCode: string; fullName: string | null; commissionCertificates: unknown[]; deals: unknown[] } | null {
+): { designerCode: string; fullName: string | null; commissionCertificates: unknown[] } | null {
   const entry = otpStore.get(phone);
   if (!entry || entry.code !== code || Date.now() > entry.expiresAt) return null;
   otpStore.delete(phone);
@@ -45,7 +42,6 @@ export function getAndConsumeOtp(
     designerCode: entry.designerCode,
     fullName: entry.fullName,
     commissionCertificates: entry.commissionCertificates,
-    deals: entry.deals,
   };
 }
 

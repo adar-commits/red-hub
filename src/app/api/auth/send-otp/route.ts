@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { erpSendOtpWithData, erpGetDeals } from "@/lib/erp";
+import { erpSendOtpWithData } from "@/lib/erp";
 import { generateOtp, setOtp } from "@/lib/otp-store";
 
 export async function POST(request: Request) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const code = generateOtp();
 
-    // Send OTP via webhook; webhook also returns all commission certificate data for this agent
+    // Send OTP via webhook; webhook also returns commission certificate data for this agent
     const result = await erpSendOtpWithData(phone, code);
 
     if (!result || result.length === 0 || !result[0]?.agentcode) {
@@ -36,22 +36,14 @@ export async function POST(request: Request) {
     const agentcode = result[0].agentcode;
     const commissionCertificates = result.flatMap((g) => g.commissionCertificates ?? []);
 
-    // Fetch deals in parallel now that we have the agentCode
-    let deals: unknown[] = [];
-    try {
-      deals = await erpGetDeals(agentcode);
-    } catch (e) {
-      console.warn("deals pre-fetch failed (non-fatal):", e);
-    }
-
-    setOtp(phone, code, agentcode, null, commissionCertificates, deals);
+    setOtp(phone, code, agentcode, null, commissionCertificates);
 
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error("send-otp", e);
-    return NextResponse.json(
-      { error: "שגיאה בשליחת הקוד. נסה שוב." },
-      { status: 500 }
-    );
+    console.error("send-otp error:", e);
+    // Surface real error in development to help debug
+    const isDev = process.env.NODE_ENV === "development";
+    const message = isDev ? String(e) : "שגיאה בשליחת הקוד. נסה שוב.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
