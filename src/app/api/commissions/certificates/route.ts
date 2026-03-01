@@ -7,8 +7,7 @@ export async function GET() {
     if (!session?.designerCode || isSessionExpired(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    // Certificates from ERP; until then return empty
-    return NextResponse.json([]);
+    return NextResponse.json(session.commissionCertificates ?? []);
   } catch {
     return NextResponse.json([]);
   }

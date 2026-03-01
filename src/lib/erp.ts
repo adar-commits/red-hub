@@ -27,7 +27,7 @@ export async function erpValidatePhone(phone: string): Promise<{
   return res.json();
 }
 
-export async function erpGetDeals(agentCode: string): Promise<unknown> {
+export async function erpGetDeals(agentCode: string): Promise<unknown[]> {
   const url = getEnv("ERP_DEALS_WEBHOOK");
   const res = await fetch(url, {
     method: "POST",
@@ -91,4 +91,19 @@ export async function whatsAppSendOtp(phone: string, code: string): Promise<void
     body: JSON.stringify({ phone, code }),
   });
   if (!res.ok) throw new Error(`WhatsApp OTP webhook failed: ${res.status}`);
+}
+
+export async function erpSendOtpWithData(phone: string, otp: string): Promise<Array<{
+  agentcode: string;
+  otp: string;
+  commissionCertificates: unknown[];
+}>> {
+  const url = getEnv("ERP_SEND_OTP_WEBHOOK");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, otp }),
+  });
+  if (!res.ok) throw new Error(`ERP send-otp webhook failed: ${res.status}`);
+  return res.json();
 }

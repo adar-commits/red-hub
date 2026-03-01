@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { erpValidatePhone } from "@/lib/erp";
-import { whatsAppSendOtp } from "@/lib/erp";
+import { erpSendOtpWithData, erpGetDeals } from "@/lib/erp";
 import { generateOtp, setOtp } from "@/lib/otp-store";
 
 export async function POST(request: Request) {
@@ -22,17 +21,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "יש להזין טלפון בפורמט 05xxxxxxxx" }, { status: 400 });
     }
 
-    const erp = await erpValidatePhone(phone);
-    if (!erp.found || !erp.designerCode) {
+    const code = generateOtp();
+
+    // Send OTP via webhook; webhook also returns all commission certificate data for this agent
+    const result = await erpSendOtpWithData(phone, code);
+
+    if (!result || result.length === 0 || !result[0]?.agentcode) {
       return NextResponse.json(
         { error: "לא נמצא במערכת. יש ליצור קשר עם החברה להרשמה." },
         { status: 404 }
       );
     }
 
-    const code = generateOtp();
-    setOtp(phone, code, erp.designerCode, erp.fullName ?? null);
-    await whatsAppSendOtp(phone, code);
+    const agentcode = result[0].agentcode;
+    const commissionCertificates = result.flatMap((g) => g.commissionCertificates ?? []);
+
+    // Fetch deals in parallel now that we have the agentCode
+    let deals: unknown[] = [];
+    try {
+      deals = await erpGetDeals(agentcode);
+    } catch (e) {
+      console.warn("deals pre-fetch failed (non-fatal):", e);
+    }
+
+    setOtp(phone, code, agentcode, null, commissionCertificates, deals);
 
     return NextResponse.json({ success: true });
   } catch (e) {

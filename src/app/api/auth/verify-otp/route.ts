@@ -25,6 +25,8 @@ export async function POST(request: Request) {
     session.phone = phone;
     session.fullName = payload.fullName;
     session.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    session.commissionCertificates = payload.commissionCertificates;
+    session.deals = payload.deals;
     await session.save();
 
     return NextResponse.json({ success: true });

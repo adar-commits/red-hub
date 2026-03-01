@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
-import { erpGetDeals } from "@/lib/erp";
+
+interface TInvoice {
+  IVNUM?: string;
+  CDES?: string;
+  IVDATE?: string;
+  Y_151_0_ESHB?: string;
+  TOTPRICE?: number;
+  STATDES?: string;
+  TYPEDES?: string;
+  [key: string]: unknown;
+}
+
+function mapTInvoiceToDealRow(iv: TInvoice) {
+  return {
+    id: iv.IVNUM,
+    invoice_date: iv.IVDATE,
+    customer_name: iv.CDES,
+    phone: iv.Y_151_0_ESHB,
+    amount_excl_vat: iv.TOTPRICE,
+    commission: undefined,
+    status: iv.STATDES ?? iv.TYPEDES,
+  };
+}
 
 export async function GET() {
   try {
@@ -8,12 +30,13 @@ export async function GET() {
     if (!session?.designerCode || isSessionExpired(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const data = await erpGetDeals(session.designerCode);
-    return NextResponse.json(data);
+
+    const rawGroups = (session.deals ?? []) as Array<{ value: TInvoice[] }>;
+    const tinvoices = rawGroups.flatMap((g) => g.value ?? []);
+    const deals = tinvoices.map(mapTInvoiceToDealRow);
+
+    return NextResponse.json(deals);
   } catch (e) {
-    if (String(e).includes("Missing env")) {
-      return NextResponse.json({ deals: [], summary: {} });
-    }
     console.error("deals", e);
     return NextResponse.json({ error: "Failed to load deals" }, { status: 500 });
   }
