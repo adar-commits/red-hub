@@ -32,7 +32,6 @@ export async function POST(request: Request) {
     const payload = {
       designerCode: otpSession.designerCode,
       fullName: otpSession.fullName,
-      commissionCertificates: otpSession.commissionCertificates,
     };
 
     // Clear the OTP session cookie
@@ -43,7 +42,6 @@ export async function POST(request: Request) {
     session.phone = phone;
     session.fullName = payload.fullName;
     session.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    session.commissionCertificates = payload.commissionCertificates;
     await session.save();
 
     return NextResponse.json({ success: true });

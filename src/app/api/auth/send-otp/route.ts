@@ -34,19 +34,28 @@ export async function POST(request: Request) {
     }
 
     const agentcode = result[0].agentcode;
-    const commissionCertificates = result.flatMap((g) => g.commissionCertificates ?? []);
 
-    // Save OTP state into an encrypted cookie instead of in-memory store
+    const rawCerts = result.flatMap((g: { commissionCertificates?: unknown[] }) => (g.commissionCertificates ?? []) as Record<string, unknown>[]);
+    const commissions = rawCerts.map((c) => ({
+      id: c.IVNUM,
+      date: c.IVDATE,
+      updated_at: c.UDATE,
+      customer: c.CUSTDES,
+      amount: c.IVPRICE,
+      commission: c.COMMISSION,
+      invoice_code: c.IVCODE,
+      recon_date: c.IVRECONDATE,
+    }));
+
     const otpSession = await getOtpSession();
     otpSession.phone = phone;
     otpSession.code = code;
     otpSession.designerCode = agentcode;
     otpSession.fullName = null;
-    otpSession.commissionCertificates = commissionCertificates;
     otpSession.expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
     await otpSession.save();
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, commissions });
   } catch (e) {
     console.error("send-otp error:", e);
     const isDev = process.env.NODE_ENV === "development";

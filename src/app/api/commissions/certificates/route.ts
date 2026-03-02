@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
+import { loadCommissions } from "@/lib/agent-store";
 
 interface RawCert {
   IVNUM?: string;
@@ -23,15 +24,11 @@ function mapToCertRow(raw: RawCert) {
 }
 
 export async function GET() {
-  try {
-    const session = await getDesignerSession();
-    if (!session?.designerCode || isSessionExpired(session)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const raw = (session.commissionCertificates ?? []) as RawCert[];
-    const certs = raw.map(mapToCertRow);
-    return NextResponse.json(certs);
-  } catch {
-    return NextResponse.json([]);
+  const session = await getDesignerSession();
+  if (!session?.designerCode || isSessionExpired(session)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const raw = (await loadCommissions(session.designerCode)) as RawCert[];
+  const certs = raw.map(mapToCertRow);
+  return NextResponse.json(certs);
 }

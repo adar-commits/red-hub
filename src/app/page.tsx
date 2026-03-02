@@ -27,6 +27,9 @@ export default function LoginPage() {
         setError(data.error || "שגיאה");
         return;
       }
+      if (data.commissions) {
+        sessionStorage.setItem("commissions", JSON.stringify(data.commissions));
+      }
       window.location.href = `/verify?phone=${encodeURIComponent(phone)}`;
     } catch {
       setError("שגיאה בחיבור");

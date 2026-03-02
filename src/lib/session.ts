@@ -6,7 +6,6 @@ export interface DesignerSession {
   phone: string;
   fullName: string | null;
   expiresAt: number;
-  commissionCertificates?: unknown[];
 }
 
 const sessionOptions: SessionOptions = {
@@ -36,7 +35,6 @@ export interface OtpSession {
   code: string;
   designerCode: string;
   fullName: string | null;
-  commissionCertificates: unknown[];
   expiresAt: number;
 }
 
