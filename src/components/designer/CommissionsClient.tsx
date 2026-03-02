@@ -5,11 +5,13 @@ import { ReferralModal } from "./ReferralModal";
 
 interface CertRow {
   id?: string;
-  created_at?: string;
-  certificate_number?: string;
-  transaction_count?: number;
+  date?: string;
+  updated_at?: string;
+  customer?: string;
+  amount?: number;
   commission?: number;
-  status?: string;
+  invoice_code?: string;
+  recon_date?: string | null;
 }
 
 interface CommissionStats {
@@ -26,15 +28,15 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetch("/api/commissions/stats"), fetch("/api/commissions/certificates")])
-      .then(async ([sRes, cRes]) => {
-        const s = await sRes.json();
-        const c = await cRes.json();
-        setStats(s.error ? { pendingApproval: 0, unpaid: 0, paid: 0 } : s);
-        setCerts(Array.isArray(c) ? c : c?.certificates ?? []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const raw = sessionStorage.getItem("commissions");
+    const parsed: CertRow[] = raw ? (JSON.parse(raw) as CertRow[]) : [];
+    setCerts(parsed);
+
+    const paid = parsed.filter((c) => c.recon_date).length;
+    const unpaid = parsed.filter((c) => !c.recon_date && (c.commission ?? 0) > 0).length;
+    setStats({ pendingApproval: 0, unpaid, paid });
+
+    setLoading(false);
   }, []);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -47,7 +49,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       const res = await fetch("/api/commissions/upload-invoice", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "שגיאה");
-      setCerts((prev) => [{ ...data, created_at: new Date().toISOString(), status: "ממתין לאישור" }, ...prev]);
+      setCerts((prev) => [{ ...data, date: new Date().toISOString() }, ...prev]);
     } catch (err) {
       alert(err instanceof Error ? err.message : "שגיאה בהעלאה");
     } finally {
@@ -102,12 +104,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="text-right py-2 px-3">נוצרה בתאריך</th>
+              <th className="text-right py-2 px-3">תאריך</th>
               <th className="text-right py-2 px-3">מספר תעודה</th>
-              <th className="text-right py-2 px-3">כמות עסקאות</th>
+              <th className="text-right py-2 px-3">לקוח</th>
+              <th className="text-right py-2 px-3">סכום</th>
               <th className="text-right py-2 px-3">עמלה</th>
-              <th className="text-right py-2 px-3">סטטוס</th>
-              <th className="text-right py-2 px-3">צפייה בעסקאות</th>
+              <th className="text-right py-2 px-3">תאריך פירעון</th>
             </tr>
           </thead>
           <tbody>
@@ -118,12 +120,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             ) : (
               certs.map((c, i) => (
                 <tr key={c.id ?? i} className="border-t border-gray-100">
-                  <td className="py-2 px-3">{c.created_at ? new Date(c.created_at).toLocaleDateString("he-IL") : "—"}</td>
-                  <td className="py-2 px-3">{c.certificate_number ?? "—"}</td>
-                  <td className="py-2 px-3">{c.transaction_count ?? "—"}</td>
+                  <td className="py-2 px-3">{c.date ? new Date(c.date).toLocaleDateString("he-IL") : "—"}</td>
+                  <td className="py-2 px-3">{c.id ?? "—"}</td>
+                  <td className="py-2 px-3">{c.customer ?? "—"}</td>
+                  <td className="py-2 px-3">{c.amount != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(c.amount) : "—"}</td>
                   <td className="py-2 px-3">{c.commission != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(c.commission) : "—"}</td>
-                  <td className="py-2 px-3">{c.status ?? "—"}</td>
-                  <td className="py-2 px-3">—</td>
+                  <td className="py-2 px-3">{c.recon_date ? new Date(c.recon_date).toLocaleDateString("he-IL") : "—"}</td>
                 </tr>
               ))
             )}
