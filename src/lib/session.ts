@@ -30,3 +30,29 @@ export function isSessionExpired(session: DesignerSession | null): boolean {
   if (!session?.expiresAt) return true;
   return Date.now() > session.expiresAt;
 }
+
+export interface OtpSession {
+  phone: string;
+  code: string;
+  designerCode: string;
+  fullName: string | null;
+  commissionCertificates: unknown[];
+  expiresAt: number;
+}
+
+const otpSessionOptions: SessionOptions = {
+  password: process.env.SESSION_SECRET || "red-hub-dev-secret-min-32-chars-long",
+  cookieName: "red_hub_otp",
+  cookieOptions: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 60 * 10, // 10 minutes
+    sameSite: "lax" as const,
+    path: "/",
+  },
+};
+
+export async function getOtpSession() {
+  const cookieStore = await cookies();
+  return getIronSession<OtpSession>(cookieStore, otpSessionOptions);
+}
