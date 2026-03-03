@@ -57,7 +57,7 @@ function VerifyForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
         <h1 className="text-2xl font-bold text-center mb-1 text-foreground">
           אימות קוד
         </h1>
@@ -92,7 +92,7 @@ function VerifyForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold text-lg hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold text-lg hover:bg-[var(--brand-red-hover)] disabled:opacity-60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 active:scale-[0.99]"
           >
             {loading ? "מאמת..." : "אשר קוד"}
           </button>
@@ -103,14 +103,14 @@ function VerifyForm() {
           {resendSecs > 0 ? (
             <span>שלח מחדש בעוד {resendSecs} שניות</span>
           ) : (
-            <Link href="/" className="text-[var(--brand-red)] underline">
+            <Link href="/" className="text-[var(--brand-red)] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-1 rounded">
               שלח מחדש
             </Link>
           )}
         </p>
 
         <p className="text-center text-sm text-gray-500 mt-2">
-          <Link href="/" className="text-[var(--brand-red)] underline">
+          <Link href="/" className="text-[var(--brand-red)] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-1 rounded">
             חזרה להתחברות
           </Link>
         </p>

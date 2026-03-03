@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122)' }}>
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
         <h1 className="text-2xl font-bold text-[var(--brand-red)] text-center mb-1">
           ברוכים הבאים לפורטל
         </h1>
@@ -62,7 +62,7 @@ export default function LoginPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="05xxxxxxxx"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-[var(--brand-red)] focus:ring-1 focus:ring-[var(--brand-red)] outline-none"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors"
               required
               dir="ltr"
             />
@@ -88,7 +88,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold text-lg hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold text-lg hover:bg-[var(--brand-red-hover)] disabled:opacity-60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 active:scale-[0.99]"
           >
             {loading ? "שולח..." : "שלח קוד"}
           </button>

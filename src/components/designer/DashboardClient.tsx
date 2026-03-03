@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 
 interface Stats {
   totalEarned: number;
@@ -28,11 +29,20 @@ interface DealRow {
   status?: string;
 }
 
+function searchMatch(text: string, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const words = q.split(/\s+/).filter(Boolean);
+  const t = text.toLowerCase();
+  return words.every((w) => t.includes(w));
+}
+
 export function DashboardClient({ designerCode }: { designerCode: string }) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +91,46 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
 
   const s = stats ?? { totalEarned: 0, pendingCommission: 0, dealsThisMonth: 0, lastPayment: null, openReferrals: 0 };
 
+  const filteredAnnouncements = useMemo(() => {
+    if (!searchQuery.trim()) return announcements ?? [];
+    return (announcements ?? []).filter(
+      (a) =>
+        searchMatch(a.title, searchQuery) ||
+        (a.content != null && searchMatch(a.content, searchQuery))
+    );
+  }, [announcements, searchQuery]);
+
+  const dealRowText = (d: DealRow) =>
+    [
+      d.invoice_date ?? "",
+      d.customer_name ?? "",
+      d.phone ?? "",
+      d.amount_excl_vat ?? "",
+      d.commission ?? "",
+    ].join(" ");
+  const filteredDeals = useMemo(() => {
+    if (!searchQuery.trim()) return deals;
+    return deals.filter((d) => searchMatch(dealRowText(d), searchQuery));
+  }, [deals, searchQuery]);
+
+  const dashboardDealColumns: SortFilterColumn<DealRow>[] = useMemo(
+    () => [
+      { key: "invoice_date", label: "תאריך החשבונית" },
+      { key: "customer_name", label: "שם לקוח" },
+      { key: "phone", label: "טלפון" },
+      { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
+      { key: "commission", label: "עמלה" },
+    ],
+    []
+  );
+  const {
+    filteredSortedRows: sortedDeals,
+    sortKey,
+    sortDir,
+    toggleSort,
+    exportCsv,
+  } = useSortAndFilter(filteredDeals, dashboardDealColumns, { searchPlaceholder: "" });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -94,45 +144,76 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         <StatCard title="הפניות פתוחות" value={String(s.openReferrals)} />
       </div>
 
-      <section>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="חיפוש בעדכונים ובעסקאות..."
+          className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-4 py-2 text-sm placeholder:text-gray-500 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none"
+          aria-label="חיפוש"
+        />
+      </div>
+
+      <section className="animate-in-fade-up">
         <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">עדכונים אחרונים</h2>
-        {announcements && announcements.length > 0 ? (
+        {filteredAnnouncements.length > 0 ? (
           <div className="space-y-3">
-            {announcements.map((a) => (
-              <div key={a.id} className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
+            {filteredAnnouncements.map((a) => (
+              <div key={a.id} className="p-4 rounded-xl bg-white border border-gray-200 transition-shadow hover:shadow-[var(--shadow-card)]" style={{ boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}>
                 <h3 className="font-medium text-gray-900">{a.title}</h3>
                 {a.content && <p className="text-sm text-gray-600 mt-1">{a.content}</p>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">אין עדכונים</p>
+          <p className="text-gray-500 text-sm">
+            {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין עדכונים"}
+          </p>
         )}
       </section>
 
-      <section>
-        <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">סופקו לאחרונה</h2>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <section className="animate-in-fade-up">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-lg font-semibold text-[var(--brand-red)]">סופקו לאחרונה</h2>
+          <button
+            type="button"
+            onClick={() => exportCsv("dashboard-deals.csv")}
+            className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
+          >
+            ייצוא CSV
+          </button>
+        </div>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
-                <th className="text-right py-2 px-3">תאריך החשבונית</th>
-                <th className="text-right py-2 px-3">שם לקוח</th>
-                <th className="text-right py-2 px-3">טלפון</th>
-                <th className="text-right py-2 px-3">סכום ללא מע״מ</th>
-                <th className="text-right py-2 px-3">עמלה</th>
+                {dashboardDealColumns.map((col) => (
+                  <th
+                    key={String(col.key)}
+                    className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
+                    onClick={() => toggleSort(col.key)}
+                  >
+                    <span className="flex items-center justify-end gap-1">
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                      )}
+                    </span>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {deals.length === 0 ? (
+              {sortedDeals.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6 text-gray-500">
-                    אין תוצאות
+                    {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                   </td>
                 </tr>
               ) : (
-                deals.map((d, i) => (
-                  <tr key={d.id ?? i} className="border-t border-gray-100">
+                sortedDeals.map((d, i) => (
+                  <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
                     <td className="py-2 px-3">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
                     <td className="py-2 px-3">{d.customer_name ?? "—"}</td>
                     <td className="py-2 px-3" dir="ltr">{d.phone ?? "—"}</td>
@@ -151,9 +232,12 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
 
 function StatCard({ title, value }: { title: string; value: string }) {
   return (
-    <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm">
+    <div
+      className="p-4 rounded-xl bg-white border border-gray-200 transition-shadow hover:shadow-[var(--shadow-card)]"
+      style={{ boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}
+    >
       <p className="text-xs text-gray-500 mb-1">{title}</p>
-      <p className="font-semibold text-gray-900">{value}</p>
+      <p className="text-lg font-bold text-gray-900">{value}</p>
     </div>
   );
 }

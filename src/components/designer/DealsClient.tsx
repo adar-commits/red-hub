@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ReferralModal } from "./ReferralModal";
+import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
+import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
 
 interface DealRow {
   id?: string;
@@ -12,6 +14,15 @@ interface DealRow {
   commission?: number;
   status?: string;
 }
+
+const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
+  { key: "invoice_date", label: "תאריך החשבונית" },
+  { key: "customer_name", label: "שם לקוח" },
+  { key: "phone", label: "טלפון" },
+  { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
+  { key: "commission", label: "עמלה" },
+  { key: "status", label: "סטטוס" },
+];
 
 export function DealsClient({ designerCode }: { designerCode: string }) {
   const [deals, setDeals] = useState<DealRow[]>([]);
@@ -29,25 +40,16 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
       .finally(() => setLoading(false));
   }, []);
 
-  function exportExcel() {
-    const headers = ["תאריך החשבונית", "שם לקוח", "טלפון", "סכום ללא מע״מ", "עמלה", "סטטוס"];
-    const rows = deals.map((d) => [
-      d.invoice_date ?? "",
-      d.customer_name ?? "",
-      d.phone ?? "",
-      d.amount_excl_vat ?? "",
-      d.commission ?? "",
-      d.status ?? "",
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "deals.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredSortedRows,
+    sortKey,
+    sortDir,
+    toggleSort,
+    exportCsv,
+    searchPlaceholder,
+  } = useSortAndFilter(deals, DEAL_COLUMNS, { searchPlaceholder: "חיפוש בעסקאות..." });
 
   if (loading) {
     return (
@@ -64,41 +66,50 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         <button
           type="button"
           onClick={() => setReferralOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--sidebar-bg)] text-white text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--sidebar-bg)] text-white text-sm font-medium hover:bg-[var(--sidebar-bg)]/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
         >
           הוספת עסקה חדשה / הפניה
         </button>
-        <button
-          type="button"
-          onClick={exportExcel}
-          className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
-        >
-          ייצוא לאקסל
-        </button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <DataTableToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onExportCsv={() => exportCsv("deals.csv")}
+        searchPlaceholder={searchPlaceholder}
+        exportLabel="ייצוא CSV"
+      />
+
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="text-right py-2 px-3">תאריך החשבונית</th>
-              <th className="text-right py-2 px-3">שם לקוח</th>
-              <th className="text-right py-2 px-3">טלפון</th>
-              <th className="text-right py-2 px-3">סכום ללא מע״מ</th>
-              <th className="text-right py-2 px-3">עמלה</th>
-              <th className="text-right py-2 px-3">סטטוס</th>
+              {DEAL_COLUMNS.map((col) => (
+                <th
+                  key={String(col.key)}
+                  className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
+                  onClick={() => toggleSort(col.key)}
+                >
+                  <span className="flex items-center justify-end gap-1">
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                    )}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {deals.length === 0 ? (
+            {filteredSortedRows.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-8 text-gray-500">
-                  אין תוצאות
+                  {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
             ) : (
-              deals.map((d, i) => (
-                <tr key={d.id ?? i} className="border-t border-gray-100">
+              filteredSortedRows.map((d, i) => (
+                <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
                   <td className="py-2 px-3">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
                   <td className="py-2 px-3">{d.customer_name ?? "—"}</td>
                   <td className="py-2 px-3" dir="ltr">{d.phone ?? "—"}</td>

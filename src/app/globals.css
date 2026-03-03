@@ -8,6 +8,21 @@
   --sidebar-bg: #2d2d2d;
   --card-bg: #ffffff;
   --muted: #6b7280;
+  /* Design tokens: motion */
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* Design tokens: surfaces */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --radius-modal: 1rem;
+  --radius-card: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0ms;
+    --motion-duration-normal: 0ms;
+  }
 }
 
 @theme inline {
@@ -29,4 +44,74 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-noto-sans-hebrew), system-ui, sans-serif;
+}
+
+/* Motion keyframes */
+@keyframes fade-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utility classes for motion */
+.animate-in-fade-up {
+  animation: fade-up-in var(--motion-duration-normal) var(--motion-ease) forwards;
+}
+
+.animate-in-scale {
+  animation: scale-in var(--motion-duration-normal) var(--motion-ease) forwards;
+}
+
+.animate-in-backdrop {
+  animation: backdrop-in var(--motion-duration-fast) var(--motion-ease) forwards;
+}
+
+.animate-in-slide-up {
+  animation: slide-up-in var(--motion-duration-normal) var(--motion-ease) forwards;
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Global focus and interaction polish */
+a:focus-visible,
+button:focus-visible {
+  outline: none;
 }
