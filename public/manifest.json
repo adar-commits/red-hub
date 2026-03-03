@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "Red Hub — אדריכלים ומעצבים",
   "short_name": "Red Hub",
   "description": "פורטל אדריכלים ומעצבים — השטיח האדום",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#C8102E",

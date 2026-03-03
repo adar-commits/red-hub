@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Hebrew } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { PwaRegister } from "@/components/PwaRegister";
 
 const notoSansHebrew = Noto_Sans_Hebrew({
   variable: "--font-noto-sans-hebrew",
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
   description: "פורטל אדריכלים ומעצבים — השטיח האדום",
   manifest: "/manifest.json",
   appleWebApp: { capable: true, title: "Red Hub" },
+  icons: { apple: "/icon-192.png" },
 };
 
 export const viewport: Viewport = {
@@ -33,7 +35,10 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={notoSansHebrew.variable}>
       <body className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          <PwaRegister />
+          {children}
+        </Providers>
       </body>
     </html>
   );

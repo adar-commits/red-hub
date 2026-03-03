@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { ReferralModal } from "./ReferralModal";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+
+/** Line item (COMITEMS) for a commission certificate */
+export interface ComItemRow {
+  ITEMCODE?: string | null;
+  ITEMDES?: string | null;
+  QTY?: number | null;
+  PRICE?: number | null;
+  TOTPRICE?: number | null;
+  COMMISSION?: number | null;
+  [key: string]: unknown;
+}
 
 interface CertRow {
   id?: string;
@@ -14,6 +25,7 @@ interface CertRow {
   commission?: number;
   invoice_code?: string;
   recon_date?: string | null;
+  comitems?: ComItemRow[];
 }
 
 interface CommissionStats {
@@ -31,6 +43,20 @@ const CERT_COLUMNS: SortFilterColumn<CertRow>[] = [
   { key: "recon_date", label: "תאריך פירעון" },
 ];
 
+function formatCertCurrency(n: number | null | undefined): string {
+  if (n == null) return "—";
+  return new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(n);
+}
+
+function formatCertDate(s: string | null | undefined): string {
+  if (!s) return "—";
+  try {
+    return new Date(s).toLocaleDateString("he-IL");
+  } catch {
+    return String(s);
+  }
+}
+
 export function CommissionsClient({ designerCode }: { designerCode: string }) {
   const [stats, setStats] = useState<CommissionStats>({ pendingApproval: 0, unpaid: 0, paid: 0 });
   const [certs, setCerts] = useState<CertRow[]>([]);
@@ -38,6 +64,16 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   const [referralOpen, setReferralOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("commissions");
@@ -152,6 +188,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
+              <th className="w-10 py-2 px-2" aria-label="הרחבה" />
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
@@ -171,21 +208,78 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-500">
+                <td colSpan={7} className="text-center py-8 text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
             ) : (
-              filteredSortedRows.map((c, i) => (
-                <tr key={c.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                  <td className="py-2 px-3">{c.date ? new Date(c.date).toLocaleDateString("he-IL") : "—"}</td>
-                  <td className="py-2 px-3">{c.id ?? "—"}</td>
-                  <td className="py-2 px-3">{c.customer ?? "—"}</td>
-                  <td className="py-2 px-3">{c.amount != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(c.amount) : "—"}</td>
-                  <td className="py-2 px-3">{c.commission != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(c.commission) : "—"}</td>
-                  <td className="py-2 px-3">{c.recon_date ? new Date(c.recon_date).toLocaleDateString("he-IL") : "—"}</td>
-                </tr>
-              ))
+              filteredSortedRows.map((c, i) => {
+                const rowKey = c.id ?? `row-${i}`;
+                const hasComitems = Array.isArray(c.comitems) && c.comitems.length > 0;
+                const isExpanded = hasComitems && expandedIds.has(String(rowKey));
+                return (
+                  <React.Fragment key={rowKey}>
+                    <tr className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
+                      <td className="py-2 px-2 align-middle">
+                        {hasComitems ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpand(String(rowKey))}
+                            className="p-1 rounded text-gray-600 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40"
+                            aria-expanded={isExpanded}
+                            aria-label={isExpanded ? "סגור פריטים" : "הצג פריטים"}
+                          >
+                            <span className="inline-block transition-transform duration-[var(--motion-duration-fast)]" style={{ transform: isExpanded ? "rotate(90deg)" : "none" }}>
+                              ▶
+                            </span>
+                          </button>
+                        ) : (
+                          <span className="inline-block w-6" aria-hidden />
+                        )}
+                      </td>
+                      <td className="py-2 px-3">{formatCertDate(c.date)}</td>
+                      <td className="py-2 px-3">{c.id ?? "—"}</td>
+                      <td className="py-2 px-3">{c.customer ?? "—"}</td>
+                      <td className="py-2 px-3">{formatCertCurrency(c.amount)}</td>
+                      <td className="py-2 px-3">{formatCertCurrency(c.commission)}</td>
+                      <td className="py-2 px-3">{formatCertDate(c.recon_date ?? undefined)}</td>
+                    </tr>
+                    {isExpanded && hasComitems && (
+                      <tr className="border-t border-gray-100 bg-gray-50/60">
+                        <td colSpan={7} className="py-3 px-4">
+                          <div className="pr-6">
+                            <p className="text-xs font-medium text-gray-500 mb-2">פריטי עמלה (COMITEMS) — {c.id ?? "תעודה"}</p>
+                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white">
+                              <thead>
+                                <tr className="bg-gray-100 text-right">
+                                  <th className="py-1.5 px-2 font-medium">קוד</th>
+                                  <th className="py-1.5 px-2 font-medium">תיאור</th>
+                                  <th className="py-1.5 px-2 font-medium">כמות</th>
+                                  <th className="py-1.5 px-2 font-medium">מחיר</th>
+                                  <th className="py-1.5 px-2 font-medium">סה״כ</th>
+                                  <th className="py-1.5 px-2 font-medium">עמלה</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(c.comitems ?? []).map((item, j) => (
+                                  <tr key={j} className="border-t border-gray-100">
+                                    <td className="py-1.5 px-2">{item.ITEMCODE ?? "—"}</td>
+                                    <td className="py-1.5 px-2">{item.ITEMDES ?? "—"}</td>
+                                    <td className="py-1.5 px-2">{item.QTY != null ? String(item.QTY) : "—"}</td>
+                                    <td className="py-1.5 px-2">{formatCertCurrency(item.PRICE as number)}</td>
+                                    <td className="py-1.5 px-2">{formatCertCurrency(item.TOTPRICE as number)}</td>
+                                    <td className="py-1.5 px-2">{formatCertCurrency(item.COMMISSION as number)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -1,154 +1,264 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { BusinessInfo } from "@/lib/erp";
 
-const BUSINESS_TYPES = ["עוסק מורשה", "עוסק פטור", "חברה"];
-const DESIGN_TYPES = ["פנים", "חוץ", "משולב"];
-const SPECIALIZATIONS = ["מגורים", "מסחר", "משרדים", "אחר"];
-const EXPERIENCE = ["פחות משנה", "1-5", "5-10", "מעל 10"];
-const HOW_HEARD = ["חיפוש", "המלצה", "פייסבוק", "אחר"];
+const emptyForm: BusinessInfo = {
+  fullName: "",
+  phoneNumber: "",
+  email: "",
+  companyName: "",
+  companyType: "",
+  vatNo: "",
+  companyAddress: "",
+  companyCity: "",
+  designerType: "",
+  speciality: "",
+  birthday: "",
+  bankType: "",
+  bankBranch: "",
+  bankNo: "",
+};
 
 export function BusinessCardForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    full_name: "",
-    phone: "",
-    email: "",
-    business_name: "",
-    business_type: "",
-    company_id: "",
-    business_address: "",
-    city: "",
-    design_type: "",
-    specialization: "",
-    experience_years: "",
-    how_heard: "",
-    date_of_birth: "",
-    marketing_consent: false,
-  });
+  const [error, setError] = useState("");
+  const [form, setForm] = useState<BusinessInfo>(emptyForm);
 
   useEffect(() => {
-    fetch("/api/profile")
+    fetch("/api/business")
       .then((r) => r.json())
       .then((data) => {
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
         setForm({
-          full_name: data.full_name ?? "",
-          phone: data.phone ?? "",
+          fullName: data.fullName ?? "",
+          phoneNumber: data.phoneNumber ?? "",
           email: data.email ?? "",
-          business_name: data.business_name ?? "",
-          business_type: data.business_type ?? "",
-          company_id: data.company_id ?? "",
-          business_address: data.business_address ?? "",
-          city: data.city ?? "",
-          design_type: data.design_type ?? "",
-          specialization: data.specialization ?? "",
-          experience_years: data.experience_years ?? "",
-          how_heard: data.how_heard ?? "",
-          date_of_birth: data.date_of_birth ?? "",
-          marketing_consent: data.marketing_consent ?? false,
+          companyName: data.companyName ?? "",
+          companyType: data.companyType ?? "",
+          vatNo: data.vatNo ?? "",
+          companyAddress: data.companyAddress ?? "",
+          companyCity: data.companyCity ?? "",
+          designerType: data.designerType ?? "",
+          speciality: data.speciality ?? "",
+          birthday: data.birthday ?? "",
+          bankType: data.bankType ?? "",
+          bankBranch: data.bankBranch ?? "",
+          bankNo: data.bankNo ?? "",
         });
       })
-      .catch(() => {})
+      .catch(() => setError("שגיאה בטעינת הנתונים"))
       .finally(() => setLoading(false));
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setSaving(true);
     try {
-      const res = await fetch("/api/profile", {
+      const res = await fetch("/api/business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          fullName: form.fullName,
+          phoneNumber: form.phoneNumber,
+          companyAddress: form.companyAddress,
+          companyCity: form.companyCity,
+          companyType: form.companyType,
+          birthday: form.birthday,
+          email: form.email,
+          companyName: form.companyName,
+          vatNo: form.vatNo,
+          designerType: form.designerType,
+          speciality: form.speciality,
+          bankType: form.bankType,
+          bankBranch: form.bankBranch,
+          bankNo: form.bankNo,
+        }),
       });
-      if (!res.ok) throw new Error("שגיאה בשמירה");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "שגיאה בשמירה");
       alert("נשמר בהצלחה");
-    } catch {
-      alert("שגיאה בשמירה");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה בשמירה");
     } finally {
       setSaving(false);
     }
   }
 
+  const update = (key: keyof BusinessInfo, value: string) =>
+    setForm((f) => ({ ...f, [key]: value }));
+
   if (loading) {
-    return <div className="animate-pulse h-96 bg-gray-200 rounded-xl" />;
+    return <div className="animate-pulse h-96 bg-gray-200 rounded-xl" style={{ borderRadius: "var(--radius-card)" }} />;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-xl animate-in-fade-up">
+      {error && (
+        <p className="text-red-600 text-sm" role="alert">
+          {error}
+        </p>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">שם מלא</label>
-        <input type="text" value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        <input
+          type="text"
+          value={form.fullName ?? ""}
+          onChange={(e) => update("fullName", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">טלפון נייד</label>
-        <input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" dir="ltr" />
+        <input
+          type="tel"
+          value={form.phoneNumber ?? ""}
+          readOnly
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-gray-600 cursor-not-allowed"
+          dir="ltr"
+          aria-readonly="true"
+        />
+        <p className="text-xs text-gray-500 mt-0.5">לא ניתן לעריכה</p>
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">כתובת אי-מייל</label>
-        <input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" dir="ltr" />
+        <input
+          type="email"
+          value={form.email ?? ""}
+          onChange={(e) => update("email", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+          dir="ltr"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">שם העסק</label>
-        <input type="text" value={form.business_name} onChange={(e) => setForm((f) => ({ ...f, business_name: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">שם החברה</label>
+        <input
+          type="text"
+          value={form.companyName ?? ""}
+          onChange={(e) => update("companyName", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">סוג העוסק</label>
-        <select value={form.business_type} onChange={(e) => setForm((f) => ({ ...f, business_type: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2">
-          <option value="">בחר</option>
-          {BUSINESS_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mb-1">סוג חברה (ח.פ)</label>
+        <input
+          type="text"
+          value={form.companyType ?? ""}
+          onChange={(e) => update("companyType", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+          dir="ltr"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">ח.פ / ת.ז (עוסק פטור)</label>
-        <input type="text" value={form.company_id} onChange={(e) => setForm((f) => ({ ...f, company_id: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" dir="ltr" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">ח.פ / מע״מ</label>
+        <input
+          type="text"
+          value={form.vatNo ?? ""}
+          onChange={(e) => update("vatNo", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+          dir="ltr"
+        />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">כתובת העסק</label>
-        <input type="text" value={form.business_address} onChange={(e) => setForm((f) => ({ ...f, business_address: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        <input
+          type="text"
+          value={form.companyAddress ?? ""}
+          onChange={(e) => update("companyAddress", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">עיר</label>
-        <input type="text" value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        <input
+          type="text"
+          value={form.companyCity ?? ""}
+          onChange={(e) => update("companyCity", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">סוג עיצוב</label>
-        <select value={form.design_type} onChange={(e) => setForm((f) => ({ ...f, design_type: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2">
-          <option value="">בחר</option>
-          {DESIGN_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mb-1">סוג מעצב</label>
+        <input
+          type="text"
+          value={form.designerType ?? ""}
+          onChange={(e) => update("designerType", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">סוג התמחות</label>
-        <select value={form.specialization} onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2">
-          <option value="">בחר</option>
-          {SPECIALIZATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mb-1">התמחות</label>
+        <input
+          type="text"
+          value={form.speciality ?? ""}
+          onChange={(e) => update("speciality", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">וותק במקצוע</label>
-        <select value={form.experience_years} onChange={(e) => setForm((f) => ({ ...f, experience_years: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2">
-          <option value="">בחר</option>
-          {EXPERIENCE.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mb-1">תאריך לידה (dd/mm/yyyy)</label>
+        <input
+          type="text"
+          value={form.birthday ?? ""}
+          onChange={(e) => update("birthday", e.target.value)}
+          placeholder="18/06/1971"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+          dir="ltr"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">איך שמעת עלינו</label>
-        <select value={form.how_heard} onChange={(e) => setForm((f) => ({ ...f, how_heard: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2">
-          <option value="">בחר</option>
-          {HOW_HEARD.map((o) => <option key={o} value={o}>{o}</option>)}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mb-1">סוג בנק</label>
+        <input
+          type="text"
+          value={form.bankType ?? ""}
+          onChange={(e) => update("bankType", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">תאריך לידה (רשות)</label>
-        <input type="date" value={form.date_of_birth} onChange={(e) => setForm((f) => ({ ...f, date_of_birth: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-4 py-2" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">סניף בנק</label>
+        <input
+          type="text"
+          value={form.bankBranch ?? ""}
+          onChange={(e) => update("bankBranch", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+        />
       </div>
-      <label className="flex items-center gap-2">
-        <input type="checkbox" checked={form.marketing_consent} onChange={(e) => setForm((f) => ({ ...f, marketing_consent: e.target.checked }))} />
-        <span className="text-sm">אני מאשר/ת קבלת דיוור ומידע פרסומי</span>
-      </label>
-      <button type="submit" disabled={saving} className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold disabled:opacity-60">
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">מספר חשבון</label>
+        <input
+          type="text"
+          value={form.bankNo ?? ""}
+          onChange={(e) => update("bankNo", e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+          dir="ltr"
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={saving}
+        className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold disabled:opacity-60 hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2"
+      >
         {saving ? "שומר..." : "שמור"}
       </button>
     </form>

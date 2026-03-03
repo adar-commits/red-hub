@@ -57,7 +57,34 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         const statsData = await statsRes.json();
         const annData = await annRes.json();
         const dealsData = await dealsRes.json();
-        setStats(statsData.error ? null : statsData);
+        let mergedStats = statsData.error ? null : statsData;
+
+        const commissionsRaw = typeof window !== "undefined" ? sessionStorage.getItem("commissions") : null;
+        const commissions = commissionsRaw ? (JSON.parse(commissionsRaw) as Array<{ commission?: number; recon_date?: string | null }>) : [];
+        const totalEarned = commissions
+          .filter((c) => c.recon_date)
+          .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
+        const pendingCommission = commissions
+          .filter((c) => !c.recon_date)
+          .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
+
+        if (mergedStats && (commissions.length > 0)) {
+          mergedStats = {
+            ...mergedStats,
+            totalEarned: mergedStats.totalEarned ?? totalEarned,
+            pendingCommission: mergedStats.pendingCommission ?? pendingCommission,
+          };
+        } else if (commissions.length > 0) {
+          mergedStats = {
+            totalEarned,
+            pendingCommission,
+            dealsThisMonth: 0,
+            lastPayment: null,
+            openReferrals: 0,
+          };
+        }
+
+        setStats(mergedStats ?? { totalEarned: 0, pendingCommission: 0, dealsThisMonth: 0, lastPayment: null, openReferrals: 0 });
         setAnnouncements(Array.isArray(annData) ? annData : []);
         const list = dealsData?.deals ?? dealsData ?? [];
         setDeals(Array.isArray(list) ? list.slice(0, 5) : []);

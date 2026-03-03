@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
-import { erpSendOtpWithData } from "@/lib/erp";
+import {
+  erpSendOtpWithData,
+  erpValidatePhone,
+  normalizeErpOtpResponse,
+  type ErpOtpCertRecord,
+} from "@/lib/erp";
 import { generateOtp } from "@/lib/otp-store";
 import { getOtpSession } from "@/lib/session";
+
+function mapCertToCommission(c: ErpOtpCertRecord) {
+  return {
+    id: c.IVNUM ?? undefined,
+    date: c.IVDATE ?? undefined,
+    updated_at: c.UDATE ?? undefined,
+    customer: c.CUSTDES ?? undefined,
+    amount: c.IVPRICE ?? undefined,
+    commission: c.COMMISSION ?? undefined,
+    invoice_code: c.IVCODE ?? undefined,
+    recon_date: c.IVRECONDATE ?? undefined,
+    comitems: Array.isArray(c.COMITEMS) ? c.COMITEMS : [],
+  };
+}
 
 export async function POST(request: Request) {
   try {
@@ -24,28 +43,28 @@ export async function POST(request: Request) {
 
     const code = generateOtp();
 
-    const result = await erpSendOtpWithData(phone, code);
+    const raw = await erpSendOtpWithData(phone, code);
+    const { agentcode: parsedAgentcode, certs } = normalizeErpOtpResponse(raw);
 
-    if (!result || result.length === 0 || !result[0]?.agentcode) {
+    let agentcode: string | null = parsedAgentcode;
+    if (!agentcode && certs.length > 0) {
+      try {
+        const validated = await erpValidatePhone(phone);
+        agentcode =
+          typeof validated?.designerCode === "string" ? validated.designerCode : null;
+      } catch {
+        agentcode = null;
+      }
+    }
+
+    if (!agentcode) {
       return NextResponse.json(
         { error: "לא נמצא במערכת. יש ליצור קשר עם החברה להרשמה." },
         { status: 404 }
       );
     }
 
-    const agentcode = result[0].agentcode;
-
-    const rawCerts = result.flatMap((g: { commissionCertificates?: unknown[] }) => (g.commissionCertificates ?? []) as Record<string, unknown>[]);
-    const commissions = rawCerts.map((c) => ({
-      id: c.IVNUM,
-      date: c.IVDATE,
-      updated_at: c.UDATE,
-      customer: c.CUSTDES,
-      amount: c.IVPRICE,
-      commission: c.COMMISSION,
-      invoice_code: c.IVCODE,
-      recon_date: c.IVRECONDATE,
-    }));
+    const commissions = certs.map(mapCertToCommission);
 
     const otpSession = await getOtpSession();
     otpSession.phone = phone;
