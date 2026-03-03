@@ -39,7 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122)' }}>
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
         <h1 className="text-2xl font-bold text-[var(--brand-red)] text-center mb-1">
           ברוכים הבאים לפורטל
