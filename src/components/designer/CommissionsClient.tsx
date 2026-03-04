@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
-import { Modal } from "@/components/ui/Modal";
 
 /** Line item (COMITEMS) for a commission certificate */
 export interface ComItemRow {
@@ -98,7 +97,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     });
   }, []);
 
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("commissions");
@@ -256,34 +254,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         </div>
       </div>
 
-      <Modal
-        open={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-        title="הסבר סטטוסים"
-      >
-        <div dir="rtl" className="text-right max-h-[60vh] overflow-y-auto">
-          <ul className="space-y-3 text-sm text-gray-700 list-none p-0 m-0">
-            {[
-              "חדשה/בבדיקה",
-              "נשלחה לאישור",
-              "חשבונית חסרה",
-              "ממתין לתשלום",
-              "שולמה",
-              "סופית",
-              "מבוטלת",
-            ].map((label) => {
-              const text = COMMISSION_STATUS_EXPLANATIONS[label];
-              if (!text) return null;
-              return (
-                <li key={label} className="border-b border-gray-100 pb-2 last:border-0">
-                  <strong className="text-gray-900">{label}:</strong> {text}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </Modal>
-
       <DataTableToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -292,12 +262,18 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         exportLabel="ייצוא CSV"
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
-        <table className="w-full text-sm border-collapse">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white text-end" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
+        <table className="w-full text-sm border-collapse text-end">
+          <colgroup>
+            <col style={{ width: "2.5rem" }} />
+            {CERT_COLUMNS.map((col) => (
+              <col key={String(col.key)} />
+            ))}
+            <col style={{ width: "3rem" }} />
+          </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               <th className="w-10 py-2.5 px-3 text-end" aria-label="הרחבה" />
-              <th className="w-12 py-2.5 px-3 text-end whitespace-nowrap">העלאת חשבונית</th>
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
@@ -307,15 +283,13 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   <span className="flex items-center justify-end gap-1">
                     {col.label}
                     {col.key === "status" ? (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setStatusModalOpen(true); }}
-                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold"
+                      <span
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold cursor-help"
+                        title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
                         aria-label="הסבר סטטוסים"
-                        title="הסבר סטטוסים"
                       >
                         ?
-                      </button>
+                      </span>
                     ) : (
                       sortKey === col.key && (
                         <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
@@ -324,6 +298,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   </span>
                 </th>
               ))}
+              <th className="w-12 py-2.5 px-3 text-end whitespace-nowrap">העלאת חשבונית</th>
             </tr>
           </thead>
           <tbody>
@@ -364,6 +339,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
+                      <td className="py-2.5 px-3 text-end">{formatCertDate(c.date)}</td>
+                      <td className="py-2.5 px-3 text-end">{c.comnum ?? c.id ?? "—"}</td>
+                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.amount)}</td>
+                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.commission)}</td>
+                      <td className="py-2.5 px-3 text-end">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
+                      <td className="py-2.5 px-3 text-end">{c.status ?? "—"}</td>
                       <td className="py-2.5 px-3 text-end align-middle" onClick={(e) => e.stopPropagation()}>
                         {c.invoice_code ? (
                           <span className="inline-flex items-center justify-center w-8 h-8 rounded text-green-600" title="חשבונית הועלתה" aria-label="חשבונית הועלתה">
@@ -393,12 +374,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           </button>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-end">{formatCertDate(c.date)}</td>
-                      <td className="py-2.5 px-3 text-end">{c.comnum ?? c.id ?? "—"}</td>
-                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.amount)}</td>
-                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.commission)}</td>
-                      <td className="py-2.5 px-3 text-end">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
-                      <td className="py-2.5 px-3 text-end">{c.status ?? "—"}</td>
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">

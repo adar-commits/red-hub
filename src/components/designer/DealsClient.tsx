@@ -69,7 +69,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
           onClick={() => setReferralOpen(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--sidebar-bg)] text-white text-sm font-medium hover:bg-[var(--sidebar-bg)]/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
         >
-          הוספת עסקה חדשה / הפניה
+          הוספת עסקה חדשה
         </button>
       </div>
 
@@ -83,12 +83,17 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
         <table className="w-full text-sm border-collapse">
+          <colgroup>
+            {DEAL_COLUMNS.map((col) => (
+              <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
+            ))}
+          </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               {DEAL_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
+                  className={`py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
                   onClick={() => toggleSort(col.key)}
                 >
                   {col.label}
@@ -111,7 +116,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
                 <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
                   <td className="py-2.5 px-3 text-end">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
                   <td className="py-2.5 px-3 text-end">{d.customer_name ?? "—"}</td>
-                  <td className="py-2.5 px-3 text-end" dir="ltr">{d.phone ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end min-w-[8rem]" dir="ltr">{d.phone ?? "—"}</td>
                   <td className="py-2.5 px-3 text-end">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
                   <td className="py-2.5 px-3 text-end">{d.id ?? "—"}</td>
                   <td className="py-2.5 px-3 text-end"><StatusBadge status={d.status} /></td>

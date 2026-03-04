@@ -81,11 +81,16 @@ export function DesignerShell({
         <div className={`p-3 border-b border-white/10 ${collapsed ? "text-center" : ""}`}>
           {!collapsed && (
             <>
-              <div className="font-bold text-lg leading-tight">
-                <span className="text-[var(--brand-red)]">DESIGNERS</span>{" "}
-                <span className="text-white">RedHub</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-lg text-white">Lightning</span>
+                <span className="font-bold text-lg text-[#2dd4bf]">RedHub</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0" aria-hidden>
+                  <path d="M12 2c-2.5 4-5 8-5 12 0 3.3 2.2 6 5 6s5-2.7 5-6c0-4-2.5-8-5-12z" fill="#8B1538" />
+                  <path d="M12 3.5L7 14h3.5L9 22l6-11H11.5L12 3.5z" fill="white" fillOpacity="0.4" />
+                  <ellipse cx="12" cy="14" rx="5" ry="6" fill="#6b2d3d" />
+                </svg>
               </div>
-              <div className="text-xs text-white/70 mt-1">version 4.2.1</div>
+              <div className="text-xs text-white/70 mt-1">Version 4.3.1</div>
             </>
           )}
         </div>
@@ -143,9 +148,9 @@ export function DesignerShell({
           <span className="w-5 h-0.5 bg-white rounded" aria-hidden />
         </button>
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between md:hidden">
-          <span className="font-semibold">
-            <span className="text-[var(--brand-red)]">DESIGNERS</span>{" "}
-            <span className="text-gray-900">RedHub</span>
+          <span className="font-semibold flex items-center gap-1.5">
+            <span className="text-gray-900">Lightning</span>
+            <span className="text-[#0d9488]">RedHub</span>
           </span>
           <div className="flex items-center gap-2">
             <NotificationBell designerCode={designerCode} />

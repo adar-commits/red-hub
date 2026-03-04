@@ -20,7 +20,7 @@ function mapCertToCommission(c: ErpOtpCertRecord) {
     invoice_code: c.IVCODE ?? undefined,
     recon_date: c.IVRECONDATE ?? undefined,
     status: (c.STATDES ?? c.STATUS ?? c.DETAILS) as string | undefined,
-    comitems: Array.isArray(c.COMITEMS) ? c.COMITEMS : [],
+    comitems: Array.isArray(c.COMITEMS) ? c.COMITEMS : (Array.isArray(c.COMITEMS_SUBFORM) ? c.COMITEMS_SUBFORM : []),
   };
 }
 

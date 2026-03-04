@@ -155,7 +155,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           <table className="w-full text-sm border-collapse">
             <colgroup>
               {DASHBOARD_DEAL_COLUMNS.map((col) => (
-                <col key={String(col.key)} />
+                <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
               ))}
             </colgroup>
             <thead>
@@ -163,7 +163,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
                 {DASHBOARD_DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
-                    className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
+                    className={`py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
                     onClick={() => toggleSort(col.key)}
                   >
                     {col.label}
@@ -186,7 +186,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
                   <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
                     <td className="py-2.5 px-3 text-end align-top">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
                     <td className="py-2.5 px-3 text-end align-top">{d.customer_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-end align-top" dir="ltr">{d.phone ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top min-w-[8rem]" dir="ltr">{d.phone ?? "—"}</td>
                     <td className="py-2.5 px-3 text-end align-top">{d.seller_name ?? "—"}</td>
                     <td className="py-2.5 px-3 text-end align-top">{d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}</td>
                   </tr>

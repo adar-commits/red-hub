@@ -42,6 +42,8 @@ export interface ErpOtpCertRecord {
   STATUS?: string | null;
   /** Inner rows (commission request line items) for this IVNUM */
   COMITEMS?: ErpComItem[] | null;
+  /** Alternative key for same data (ERP subform name) */
+  COMITEMS_SUBFORM?: ErpComItem[] | null;
   [key: string]: unknown;
 }
 
@@ -207,10 +209,13 @@ export async function erpUpdateProfile(agentCode: string, data: Record<string, u
 }
 
 export async function erpSubmitReferral(payload: {
+  actionType: "assignment";
   agentCode: string;
   phone: string;
   optionalField?: string;
   optionalValue?: string;
+  declarationAccepted?: boolean;
+  [key: string]: unknown;
 }): Promise<void> {
   const url = getEnv("ERP_REFERRAL_WEBHOOK");
   const res = await fetch(url, {

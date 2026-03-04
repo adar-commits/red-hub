@@ -12,10 +12,12 @@ export async function POST(request: Request) {
     const phone = typeof body.phone === "string" ? body.phone.trim() : "";
     if (!phone) return NextResponse.json({ error: "טלפון חסר" }, { status: 400 });
     await erpSubmitReferral({
+      actionType: "assignment",
       agentCode: session.designerCode,
       phone,
       optionalField: body.optionalField,
       optionalValue: body.optionalValue,
+      declarationAccepted: Boolean(body.declarationAccepted),
     });
     return NextResponse.json({ success: true });
   } catch (e) {
