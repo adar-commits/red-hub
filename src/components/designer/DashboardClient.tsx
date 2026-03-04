@@ -37,12 +37,50 @@ function searchMatch(text: string, query: string): boolean {
   return words.every((w) => t.includes(w));
 }
 
+const DASHBOARD_DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
+  { key: "invoice_date", label: "תאריך החשבונית" },
+  { key: "customer_name", label: "שם לקוח" },
+  { key: "phone", label: "טלפון" },
+  { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
+  { key: "commission", label: "עמלה" },
+];
+
 export function DashboardClient({ designerCode }: { designerCode: string }) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredAnnouncements = useMemo(() => {
+    if (!searchQuery.trim()) return announcements ?? [];
+    return (announcements ?? []).filter(
+      (a) =>
+        searchMatch(a.title, searchQuery) ||
+        (a.content != null && searchMatch(a.content, searchQuery))
+    );
+  }, [announcements, searchQuery]);
+
+  const dealRowText = (d: DealRow) =>
+    [
+      d.invoice_date ?? "",
+      d.customer_name ?? "",
+      d.phone ?? "",
+      d.amount_excl_vat ?? "",
+      d.commission ?? "",
+    ].join(" ");
+  const filteredDeals = useMemo(() => {
+    if (!searchQuery.trim()) return deals;
+    return deals.filter((d) => searchMatch(dealRowText(d), searchQuery));
+  }, [deals, searchQuery]);
+
+  const {
+    filteredSortedRows: sortedDeals,
+    sortKey,
+    sortDir,
+    toggleSort,
+    exportCsv,
+  } = useSortAndFilter(filteredDeals, DASHBOARD_DEAL_COLUMNS, { searchPlaceholder: "" });
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +140,8 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
     return () => { cancelled = true; };
   }, []);
 
+  const s = stats ?? { totalEarned: 0, pendingCommission: 0, dealsThisMonth: 0, lastPayment: null, openReferrals: 0 };
+
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -115,48 +155,6 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
       </div>
     );
   }
-
-  const s = stats ?? { totalEarned: 0, pendingCommission: 0, dealsThisMonth: 0, lastPayment: null, openReferrals: 0 };
-
-  const filteredAnnouncements = useMemo(() => {
-    if (!searchQuery.trim()) return announcements ?? [];
-    return (announcements ?? []).filter(
-      (a) =>
-        searchMatch(a.title, searchQuery) ||
-        (a.content != null && searchMatch(a.content, searchQuery))
-    );
-  }, [announcements, searchQuery]);
-
-  const dealRowText = (d: DealRow) =>
-    [
-      d.invoice_date ?? "",
-      d.customer_name ?? "",
-      d.phone ?? "",
-      d.amount_excl_vat ?? "",
-      d.commission ?? "",
-    ].join(" ");
-  const filteredDeals = useMemo(() => {
-    if (!searchQuery.trim()) return deals;
-    return deals.filter((d) => searchMatch(dealRowText(d), searchQuery));
-  }, [deals, searchQuery]);
-
-  const dashboardDealColumns: SortFilterColumn<DealRow>[] = useMemo(
-    () => [
-      { key: "invoice_date", label: "תאריך החשבונית" },
-      { key: "customer_name", label: "שם לקוח" },
-      { key: "phone", label: "טלפון" },
-      { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
-      { key: "commission", label: "עמלה" },
-    ],
-    []
-  );
-  const {
-    filteredSortedRows: sortedDeals,
-    sortKey,
-    sortDir,
-    toggleSort,
-    exportCsv,
-  } = useSortAndFilter(filteredDeals, dashboardDealColumns, { searchPlaceholder: "" });
 
   return (
     <div className="space-y-6">
@@ -215,7 +213,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
-                {dashboardDealColumns.map((col) => (
+                {DASHBOARD_DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
                     className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"

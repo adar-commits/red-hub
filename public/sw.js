@@ -13,7 +13,3 @@ self.addEventListener("activate", (event) => {
   );
   self.clients.claim();
 });
-
-self.addEventListener("fetch", () => {
-  // No-op: network-first; SW exists only to satisfy install criteria
-});
