@@ -10,6 +10,7 @@ export interface ErpComItem {
   QTY?: number | null;
   PRICE?: number | null;
   TOTPRICE?: number | null;
+  IVPRICE?: number | null;
   COMMISSION?: number | null;
   [key: string]: unknown;
 }
@@ -29,6 +30,7 @@ export interface ErpOtpCertRecord {
   IVNUM?: string | null;
   IVCODE?: string | null;
   COMNUM?: string | null;
+  CURDATE?: string | null;
   IVDATE?: string | null;
   CUSTDES?: string | null;
   ORDNAME?: string | null;

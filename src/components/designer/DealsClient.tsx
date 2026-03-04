@@ -81,22 +81,20 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         exportLabel="ייצוא CSV"
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
-        <table className="w-full text-sm table-fixed">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
+        <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               {DEAL_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
+                  className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
                   onClick={() => toggleSort(col.key)}
                 >
-                  <span className="flex items-center justify-end gap-1">
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
-                    )}
-                  </span>
+                  {col.label}
+                  {sortKey === col.key && (
+                    <span className="mr-1" aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -111,12 +109,12 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
             ) : (
               filteredSortedRows.map((d, i) => (
                 <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                  <td className="py-2 px-3 text-right">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
-                  <td className="py-2 px-3 text-right">{d.customer_name ?? "—"}</td>
-                  <td className="py-2 px-3 text-right" dir="ltr">{d.phone ?? "—"}</td>
-                  <td className="py-2 px-3 text-right">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
-                  <td className="py-2 px-3 text-right">{d.id ?? "—"}</td>
-                  <td className="py-2 px-3 text-right"><StatusBadge status={d.status} /></td>
+                  <td className="py-2.5 px-3 text-end">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
+                  <td className="py-2.5 px-3 text-end">{d.customer_name ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end" dir="ltr">{d.phone ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
+                  <td className="py-2.5 px-3 text-end">{d.id ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end"><StatusBadge status={d.status} /></td>
                 </tr>
               ))
             )}

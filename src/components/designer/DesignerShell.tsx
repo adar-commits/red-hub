@@ -78,25 +78,14 @@ export function DesignerShell({
       <aside
         className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-white shadow-[2px_0_12px_rgba(0,0,0,0.08)] transition-[width] duration-200 ${sidebarW}`}
       >
-        <div className={`p-3 border-b border-white/10 flex items-center ${collapsed ? "flex-col gap-1" : "flex-row flex-wrap"}`}>
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            title={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
-            aria-label={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
-          >
-            <span className="inline-block transition-transform duration-200" style={{ transform: collapsed ? "rotate(0deg)" : "rotate(180deg)" }}>
-              ◀
-            </span>
-          </button>
+        <div className={`p-3 border-b border-white/10 ${collapsed ? "text-center" : ""}`}>
           {!collapsed && (
             <>
-              <div className="font-bold text-lg leading-tight w-full">
+              <div className="font-bold text-lg leading-tight">
                 <span className="text-[var(--brand-red)]">DESIGNERS</span>{" "}
                 <span className="text-white">RedHub</span>
               </div>
-              <div className="text-xs text-white/70 mt-1 w-full">version 4.2.1</div>
+              <div className="text-xs text-white/70 mt-1">version 4.2.1</div>
             </>
           )}
         </div>
@@ -141,7 +130,18 @@ export function DesignerShell({
       </aside>
 
       {/* Main content */}
-      <main className={`flex-1 min-h-screen flex flex-col pb-20 md:pb-0 bg-gray-50/80 transition-[margin] duration-200 ${mainMargin}`}>
+      <main className={`flex-1 min-h-screen flex flex-col pb-20 md:pb-0 bg-gray-50/80 transition-[margin] duration-200 relative ${mainMargin}`}>
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="hidden md:flex fixed left-0 top-4 z-20 flex-col gap-1 p-2 rounded-r-lg bg-[var(--sidebar-bg)] text-white hover:bg-[var(--sidebar-bg)]/90 shadow-md"
+          title={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
+          aria-label={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
+        >
+          <span className="w-5 h-0.5 bg-white rounded" aria-hidden />
+          <span className="w-5 h-0.5 bg-white rounded" aria-hidden />
+          <span className="w-5 h-0.5 bg-white rounded" aria-hidden />
+        </button>
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between md:hidden">
           <span className="font-semibold">
             <span className="text-[var(--brand-red)]">DESIGNERS</span>{" "}

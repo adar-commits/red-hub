@@ -151,7 +151,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
             ייצוא CSV
           </button>
         </div>
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
           <table className="w-full text-sm border-collapse">
             <colgroup>
               {DASHBOARD_DEAL_COLUMNS.map((col) => (

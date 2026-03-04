@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "קובץ חסר" }, { status: 400 });
+    const certId = (formData.get("certId") as string | null) ?? undefined;
     const supabase = createServerSupabaseClient();
     const ext = file.name.split(".").pop() || "pdf";
     const path = `invoices/${session.designerCode}/${Date.now()}.${ext}`;
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({
       id: upload.path,
+      invoice_code: upload.path,
+      certId,
       created_at: new Date().toISOString(),
       certificate_number: null,
       transaction_count: null,

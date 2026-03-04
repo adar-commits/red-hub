@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { ReferralModal } from "./ReferralModal";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
 import { Modal } from "@/components/ui/Modal";
@@ -13,6 +12,7 @@ export interface ComItemRow {
   QTY?: number | null;
   PRICE?: number | null;
   TOTPRICE?: number | null;
+  IVPRICE?: number | null;
   COMMISSION?: number | null;
   [key: string]: unknown;
 }
@@ -84,9 +84,9 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   });
   const [certs, setCerts] = useState<CertRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [referralOpen, setReferralOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingRowId, setUploadingRowId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const toggleExpand = useCallback((id: string) => {
@@ -128,11 +128,22 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
   const certsWithCount = useMemo(
     () =>
-      certs.map((c) => ({
-        ...c,
-        comnum: c.comnum ?? c.id,
-        comitems_count: (c.comitems ?? []).length,
-      })),
+      certs.map((c) => {
+        const items = c.comitems ?? [];
+        const amountSum = items.length
+          ? items.reduce((s, i) => s + (Number((i as ComItemRow).IVPRICE ?? (i as ComItemRow).TOTPRICE) || 0), 0)
+          : (c.amount ?? 0);
+        const commissionSum = items.length
+          ? items.reduce((s, i) => s + (Number((i as ComItemRow).COMMISSION) || 0), 0)
+          : (c.commission ?? 0);
+        return {
+          ...c,
+          comnum: c.comnum ?? c.id,
+          comitems_count: items.length,
+          amount: amountSum,
+          commission: commissionSum,
+        };
+      }),
     [certs]
   );
 
@@ -149,21 +160,41 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    const certId = uploadingRowId ?? undefined;
+    e.target.value = "";
+    if (!file) {
+      setUploadingRowId(null);
+      return;
+    }
     setUploadError("");
-    setUploading(true);
     try {
       const form = new FormData();
       form.append("file", file);
+      if (certId) form.append("certId", certId);
       const res = await fetch("/api/commissions/upload-invoice", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "שגיאה");
-      setCerts((prev) => [{ ...data, date: new Date().toISOString() }, ...prev]);
+      const returnedCertId = data.certId as string | undefined;
+      const invoiceCode = data.invoice_code ?? data.id;
+      if (returnedCertId != null && returnedCertId !== "" && invoiceCode) {
+        setCerts((prev) => {
+          const next = prev.map((c) => {
+            const key = c.id ?? c.comnum ?? "";
+            if (key === "" || String(key) !== String(returnedCertId)) return c;
+            return { ...c, invoice_code: invoiceCode };
+          });
+          try {
+            sessionStorage.setItem("commissions", JSON.stringify(next));
+          } catch {
+            // ignore
+          }
+          return next;
+        });
+      }
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "שגיאה בהעלאה");
     } finally {
-      setUploading(false);
-      e.target.value = "";
+      setUploadingRowId(null);
     }
   }
 
@@ -182,19 +213,13 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => setReferralOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--sidebar-bg)] text-white text-sm font-medium hover:bg-[var(--sidebar-bg)]/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
-        >
-          הפניה חדשה
-        </button>
-        <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium cursor-pointer hover:bg-gray-50 focus-within:ring-2 focus-within:ring-[var(--brand-red)]/20 transition-colors">
-          <input type="file" accept=".pdf,image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-          {uploading ? "מעלה..." : "העלאת חשבונית"}
-        </label>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,image/*"
+        className="hidden"
+        onChange={handleUpload}
+      />
       {uploadError && (
         <p className="text-red-600 text-sm mb-4" role="alert">
           {uploadError}
@@ -236,13 +261,27 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         onClose={() => setStatusModalOpen(false)}
         title="הסבר סטטוסים"
       >
-        <ul className="space-y-3 text-sm text-gray-700">
-          {Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([label, text]) => (
-            <li key={label}>
-              <strong className="text-gray-900">{label}:</strong> {text}
-            </li>
-          ))}
-        </ul>
+        <div dir="rtl" className="text-right max-h-[60vh] overflow-y-auto">
+          <ul className="space-y-3 text-sm text-gray-700 list-none p-0 m-0">
+            {[
+              "חדשה/בבדיקה",
+              "נשלחה לאישור",
+              "חשבונית חסרה",
+              "ממתין לתשלום",
+              "שולמה",
+              "סופית",
+              "מבוטלת",
+            ].map((label) => {
+              const text = COMMISSION_STATUS_EXPLANATIONS[label];
+              if (!text) return null;
+              return (
+                <li key={label} className="border-b border-gray-100 pb-2 last:border-0">
+                  <strong className="text-gray-900">{label}:</strong> {text}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </Modal>
 
       <DataTableToolbar
@@ -253,15 +292,16 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         exportLabel="ייצוא CSV"
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
+        <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="w-10 py-2 px-2" aria-label="הרחבה" />
+              <th className="w-10 py-2.5 px-3 text-end" aria-label="הרחבה" />
+              <th className="w-12 py-2.5 px-3 text-end whitespace-nowrap">העלאת חשבונית</th>
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
+                  className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
                   onClick={() => col.key !== "status" && toggleSort(col.key)}
                 >
                   <span className="flex items-center justify-end gap-1">
@@ -289,7 +329,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-gray-500">
+                <td colSpan={8} className="text-center py-8 text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
@@ -307,7 +347,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                       tabIndex={hasComitems ? 0 : undefined}
                       onKeyDown={(e) => hasComitems && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleExpand(String(rowKey)))}
                     >
-                      <td className="py-2 px-2 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-2.5 px-3 text-end align-middle" onClick={(e) => e.stopPropagation()}>
                         {hasComitems ? (
                           <button
                             type="button"
@@ -324,36 +364,67 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
-                      <td className="py-2 px-3 text-right">{formatCertDate(c.date)}</td>
-                      <td className="py-2 px-3 text-right">{c.comnum ?? c.id ?? "—"}</td>
-                      <td className="py-2 px-3 text-right">{formatCertCurrency(c.amount)}</td>
-                      <td className="py-2 px-3 text-right">{formatCertCurrency(c.commission)}</td>
-                      <td className="py-2 px-3 text-right">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
-                      <td className="py-2 px-3 text-right">{c.status ?? "—"}</td>
+                      <td className="py-2.5 px-3 text-end align-middle" onClick={(e) => e.stopPropagation()}>
+                        {c.invoice_code ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded text-green-600" title="חשבונית הועלתה" aria-label="חשבונית הועלתה">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                              <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clipRule="evenodd" />
+                              <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
+                            </svg>
+                          </span>
+                        ) : uploadingRowId === String(c.id ?? c.comnum ?? rowKey) ? (
+                          <span className="inline-flex items-center justify-center w-8 h-8 text-gray-400" aria-label="מעלה...">
+                            <svg className="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setUploadingRowId(String(c.id ?? c.comnum ?? rowKey)); fileInputRef.current?.click(); }}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded text-gray-500 hover:bg-gray-100 hover:text-[var(--brand-red)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 transition-colors"
+                            title="העלאת חשבונית"
+                            aria-label="העלאת חשבונית"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                              <path fillRule="evenodd" d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A7.5 7.5 0 018 20.25H6.75a5.25 5.25 0 01-2.25-10.5z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-end">{formatCertDate(c.date)}</td>
+                      <td className="py-2.5 px-3 text-end">{c.comnum ?? c.id ?? "—"}</td>
+                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.amount)}</td>
+                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.commission)}</td>
+                      <td className="py-2.5 px-3 text-end">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
+                      <td className="py-2.5 px-3 text-end">{c.status ?? "—"}</td>
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
-                        <td colSpan={7} className="py-3 px-4">
-                          <div className="pr-6">
-                            <p className="text-xs font-medium text-gray-500 mb-2">עסקאות — {c.comnum ?? c.id ?? "תעודה"}</p>
-                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white table-fixed">
+                        <td colSpan={8} className="py-3 px-4">
+                          <div className="pr-6" dir="rtl">
+                            <p className="text-xs font-medium text-gray-500 mb-2 text-end">עסקאות — {c.comnum ?? c.id ?? "תעודה"}</p>
+                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white border-collapse" dir="rtl">
                               <thead>
                                 <tr className="bg-gray-100">
-                                  <th className="py-1.5 px-2 font-medium text-right">תאריך</th>
-                                  <th className="py-1.5 px-2 font-medium text-right">שם הלקוח</th>
-                                  <th className="py-1.5 px-2 font-medium text-right">טלפון</th>
-                                  <th className="py-1.5 px-2 font-medium text-right">סכום</th>
+                                  <th className="py-1.5 px-3 font-medium text-end">תאריך עסקה</th>
+                                  <th className="py-1.5 px-3 font-medium text-end">שם הלקוח</th>
+                                  <th className="py-1.5 px-3 font-medium text-end">סכום עסקה</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {(c.comitems ?? []).map((item, j) => (
-                                  <tr key={j} className="border-t border-gray-100">
-                                    <td className="py-1.5 px-2 text-right">{formatCertDate(c.date)}</td>
-                                    <td className="py-1.5 px-2 text-right">{c.customer ?? "—"}</td>
-                                    <td className="py-1.5 px-2 text-right" dir="ltr">—</td>
-                                    <td className="py-1.5 px-2 text-right">{formatCertCurrency(item.TOTPRICE as number)}</td>
-                                  </tr>
-                                ))}
+                                {(c.comitems ?? []).map((item, j) => {
+                                  const row = item as ComItemRow;
+                                  const itemAmount = row.IVPRICE ?? row.TOTPRICE ?? 0;
+                                  return (
+                                    <tr key={j} className="border-t border-gray-100">
+                                      <td className="py-1.5 px-3 text-end">{formatCertDate(c.date)}</td>
+                                      <td className="py-1.5 px-3 text-end">{c.customer ?? "—"}</td>
+                                      <td className="py-1.5 px-3 text-end">{formatCertCurrency(itemAmount)}</td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
@@ -368,7 +439,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         </table>
       </div>
 
-      <ReferralModal open={referralOpen} onClose={() => setReferralOpen(false)} designerCode={designerCode} onSuccess={() => setReferralOpen(false)} />
     </>
   );
 }

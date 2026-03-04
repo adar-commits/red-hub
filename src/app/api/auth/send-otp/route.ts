@@ -12,7 +12,7 @@ function mapCertToCommission(c: ErpOtpCertRecord) {
   return {
     id: c.IVNUM ?? undefined,
     comnum: c.COMNUM ?? c.IVNUM ?? undefined,
-    date: c.IVDATE ?? undefined,
+    date: c.CURDATE ?? c.IVDATE ?? undefined,
     updated_at: c.UDATE ?? undefined,
     customer: c.CUSTDES ?? undefined,
     amount: c.IVPRICE ?? undefined,

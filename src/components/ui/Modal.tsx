@@ -86,15 +86,16 @@ export function Modal({
       <div
         ref={contentRef}
         data-state="open"
-        className="animate-in-scale w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-100"
+        className="animate-in-scale w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-100 text-gray-900"
         onClick={(e) => e.stopPropagation()}
+        dir="rtl"
       >
         {title && (
-          <h2 id="modal-title" className="text-xl font-bold text-[var(--brand-red)] mb-4 px-6 pt-6">
+          <h2 id="modal-title" className="text-xl font-bold text-[var(--brand-red)] mb-4 px-6 pt-6 text-right">
             {title}
           </h2>
         )}
-        <div className={title ? "px-6 pb-6" : "p-6"}>{children}</div>
+        <div className={`${title ? "px-6 pb-6" : "p-6"} text-right`}>{children}</div>
       </div>
     </div>
   );

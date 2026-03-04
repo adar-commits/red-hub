@@ -18,16 +18,16 @@ export default async function AdminDesignersPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-[var(--brand-red)]">מעצבים</h1>
       <p className="text-sm text-gray-600">ייבוא CSV זמין בהגדרות. רשימה מהטבלה designers.</p>
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" dir="rtl">
+        <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-gray-100">
-              <th className="text-right py-2 px-3">קוד</th>
-              <th className="text-right py-2 px-3">שם</th>
-              <th className="text-right py-2 px-3">טלפון</th>
-              <th className="text-right py-2 px-3">אימייל</th>
-              <th className="text-right py-2 px-3">עסק</th>
-              <th className="text-right py-2 px-3">סטטוס</th>
+              <th className="py-2.5 px-3 font-medium text-end">קוד</th>
+              <th className="py-2.5 px-3 font-medium text-end">שם</th>
+              <th className="py-2.5 px-3 font-medium text-end">טלפון</th>
+              <th className="py-2.5 px-3 font-medium text-end">אימייל</th>
+              <th className="py-2.5 px-3 font-medium text-end">עסק</th>
+              <th className="py-2.5 px-3 font-medium text-end">סטטוס</th>
             </tr>
           </thead>
           <tbody>
@@ -38,12 +38,12 @@ export default async function AdminDesignersPage() {
             ) : (
               designers.map((d) => (
                 <tr key={d.designer_code} className="border-t border-gray-100">
-                  <td className="py-2 px-3 font-mono">{d.designer_code}</td>
-                  <td className="py-2 px-3">{d.full_name ?? "—"}</td>
-                  <td className="py-2 px-3" dir="ltr">{d.phone ?? "—"}</td>
-                  <td className="py-2 px-3" dir="ltr">{d.email ?? "—"}</td>
-                  <td className="py-2 px-3">{d.business_name ?? "—"}</td>
-                  <td className="py-2 px-3">{d.status ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end font-mono">{d.designer_code}</td>
+                  <td className="py-2.5 px-3 text-end">{d.full_name ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end" dir="ltr">{d.phone ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end" dir="ltr">{d.email ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end">{d.business_name ?? "—"}</td>
+                  <td className="py-2.5 px-3 text-end">{d.status ?? "—"}</td>
                 </tr>
               ))
             )}

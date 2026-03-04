@@ -174,13 +174,13 @@ export function ActivityLogClient() {
         <h3 className="text-lg font-semibold text-[var(--brand-red)] p-4 border-b border-gray-100">
           התחברויות אחרונות (Logins)
         </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto" dir="rtl">
+          <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-right">
-                <th className="py-2 px-3 font-medium">תאריך ושעה</th>
-                <th className="py-2 px-3 font-medium">קוד מעצב</th>
-                <th className="py-2 px-3 font-medium">שם מעצב</th>
+              <tr className="bg-gray-50">
+                <th className="py-2.5 px-3 font-medium text-end">תאריך ושעה</th>
+                <th className="py-2.5 px-3 font-medium text-end">קוד מעצב</th>
+                <th className="py-2.5 px-3 font-medium text-end">שם מעצב</th>
               </tr>
             </thead>
             <tbody>
@@ -193,11 +193,11 @@ export function ActivityLogClient() {
               ) : (
                 logins.map((row, i) => (
                   <tr key={i} className="border-t border-gray-100">
-                    <td className="py-2 px-3 text-right" dir="ltr">
+                    <td className="py-2.5 px-3 text-end" dir="ltr">
                       {formatDateTime(row.date_time)}
                     </td>
-                    <td className="py-2 px-3 text-right">{row.agentcode}</td>
-                    <td className="py-2 px-3 text-right">{row.agentname}</td>
+                    <td className="py-2.5 px-3 text-end">{row.agentcode}</td>
+                    <td className="py-2.5 px-3 text-end">{row.agentname}</td>
                   </tr>
                 ))
               )}
@@ -210,15 +210,15 @@ export function ActivityLogClient() {
         <h3 className="text-lg font-semibold text-[var(--brand-red)] p-4 border-b border-gray-100">
           בקשות הפניה חדשות (Assignment Request)
         </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto" dir="rtl">
+          <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-right">
-                <th className="py-2 px-3 font-medium">תאריך ושעה</th>
-                <th className="py-2 px-3 font-medium">קוד מעצב</th>
-                <th className="py-2 px-3 font-medium">שם מעצב</th>
-                <th className="py-2 px-3 font-medium">שם לקוח</th>
-                <th className="py-2 px-3 font-medium">סכום</th>
+              <tr className="bg-gray-50">
+                <th className="py-2.5 px-3 font-medium text-end">תאריך ושעה</th>
+                <th className="py-2.5 px-3 font-medium text-end">קוד מעצב</th>
+                <th className="py-2.5 px-3 font-medium text-end">שם מעצב</th>
+                <th className="py-2.5 px-3 font-medium text-end">שם לקוח</th>
+                <th className="py-2.5 px-3 font-medium text-end">סכום</th>
               </tr>
             </thead>
             <tbody>
@@ -231,13 +231,13 @@ export function ActivityLogClient() {
               ) : (
                 assignments.map((row, i) => (
                   <tr key={i} className="border-t border-gray-100">
-                    <td className="py-2 px-3 text-right" dir="ltr">
+                    <td className="py-2.5 px-3 text-end" dir="ltr">
                       {formatDateTime(row.date_time)}
                     </td>
-                    <td className="py-2 px-3 text-right">{row.agentcode}</td>
-                    <td className="py-2 px-3 text-right">{row.agentname}</td>
-                    <td className="py-2 px-3 text-right">{row.customer_name}</td>
-                    <td className="py-2 px-3 text-right">
+                    <td className="py-2.5 px-3 text-end">{row.agentcode}</td>
+                    <td className="py-2.5 px-3 text-end">{row.agentname}</td>
+                    <td className="py-2.5 px-3 text-end">{row.customer_name}</td>
+                    <td className="py-2.5 px-3 text-end">
                       {new Intl.NumberFormat("he-IL", {
                         style: "currency",
                         currency: "ILS",
