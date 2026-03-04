@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { ReferralModal } from "./ReferralModal";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+import { Modal } from "@/components/ui/Modal";
 
 /** Line item (COMITEMS) for a commission certificate */
 export interface ComItemRow {
@@ -18,6 +19,7 @@ export interface ComItemRow {
 
 interface CertRow {
   id?: string;
+  comnum?: string;
   date?: string;
   updated_at?: string;
   customer?: string;
@@ -25,22 +27,37 @@ interface CertRow {
   commission?: number;
   invoice_code?: string;
   recon_date?: string | null;
+  status?: string;
   comitems?: ComItemRow[];
 }
 
 interface CommissionStats {
   pendingApproval: number;
   unpaid: number;
+  unpaidTotal: number;
   paid: number;
+  paidTotal: number;
 }
 
-const CERT_COLUMNS: SortFilterColumn<CertRow>[] = [
-  { key: "date", label: "תאריך" },
-  { key: "id", label: "מספר תעודה" },
-  { key: "customer", label: "לקוח" },
+/** Status explanations for the modal — you can edit this text */
+const COMMISSION_STATUS_EXPLANATIONS: Record<string, string> = {
+  "חדשה/בבדיקה": "נוצרה לאחרונה וטרם הספקנו לאמת אותה",
+  "נשלחה לאישור": "תעודת העמלה נשלחה לאדריכל/ית לאישורו הסופי",
+  "חשבונית חסרה": "התעודה אושרה ע״י שני הצדדים וכעת ממתינה לחשבונית בכדי להתקדם לביצוע תשלום",
+  "ממתין לתשלום": "ממתינה לביצוע העברת תשלום",
+  "שולמה": "הועבר תשלום על תעודה זו.",
+  סופית: "הועבר תשלום על תעודה זו.",
+  מבוטלת: "תעודה בוטלה ידנית ע״י מנהל/ת קשרי אדריכלים ומעצבים",
+};
+
+type CertRowWithCount = CertRow & { comitems_count?: number };
+const CERT_COLUMNS: SortFilterColumn<CertRowWithCount>[] = [
+  { key: "date", label: "תאריך הפקה" },
+  { key: "comnum", label: "מספר תעודה" },
   { key: "amount", label: "סכום" },
   { key: "commission", label: "עמלה" },
-  { key: "recon_date", label: "תאריך פירעון" },
+  { key: "comitems_count", label: "עסקאות" },
+  { key: "status", label: "סטטוס" },
 ];
 
 function formatCertCurrency(n: number | null | undefined): string {
@@ -58,7 +75,13 @@ function formatCertDate(s: string | null | undefined): string {
 }
 
 export function CommissionsClient({ designerCode }: { designerCode: string }) {
-  const [stats, setStats] = useState<CommissionStats>({ pendingApproval: 0, unpaid: 0, paid: 0 });
+  const [stats, setStats] = useState<CommissionStats>({
+    pendingApproval: 0,
+    unpaid: 0,
+    unpaidTotal: 0,
+    paid: 0,
+    paidTotal: 0,
+  });
   const [certs, setCerts] = useState<CertRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [referralOpen, setReferralOpen] = useState(false);
@@ -75,17 +98,43 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     });
   }, []);
 
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+
   useEffect(() => {
     const raw = sessionStorage.getItem("commissions");
     const parsed: CertRow[] = raw ? (JSON.parse(raw) as CertRow[]) : [];
     setCerts(parsed);
 
-    const paid = parsed.filter((c) => c.recon_date).length;
-    const unpaid = parsed.filter((c) => !c.recon_date && (c.commission ?? 0) > 0).length;
-    setStats({ pendingApproval: 0, unpaid, paid });
+    const סופית = "סופית";
+    const מבוטלת = "מבוטלת";
+    const ממתין_לתשלום = "ממתין לתשלום";
+    const pendingApproval = parsed.filter(
+      (c) => (c.status ?? "").trim() !== סופית && (c.status ?? "").trim() !== מבוטלת
+    ).length;
+    const unpaidList = parsed.filter((c) => (c.status ?? "").trim() === ממתין_לתשלום);
+    const paidList = parsed.filter((c) => (c.status ?? "").trim() === סופית);
+    const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
+    const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
+    setStats({
+      pendingApproval,
+      unpaid: unpaidList.length,
+      unpaidTotal,
+      paid: paidList.length,
+      paidTotal,
+    });
 
     setLoading(false);
   }, []);
+
+  const certsWithCount = useMemo(
+    () =>
+      certs.map((c) => ({
+        ...c,
+        comnum: c.comnum ?? c.id,
+        comitems_count: (c.comitems ?? []).length,
+      })),
+    [certs]
+  );
 
   const {
     searchQuery,
@@ -96,7 +145,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     toggleSort,
     exportCsv,
     searchPlaceholder,
-  } = useSortAndFilter(certs, CERT_COLUMNS, { searchPlaceholder: "חיפוש בתעודות..." });
+  } = useSortAndFilter(certsWithCount as CertRowWithCount[], CERT_COLUMNS, { searchPlaceholder: "חיפוש בתעודות..." });
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -166,6 +215,9 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         >
           <p className="text-sm opacity-90">עמלות שטרם שולמו</p>
           <p className="text-2xl font-bold">{stats.unpaid}</p>
+          <p className="text-sm opacity-90 mt-1">
+            {formatCertCurrency(stats.unpaidTotal)} · {stats.unpaid} תעודות
+          </p>
         </div>
         <div
           className="p-4 rounded-xl bg-green-600 text-white transition-shadow hover:shadow-[var(--shadow-card)]"
@@ -173,8 +225,25 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         >
           <p className="text-sm opacity-90">עמלות שולמו</p>
           <p className="text-2xl font-bold">{stats.paid}</p>
+          <p className="text-sm opacity-90 mt-1">
+            {formatCertCurrency(stats.paidTotal)} · {stats.paid} תעודות
+          </p>
         </div>
       </div>
+
+      <Modal
+        open={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        title="הסבר סטטוסים"
+      >
+        <ul className="space-y-3 text-sm text-gray-700">
+          {Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([label, text]) => (
+            <li key={label}>
+              <strong className="text-gray-900">{label}:</strong> {text}
+            </li>
+          ))}
+        </ul>
+      </Modal>
 
       <DataTableToolbar
         searchQuery={searchQuery}
@@ -193,12 +262,24 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                 <th
                   key={String(col.key)}
                   className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
-                  onClick={() => toggleSort(col.key)}
+                  onClick={() => col.key !== "status" && toggleSort(col.key)}
                 >
                   <span className="flex items-center justify-end gap-1">
                     {col.label}
-                    {sortKey === col.key && (
-                      <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                    {col.key === "status" ? (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setStatusModalOpen(true); }}
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold"
+                        aria-label="הסבר סטטוסים"
+                        title="הסבר סטטוסים"
+                      >
+                        ?
+                      </button>
+                    ) : (
+                      sortKey === col.key && (
+                        <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                      )
                     )}
                   </span>
                 </th>
@@ -216,18 +297,24 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
               filteredSortedRows.map((c, i) => {
                 const rowKey = c.id ?? `row-${i}`;
                 const hasComitems = Array.isArray(c.comitems) && c.comitems.length > 0;
-                const isExpanded = hasComitems && expandedIds.has(String(rowKey));
+                const isExpanded = expandedIds.has(String(rowKey));
                 return (
                   <React.Fragment key={rowKey}>
-                    <tr className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                      <td className="py-2 px-2 align-middle">
+                    <tr
+                      className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors"
+                      onClick={() => hasComitems && toggleExpand(String(rowKey))}
+                      role={hasComitems ? "button" : undefined}
+                      tabIndex={hasComitems ? 0 : undefined}
+                      onKeyDown={(e) => hasComitems && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleExpand(String(rowKey)))}
+                    >
+                      <td className="py-2 px-2 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                         {hasComitems ? (
                           <button
                             type="button"
                             onClick={() => toggleExpand(String(rowKey))}
                             className="p-1 rounded text-gray-600 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40"
                             aria-expanded={isExpanded}
-                            aria-label={isExpanded ? "סגור פריטים" : "הצג פריטים"}
+                            aria-label={isExpanded ? "סגור עסקאות" : "הצג עסקאות"}
                           >
                             <span className="inline-block transition-transform duration-[var(--motion-duration-fast)]" style={{ transform: isExpanded ? "rotate(90deg)" : "none" }}>
                               ▶
@@ -237,38 +324,34 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
-                      <td className="py-2 px-3">{formatCertDate(c.date)}</td>
-                      <td className="py-2 px-3">{c.id ?? "—"}</td>
-                      <td className="py-2 px-3">{c.customer ?? "—"}</td>
-                      <td className="py-2 px-3">{formatCertCurrency(c.amount)}</td>
-                      <td className="py-2 px-3">{formatCertCurrency(c.commission)}</td>
-                      <td className="py-2 px-3">{formatCertDate(c.recon_date ?? undefined)}</td>
+                      <td className="py-2 px-3 text-right">{formatCertDate(c.date)}</td>
+                      <td className="py-2 px-3 text-right">{c.comnum ?? c.id ?? "—"}</td>
+                      <td className="py-2 px-3 text-right">{formatCertCurrency(c.amount)}</td>
+                      <td className="py-2 px-3 text-right">{formatCertCurrency(c.commission)}</td>
+                      <td className="py-2 px-3 text-right">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
+                      <td className="py-2 px-3 text-right">{c.status ?? "—"}</td>
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
                         <td colSpan={7} className="py-3 px-4">
                           <div className="pr-6">
-                            <p className="text-xs font-medium text-gray-500 mb-2">פריטי עמלה (COMITEMS) — {c.id ?? "תעודה"}</p>
-                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white">
+                            <p className="text-xs font-medium text-gray-500 mb-2">עסקאות — {c.comnum ?? c.id ?? "תעודה"}</p>
+                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white table-fixed">
                               <thead>
-                                <tr className="bg-gray-100 text-right">
-                                  <th className="py-1.5 px-2 font-medium">קוד</th>
-                                  <th className="py-1.5 px-2 font-medium">תיאור</th>
-                                  <th className="py-1.5 px-2 font-medium">כמות</th>
-                                  <th className="py-1.5 px-2 font-medium">מחיר</th>
-                                  <th className="py-1.5 px-2 font-medium">סה״כ</th>
-                                  <th className="py-1.5 px-2 font-medium">עמלה</th>
+                                <tr className="bg-gray-100">
+                                  <th className="py-1.5 px-2 font-medium text-right">תאריך</th>
+                                  <th className="py-1.5 px-2 font-medium text-right">שם הלקוח</th>
+                                  <th className="py-1.5 px-2 font-medium text-right">טלפון</th>
+                                  <th className="py-1.5 px-2 font-medium text-right">סכום</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(c.comitems ?? []).map((item, j) => (
                                   <tr key={j} className="border-t border-gray-100">
-                                    <td className="py-1.5 px-2">{item.ITEMCODE ?? "—"}</td>
-                                    <td className="py-1.5 px-2">{item.ITEMDES ?? "—"}</td>
-                                    <td className="py-1.5 px-2">{item.QTY != null ? String(item.QTY) : "—"}</td>
-                                    <td className="py-1.5 px-2">{formatCertCurrency(item.PRICE as number)}</td>
-                                    <td className="py-1.5 px-2">{formatCertCurrency(item.TOTPRICE as number)}</td>
-                                    <td className="py-1.5 px-2">{formatCertCurrency(item.COMMISSION as number)}</td>
+                                    <td className="py-1.5 px-2 text-right">{formatCertDate(c.date)}</td>
+                                    <td className="py-1.5 px-2 text-right">{c.customer ?? "—"}</td>
+                                    <td className="py-1.5 px-2 text-right" dir="ltr">—</td>
+                                    <td className="py-1.5 px-2 text-right">{formatCertCurrency(item.TOTPRICE as number)}</td>
                                   </tr>
                                 ))}
                               </tbody>

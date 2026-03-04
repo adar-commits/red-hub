@@ -2,28 +2,71 @@ import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
 import { erpGetDeals } from "@/lib/erp";
 
+interface TInvoice {
+  IVNUM?: string;
+  CDES?: string;
+  IVDATE?: string;
+  Y_151_0_ESHB?: string;
+  TOTPRICE?: number;
+  STATDES?: string;
+  TYPEDES?: string;
+  LTRN_SELLERNAME?: string;
+  BRANCH?: string;
+  [key: string]: unknown;
+}
+
+function mapTInvoiceToDealRow(iv: TInvoice) {
+  return {
+    id: iv.IVNUM,
+    invoice_date: iv.IVDATE,
+    customer_name: iv.CDES,
+    phone: iv.Y_151_0_ESHB,
+    amount_excl_vat: iv.TOTPRICE,
+    commission: undefined,
+    status: iv.STATDES ?? iv.TYPEDES,
+    branch: iv.BRANCH ?? iv.branch,
+    seller_name: iv.LTRN_SELLERNAME,
+  };
+}
+
+function isCurrentMonth(dateStr: string | undefined): boolean {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  } catch {
+    return false;
+  }
+}
+
 export async function GET() {
   try {
     const session = await getDesignerSession();
     if (!session?.designerCode || isSessionExpired(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const data = await erpGetDeals(session.designerCode);
-    const raw = data as { deals?: unknown[]; totalEarned?: number; pendingCommission?: number; dealsThisMonth?: number; lastPayment?: { amount: number; date: string }; openReferrals?: number };
+    const rawGroups = (await erpGetDeals(session.designerCode)) as Array<{ value: TInvoice[] }>;
+    const tinvoices = rawGroups.flatMap((g) => g.value ?? []);
+    const deals = tinvoices.map(mapTInvoiceToDealRow);
+
+    const thisMonthDeals = deals.filter((d) => isCurrentMonth(d.invoice_date));
+    const dealsThisMonthCount = thisMonthDeals.length;
+    const dealsThisMonthTotal = thisMonthDeals.reduce(
+      (sum, d) => sum + (Number(d.amount_excl_vat) || 0),
+      0
+    );
+
     return NextResponse.json({
-      totalEarned: raw.totalEarned ?? 0,
-      pendingCommission: raw.pendingCommission ?? 0,
-      dealsThisMonth: raw.dealsThisMonth ?? (Array.isArray(raw.deals) ? raw.deals.length : 0),
-      lastPayment: raw.lastPayment ?? null,
-      openReferrals: raw.openReferrals ?? 0,
+      deals,
+      dealsThisMonthCount,
+      dealsThisMonthTotal,
     });
-  } catch {
-    return NextResponse.json({
-      totalEarned: 0,
-      pendingCommission: 0,
-      dealsThisMonth: 0,
-      lastPayment: null,
-      openReferrals: 0,
-    });
+  } catch (e) {
+    console.error("dashboard-stats", e);
+    return NextResponse.json(
+      { deals: [], dealsThisMonthCount: 0, dealsThisMonthTotal: 0 },
+      { status: 200 }
+    );
   }
 }

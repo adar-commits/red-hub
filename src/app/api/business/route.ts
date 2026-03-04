@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       vatNo: body.vatNo ?? "",
       designerType: body.designerType ?? "",
       speciality: body.speciality ?? "",
+      experienceYears: body.experienceYears ?? "",
+      howDidYouHear: body.howDidYouHear ?? "",
       bankType: body.bankType ?? "",
       bankBranch: body.bankBranch ?? "",
       bankNo: body.bankNo ?? "",

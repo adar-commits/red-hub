@@ -11,6 +11,7 @@
   /* Design tokens: motion */
   --motion-duration-fast: 150ms;
   --motion-duration-normal: 250ms;
+  --motion-duration-slow: 800ms;
   --motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   /* Design tokens: surfaces */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);

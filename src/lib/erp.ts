@@ -28,6 +28,7 @@ export interface ErpOtpCertRecord {
   KLINE?: number | null;
   IVNUM?: string | null;
   IVCODE?: string | null;
+  COMNUM?: string | null;
   IVDATE?: string | null;
   CUSTDES?: string | null;
   ORDNAME?: string | null;
@@ -35,6 +36,8 @@ export interface ErpOtpCertRecord {
   ICODE?: string | null;
   COMMISSION?: number | null;
   AGENTCODE?: string | null;
+  STATDES?: string | null;
+  STATUS?: string | null;
   /** Inner rows (commission request line items) for this IVNUM */
   COMITEMS?: ErpComItem[] | null;
   [key: string]: unknown;
@@ -43,14 +46,16 @@ export interface ErpOtpCertRecord {
 /** Legacy send-OTP response item */
 export interface ErpOtpLegacyItem {
   agentcode?: string;
+  agentname?: string;
   otp?: string;
   commissionCertificates?: unknown[];
   [key: string]: unknown;
 }
 
-/** Wrapper response: single object with agentcode + certificates */
+/** Wrapper response: single object with agentcode + agentname + certificates */
 export interface ErpOtpWrapperResponse {
   agentcode?: string;
+  agentname?: string;
   certificates?: ErpOtpCertRecord[];
   commissionCertificates?: ErpOtpCertRecord[];
   [key: string]: unknown;
@@ -61,9 +66,10 @@ export type ErpOtpRawResponse =
   | ErpOtpCertRecord[]
   | ErpOtpWrapperResponse;
 
-/** Normalized result for send-OTP: certs array + agentcode when available */
+/** Normalized result for send-OTP: certs array + agentcode + agentname when available */
 export interface ErpOtpNormalized {
   agentcode: string | null;
+  agentname: string | null;
   certs: ErpOtpCertRecord[];
 }
 
@@ -87,8 +93,12 @@ function isLegacyItem(obj: unknown): obj is ErpOtpLegacyItem {
  * Normalize ERP send-OTP webhook response into a single cert list and optional agentcode.
  * Supports: legacy [{ agentcode, commissionCertificates }], flat cert array [...], wrapper { agentcode, certificates }.
  */
+function pickAgentname(w: { agentname?: string; [key: string]: unknown }): string | null {
+  return typeof w.agentname === "string" && w.agentname.trim() ? w.agentname.trim() : null;
+}
+
 export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
-  if (raw == null) return { agentcode: null, certs: [] };
+  if (raw == null) return { agentcode: null, agentname: null, certs: [] };
 
   // Single wrapper object
   if (
@@ -101,11 +111,12 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
     const certs = (w.certificates ?? w.commissionCertificates ?? []) as ErpOtpCertRecord[];
     return {
       agentcode: typeof w.agentcode === "string" ? w.agentcode : null,
+      agentname: pickAgentname(w),
       certs: Array.isArray(certs) ? certs : [],
     };
   }
 
-  if (!Array.isArray(raw) || raw.length === 0) return { agentcode: null, certs: [] };
+  if (!Array.isArray(raw) || raw.length === 0) return { agentcode: null, agentname: null, certs: [] };
 
   const first = raw[0];
 
@@ -119,6 +130,7 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
     const certs = (w.certificates ?? w.commissionCertificates ?? []) as ErpOtpCertRecord[];
     return {
       agentcode: typeof w.agentcode === "string" ? w.agentcode : null,
+      agentname: pickAgentname(w),
       certs: Array.isArray(certs) ? certs : [],
     };
   }
@@ -126,10 +138,11 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
   // Legacy: [{ agentcode, commissionCertificates }, ...]
   if (isLegacyItem(first)) {
     const agentcode = typeof first.agentcode === "string" ? first.agentcode : null;
+    const agentname = pickAgentname(first);
     const certs = raw.flatMap((g: ErpOtpLegacyItem) =>
       Array.isArray(g.commissionCertificates) ? (g.commissionCertificates as ErpOtpCertRecord[]) : []
     );
-    return { agentcode, certs };
+    return { agentcode, agentname, certs };
   }
 
   // New flat cert array: [{ IVNUM, IVCODE, ... }, ...]
@@ -137,10 +150,13 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
     const certs = raw as ErpOtpCertRecord[];
     const agentcode =
       typeof first.AGENTCODE === "string" ? first.AGENTCODE : null;
-    return { agentcode, certs };
+    const agentname = typeof (first as ErpOtpCertRecord & { agentname?: string }).agentname === "string"
+      ? (first as ErpOtpCertRecord & { agentname?: string }).agentname
+      : null;
+    return { agentcode, agentname: agentname?.trim() ?? null, certs };
   }
 
-  return { agentcode: null, certs: [] };
+  return { agentcode: null, agentname: null, certs: [] };
 }
 
 const getEnv = (key: string): string => {
@@ -259,6 +275,8 @@ export interface BusinessInfo {
   designerType?: string;
   speciality?: string;
   birthday?: string;
+  experienceYears?: string;
+  howDidYouHear?: string;
   bankType?: string;
   bankBranch?: string;
   bankNo?: string;

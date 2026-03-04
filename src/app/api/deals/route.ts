@@ -10,6 +10,8 @@ interface TInvoice {
   TOTPRICE?: number;
   STATDES?: string;
   TYPEDES?: string;
+  BRANCH?: string;
+  LTRN_SELLERNAME?: string;
   [key: string]: unknown;
 }
 
@@ -20,8 +22,9 @@ function mapTInvoiceToDealRow(iv: TInvoice) {
     customer_name: iv.CDES,
     phone: iv.Y_151_0_ESHB,
     amount_excl_vat: iv.TOTPRICE,
-    commission: undefined,
     status: iv.STATDES ?? iv.TYPEDES,
+    branch: iv.BRANCH ?? (iv as { branch?: string }).branch,
+    seller_name: iv.LTRN_SELLERNAME,
   };
 }
 

@@ -11,8 +11,9 @@ interface DealRow {
   customer_name?: string;
   phone?: string;
   amount_excl_vat?: number;
-  commission?: number;
   status?: string;
+  branch?: string;
+  seller_name?: string;
 }
 
 const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
@@ -20,7 +21,7 @@ const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
   { key: "customer_name", label: "שם לקוח" },
   { key: "phone", label: "טלפון" },
   { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
-  { key: "commission", label: "עמלה" },
+  { key: "id", label: "הזמנה (IVNUM)" },
   { key: "status", label: "סטטוס" },
 ];
 
@@ -81,7 +82,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
       />
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               {DEAL_COLUMNS.map((col) => (
@@ -110,12 +111,12 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
             ) : (
               filteredSortedRows.map((d, i) => (
                 <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                  <td className="py-2 px-3">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
-                  <td className="py-2 px-3">{d.customer_name ?? "—"}</td>
-                  <td className="py-2 px-3" dir="ltr">{d.phone ?? "—"}</td>
-                  <td className="py-2 px-3">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
-                  <td className="py-2 px-3">{d.commission != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.commission) : "—"}</td>
-                  <td className="py-2 px-3"><StatusBadge status={d.status} /></td>
+                  <td className="py-2 px-3 text-right">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
+                  <td className="py-2 px-3 text-right">{d.customer_name ?? "—"}</td>
+                  <td className="py-2 px-3 text-right" dir="ltr">{d.phone ?? "—"}</td>
+                  <td className="py-2 px-3 text-right">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
+                  <td className="py-2 px-3 text-right">{d.id ?? "—"}</td>
+                  <td className="py-2 px-3 text-right"><StatusBadge status={d.status} /></td>
                 </tr>
               ))
             )}

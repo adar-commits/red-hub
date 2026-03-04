@@ -11,8 +11,11 @@ const navItems = [
   { href: "/admin/photos", label: "תמונות" },
 ];
 
+const settingsPath = "/admin/settings";
+
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isSettings = pathname?.startsWith(settingsPath);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
@@ -29,7 +32,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="mt-auto p-2">
+        <div className="mt-auto p-2 border-t border-white/10 pt-2 space-y-1">
+          <Link
+            href={settingsPath}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isSettings ? "bg-white/15 text-white" : "text-white/90 hover:bg-white/10"}`}
+            aria-label="הגדרות"
+          >
+            <span className="text-lg" aria-hidden>⚙️</span>
+            <span>הגדרות</span>
+          </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/admin" })}

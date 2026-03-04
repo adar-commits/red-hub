@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+const PHOTOS_WEBHOOK_URL = "https://hook.eu2.make.com/9yya0867dfwx3ivbx1au5wcqvmwl0pt5";
 
 export async function GET() {
   try {
@@ -8,18 +9,15 @@ export async function GET() {
     if (!session?.designerCode || isSessionExpired(session)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = createServerSupabaseClient();
-    const { data, error } = await supabase
-      .from("project_photos")
-      .select("id, image_url, description, created_at")
-      .eq("designer_code", session.designerCode)
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return NextResponse.json(data ?? []);
-  } catch (e) {
-    console.error("photos get", e);
+    return NextResponse.json([]);
+  } catch {
     return NextResponse.json([], { status: 200 });
   }
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  const buf = Buffer.from(await file.arrayBuffer());
+  return buf.toString("base64");
 }
 
 export async function POST(request: Request) {
@@ -29,23 +27,56 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "קובץ חסר" }, { status: 400 });
-    const supabase = createServerSupabaseClient();
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${session.designerCode}/${Date.now()}.${ext}`;
-    const { data: upload, error: uploadError } = await supabase.storage
-      .from("project-photos")
-      .upload(path, file, { contentType: file.type, upsert: false });
-    if (uploadError) throw uploadError;
-    const { data: urlData } = supabase.storage.from("project-photos").getPublicUrl(upload.path);
-    const { data: row, error: insertError } = await supabase
-      .from("project_photos")
-      .insert({ designer_code: session.designerCode, image_url: urlData.publicUrl, description: null })
-      .select("id, image_url, description, created_at")
-      .single();
-    if (insertError) throw insertError;
-    return NextResponse.json(row);
+    const projectDescription = (formData.get("projectDescription") ?? formData.get("תיאור פרויקט") ?? "").toString().trim();
+    if (!projectDescription) {
+      return NextResponse.json({ error: "חובה למלא שדה תיאור פרויקט" }, { status: 400 });
+    }
+
+    const files: File[] = [];
+    const fileList = formData.getAll("files") as File[];
+    for (const f of fileList) {
+      if (f && f instanceof File && f.type.startsWith("image/")) files.push(f);
+    }
+    const single = formData.get("file") as File | null;
+    if (single && single instanceof File && single.type.startsWith("image/")) {
+      files.push(single);
+    }
+    if (files.length === 0) {
+      return NextResponse.json({ error: "יש לבחור לפחות תמונה אחת" }, { status: 400 });
+    }
+
+    const images = await Promise.all(
+      files.map(async (file) => ({
+        fileName: file.name,
+        contentType: file.type,
+        data: await fileToBase64(file),
+      }))
+    );
+
+    const webhookUrl = process.env.PHOTOS_WEBHOOK_URL ?? PHOTOS_WEBHOOK_URL;
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agentCode: session.designerCode,
+        actionType: "imgupload",
+        projectDescription,
+        images,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("photos webhook", res.status, text);
+      return NextResponse.json(
+        { error: "שגיאה בשליחה לשרת. נסה שוב." },
+        { status: 502 }
+      );
+    }
+    return NextResponse.json({
+      success: true,
+      count: files.length,
+      projectDescription,
+    });
   } catch (e) {
     console.error("photos post", e);
     return NextResponse.json({ error: "שגיאה בהעלאה" }, { status: 500 });

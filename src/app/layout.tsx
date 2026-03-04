@@ -11,12 +11,18 @@ const notoSansHebrew = Noto_Sans_Hebrew({
   display: "swap",
 });
 
+const FAVICON_URL =
+  "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bb02cd6a669bc0af13867bc01d09091a.svg?v=1772032242";
+
 export const metadata: Metadata = {
   title: "Red Hub — אדריכלים ומעצבים",
   description: "פורטל אדריכלים ומעצבים — השטיח האדום",
   manifest: "/manifest.json",
   appleWebApp: { capable: true, title: "Red Hub" },
-  icons: { apple: "/icon-192.png" },
+  icons: {
+    icon: [{ url: FAVICON_URL, type: "image/svg+xml" }],
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {

@@ -38,9 +38,19 @@ export default function LoginPage() {
     }
   }
 
+  const bgUrl =
+    "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122)' }}>
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
+    <div className="min-h-screen flex items-center justify-center p-4 relative bg-gray-100">
+      {/* Background image as element so it loads reliably */}
+      <img
+        src={bgUrl}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover object-center"
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-10 px-4" aria-live="polite" aria-busy="true">
             <div

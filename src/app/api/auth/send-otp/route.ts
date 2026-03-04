@@ -11,6 +11,7 @@ import { getOtpSession } from "@/lib/session";
 function mapCertToCommission(c: ErpOtpCertRecord) {
   return {
     id: c.IVNUM ?? undefined,
+    comnum: c.COMNUM ?? c.IVNUM ?? undefined,
     date: c.IVDATE ?? undefined,
     updated_at: c.UDATE ?? undefined,
     customer: c.CUSTDES ?? undefined,
@@ -18,6 +19,7 @@ function mapCertToCommission(c: ErpOtpCertRecord) {
     commission: c.COMMISSION ?? undefined,
     invoice_code: c.IVCODE ?? undefined,
     recon_date: c.IVRECONDATE ?? undefined,
+    status: (c.STATDES ?? c.STATUS ?? c.DETAILS) as string | undefined,
     comitems: Array.isArray(c.COMITEMS) ? c.COMITEMS : [],
   };
 }
@@ -44,14 +46,16 @@ export async function POST(request: Request) {
     const code = generateOtp();
 
     const raw = await erpSendOtpWithData(phone, code);
-    const { agentcode: parsedAgentcode, certs } = normalizeErpOtpResponse(raw);
+    const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
 
     let agentcode: string | null = parsedAgentcode;
+    let fullName: string | null = agentname;
     if (!agentcode && certs.length > 0) {
       try {
         const validated = await erpValidatePhone(phone);
         agentcode =
           typeof validated?.designerCode === "string" ? validated.designerCode : null;
+        if (!fullName && typeof validated?.fullName === "string") fullName = validated.fullName;
       } catch {
         agentcode = null;
       }
@@ -70,7 +74,7 @@ export async function POST(request: Request) {
     otpSession.phone = phone;
     otpSession.code = code;
     otpSession.designerCode = agentcode;
-    otpSession.fullName = null;
+    otpSession.fullName = fullName;
     otpSession.expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
     await otpSession.save();
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "./NotificationBell";
+import { SidebarGreeting } from "./SidebarGreeting";
 
 function LogoutButton() {
   async function handleLogout() {
@@ -46,12 +47,15 @@ export function DesignerShell({
       {/* Sidebar — desktop */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-white shadow-[2px_0_12px_rgba(0,0,0,0.08)]">
         <div className="p-4 border-b border-white/10">
-          <div className="font-bold text-lg">השטיח האדום</div>
-          <div className="text-sm text-white/80 mt-1">Red Hub</div>
+          <div className="font-bold text-lg leading-tight">
+            <span className="text-[var(--brand-red)]">Designer&apos;s</span>{" "}
+            <span className="text-white">RedHub</span>
+          </div>
+          <div className="text-xs text-white/70 mt-1">version 4.2.1</div>
         </div>
-        <div className="p-3 text-sm text-white/90">
-          <p>שלום {fullName || "מעצב/ת"}</p>
-          <p className="text-white/70">קוד המעצב שלך {designerCode}</p>
+        <div className="p-3 text-sm">
+          <SidebarGreeting fullName={fullName} />
+          <p className="text-white/70 mt-1">קוד המעצב שלך {designerCode}</p>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-auto">
           {navItems.map((item) => {
@@ -80,7 +84,10 @@ export function DesignerShell({
       {/* Main content */}
       <main className="flex-1 md:ml-64 md:rtl:ml-0 md:rtl:mr-64 min-h-screen flex flex-col pb-20 md:pb-0 bg-gray-50/80">
         <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between md:hidden">
-          <span className="font-semibold text-[var(--brand-red)]">Red Hub</span>
+          <span className="font-semibold">
+            <span className="text-[var(--brand-red)]">Designer&apos;s</span>{" "}
+            <span className="text-gray-900">RedHub</span>
+          </span>
           <div className="flex items-center gap-2">
             <NotificationBell designerCode={designerCode} />
             <span className="text-sm text-gray-600">קוד {designerCode}</span>
