@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { ReferralModal } from "./ReferralModal";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
