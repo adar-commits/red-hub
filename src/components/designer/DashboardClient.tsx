@@ -19,7 +19,6 @@ interface DealRow {
   amount_excl_vat?: number;
   commission?: number;
   status?: string;
-  branch?: string;
   seller_name?: string;
 }
 
@@ -27,7 +26,6 @@ const DASHBOARD_DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
   { key: "invoice_date", label: "תאריך החשבונית" },
   { key: "customer_name", label: "שם לקוח" },
   { key: "phone", label: "טלפון" },
-  { key: "branch", label: "סניף" },
   { key: "seller_name", label: "מוכרן" },
   { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
 ];
@@ -71,12 +69,16 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         const commissions = commissionsRaw
           ? (JSON.parse(commissionsRaw) as Array<{ commission?: number; status?: string; recon_date?: string | null }>)
           : [];
-        const סופית = "סופית";
+        const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
+        const isReceived = (c: { status?: string; recon_date?: string | null }) => {
+          const st = normalizedStatus(c.status);
+          return st === "סופית" || st === "שולמה" || (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת");
+        };
         const totalE = commissions
-          .filter((c) => (c.status ?? "").trim() === סופית || (c.recon_date != null && c.recon_date !== ""))
+          .filter(isReceived)
           .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
         const pending = commissions
-          .filter((c) => (c.status ?? "").trim() !== סופית && (c.recon_date == null || c.recon_date === ""))
+          .filter((c) => !isReceived(c))
           .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
         setTotalEarned(totalE);
         setPendingCommission(pending);
@@ -150,21 +152,24 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           </button>
         </div>
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }}>
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm border-collapse">
+            <colgroup>
+              {DASHBOARD_DEAL_COLUMNS.map((col) => (
+                <col key={String(col.key)} />
+              ))}
+            </colgroup>
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
                 {DASHBOARD_DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
-                    className="text-right py-2 px-3 cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors"
+                    className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
                     onClick={() => toggleSort(col.key)}
                   >
-                    <span className="flex items-center justify-end gap-1">
-                      {col.label}
-                      {sortKey === col.key && (
-                        <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
-                      )}
-                    </span>
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span className="mr-1" aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                    )}
                   </th>
                 ))}
               </tr>
@@ -172,19 +177,18 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
             <tbody>
               {sortedDeals.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-6 text-gray-500">
+                  <td colSpan={5} className="text-center py-6 text-gray-500">
                     אין תוצאות
                   </td>
                 </tr>
               ) : (
                 sortedDeals.map((d, i) => (
                   <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                    <td className="py-2 px-3 text-right">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
-                    <td className="py-2 px-3 text-right">{d.customer_name ?? "—"}</td>
-                    <td className="py-2 px-3 text-right" dir="ltr">{d.phone ?? "—"}</td>
-                    <td className="py-2 px-3 text-right">{d.branch ?? "—"}</td>
-                    <td className="py-2 px-3 text-right">{d.seller_name ?? "—"}</td>
-                    <td className="py-2 px-3 text-right">{d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top">{d.customer_name ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top" dir="ltr">{d.phone ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top">{d.seller_name ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-end align-top">{d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}</td>
                   </tr>
                 ))
               )}

@@ -24,7 +24,6 @@ function mapTInvoiceToDealRow(iv: TInvoice) {
     amount_excl_vat: iv.TOTPRICE,
     commission: undefined,
     status: iv.STATDES ?? iv.TYPEDES,
-    branch: iv.BRANCH ?? iv.branch,
     seller_name: iv.LTRN_SELLERNAME,
   };
 }
