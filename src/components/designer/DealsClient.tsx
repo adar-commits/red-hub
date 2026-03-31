@@ -71,14 +71,14 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
   }
 
   return (
-    <div dir="rtl" className="w-full text-end clear-both">
+    <div dir="rtl" className="w-full text-start clear-both">
       {referralSuccess && (
         <div
           className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
           role="status"
           aria-live="polite"
         >
-          <span className="min-w-0 flex-1 text-end">{referralSuccess}</span>
+          <span className="min-w-0 flex-1 text-start">{referralSuccess}</span>
           <button
             type="button"
             onClick={() => {
@@ -94,7 +94,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap justify-end gap-2">
+      <div className="mb-4 flex flex-wrap justify-start gap-2">
         <button
           type="button"
           onClick={() => setReferralOpen(true)}
@@ -114,10 +114,11 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
       />
 
       <div
-        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-end"
+        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-start"
         style={{ boxShadow: "var(--shadow-card)" }}
+        dir="rtl"
       >
-        <table className="w-full table-fixed border-collapse text-end text-sm">
+        <table dir="rtl" className="w-full table-fixed border-collapse text-start text-sm">
           <colgroup>
             <col className="w-[6.75rem]" />
             <col />
@@ -131,10 +132,10 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
               {DEAL_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="cursor-pointer select-none px-3 py-2.5 text-end align-bottom whitespace-nowrap transition-colors hover:bg-[var(--brand-red-hover)]"
+                  className="cursor-pointer select-none px-3 py-2.5 text-start align-bottom whitespace-nowrap transition-colors hover:bg-[var(--brand-red-hover)]"
                   onClick={() => toggleSort(col.key)}
                 >
-                  <span className="flex items-end justify-end gap-1">
+                  <span className="flex items-end justify-start gap-1">
                     {col.label}
                     {sortKey === col.key && (
                       <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
@@ -147,27 +148,27 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-end text-gray-500">
+                <td colSpan={6} className="py-8 text-start text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
             ) : (
               filteredSortedRows.map((d, i) => (
                 <tr key={d.id ?? i} className="border-t border-gray-100 transition-colors hover:bg-gray-50/80">
-                  <td className="px-3 py-2.5 text-end align-top tabular-nums">
+                  <td className="px-3 py-2.5 text-start align-top tabular-nums">
                     {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
                   </td>
-                  <td className="max-w-0 px-3 py-2.5 text-end align-top break-words">{d.customer_name ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-end align-top tabular-nums" dir="ltr">
+                  <td className="max-w-0 px-3 py-2.5 text-start align-top break-words">{d.customer_name ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-start align-top tabular-nums" dir="ltr">
                     {d.phone ?? "—"}
                   </td>
-                  <td className="px-3 py-2.5 text-end align-top tabular-nums">
+                  <td className="px-3 py-2.5 text-start align-top tabular-nums">
                     {d.amount_excl_vat != null
                       ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
                       : "—"}
                   </td>
-                  <td className="max-w-0 px-3 py-2.5 text-end align-top break-words">{d.id ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-end align-top">
+                  <td className="max-w-0 px-3 py-2.5 text-start align-top break-words">{d.id ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-start align-top">
                     <StatusBadge status={d.status} />
                   </td>
                 </tr>
