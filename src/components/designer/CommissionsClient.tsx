@@ -85,8 +85,17 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   const [loading, setLoading] = useState(true);
   const [uploadingRowId, setUploadingRowId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  useEffect(
+    () => () => {
+      if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
+    },
+    []
+  );
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -172,6 +181,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       return;
     }
     setUploadError("");
+    setUploadSuccess(null);
     try {
       const form = new FormData();
       form.append("file", file);
@@ -196,6 +206,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           return next;
         });
       }
+      if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
+      setUploadSuccess("החשבונית הועלתה בהצלחה.");
+      uploadSuccessTimeoutRef.current = setTimeout(() => {
+        setUploadSuccess(null);
+        uploadSuccessTimeoutRef.current = null;
+      }, 6000);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "שגיאה בהעלאה");
     } finally {
@@ -217,7 +233,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   }
 
   return (
-    <>
+    <div dir="rtl" className="w-full text-end clear-both">
       <input
         ref={fileInputRef}
         type="file"
@@ -225,8 +241,29 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         className="hidden"
         onChange={handleUpload}
       />
+      {uploadSuccess && (
+        <div
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="min-w-0 flex-1 text-end">{uploadSuccess}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
+              uploadSuccessTimeoutRef.current = null;
+              setUploadSuccess(null);
+            }}
+            className="shrink-0 rounded p-0.5 text-emerald-700 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+            aria-label="סגור הודעה"
+          >
+            ×
+          </button>
+        </div>
+      )}
       {uploadError && (
-        <p className="text-red-600 text-sm mb-4" role="alert">
+        <p className="text-red-600 text-sm mb-4 text-end" role="alert">
           {uploadError}
         </p>
       )}
@@ -267,31 +304,38 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         onExportCsv={() => exportCsv("commissions.csv")}
         searchPlaceholder={searchPlaceholder}
         exportLabel="ייצוא CSV"
+        dir="rtl"
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white text-end" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
-        <table className="w-full text-sm border-collapse text-end">
+      <div
+        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-end"
+        style={{ boxShadow: "var(--shadow-card)" }}
+      >
+        <table className="w-full table-fixed border-collapse text-end text-sm">
           <colgroup>
-            <col style={{ width: "2.5rem" }} />
-            {CERT_COLUMNS.map((col) => (
-              <col key={String(col.key)} />
-            ))}
-            <col style={{ width: "3rem" }} />
+            <col className="w-10" />
+            <col className="w-[6.75rem]" />
+            <col className="w-[min(12rem,22vw)]" />
+            <col className="w-[7.25rem]" />
+            <col className="w-[7.25rem]" />
+            <col className="w-[3.75rem]" />
+            <col />
+            <col className="w-[5.75rem]" />
           </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="w-10 py-2.5 px-3 text-end" aria-label="הרחבה" />
+              <th className="py-2.5 px-2 text-end align-bottom" aria-label="הרחבה" />
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap"
+                  className="px-3 py-2.5 text-end align-bottom cursor-pointer select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors"
                   onClick={() => col.key !== "status" && toggleSort(col.key)}
                 >
-                  <span className="flex items-center justify-end gap-1">
+                  <span className="flex items-end justify-end gap-1">
                     {col.label}
                     {col.key === "status" ? (
                       <span
-                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold cursor-help"
+                        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white cursor-help"
                         title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
                         aria-label="הסבר סטטוסים"
                       >
@@ -305,13 +349,13 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   </span>
                 </th>
               ))}
-              <th className="w-12 py-2.5 px-3 text-end whitespace-nowrap">העלאת חשבונית</th>
+              <th className="px-2 py-2.5 text-end align-bottom whitespace-nowrap">העלאת חשבונית</th>
             </tr>
           </thead>
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-8 text-gray-500">
+                <td colSpan={8} className="py-8 text-end text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
@@ -329,16 +373,21 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                       tabIndex={hasComitems ? 0 : undefined}
                       onKeyDown={(e) => hasComitems && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleExpand(String(rowKey)))}
                     >
-                      <td className="py-2.5 px-3 text-end align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-2 py-2.5 text-end align-middle" onClick={(e) => e.stopPropagation()}>
                         {hasComitems ? (
                           <button
                             type="button"
                             onClick={() => toggleExpand(String(rowKey))}
-                            className="p-1 rounded text-gray-600 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40"
+                            className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40"
                             aria-expanded={isExpanded}
                             aria-label={isExpanded ? "סגור עסקאות" : "הצג עסקאות"}
                           >
-                            <span className="inline-block transition-transform duration-[var(--motion-duration-fast)]" style={{ transform: isExpanded ? "rotate(90deg)" : "none" }}>
+                            <span
+                              className="inline-block transition-transform duration-[var(--motion-duration-fast)]"
+                              style={{
+                                transform: isExpanded ? "scaleX(-1) rotate(90deg)" : "scaleX(-1)",
+                              }}
+                            >
                               ▶
                             </span>
                           </button>
@@ -346,13 +395,13 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-end">{formatCertDate(c.date)}</td>
-                      <td className="py-2.5 px-3 text-end">{c.comnum ?? c.id ?? "—"}</td>
-                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.amount)}</td>
-                      <td className="py-2.5 px-3 text-end">{formatCertCurrency(c.commission)}</td>
-                      <td className="py-2.5 px-3 text-end">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
-                      <td className="py-2.5 px-3 text-end">{c.status ?? "—"}</td>
-                      <td className="py-2.5 px-3 text-end align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2.5 text-end align-top tabular-nums">{formatCertDate(c.date)}</td>
+                      <td className="max-w-0 px-3 py-2.5 text-end align-top break-words">{c.comnum ?? c.id ?? "—"}</td>
+                      <td className="px-3 py-2.5 text-end align-top tabular-nums">{formatCertCurrency(c.amount)}</td>
+                      <td className="px-3 py-2.5 text-end align-top tabular-nums">{formatCertCurrency(c.commission)}</td>
+                      <td className="px-3 py-2.5 text-end align-top tabular-nums">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
+                      <td className="px-3 py-2.5 text-end align-top break-words">{c.status ?? "—"}</td>
+                      <td className="px-2 py-2.5 text-end align-middle" onClick={(e) => e.stopPropagation()}>
                         {c.invoice_code ? (
                           <span className="inline-flex items-center justify-center w-8 h-8 rounded text-green-600" title="חשבונית הועלתה" aria-label="חשבונית הועלתה">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -384,26 +433,44 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
-                        <td colSpan={8} className="py-3 px-4">
-                          <div className="pr-6" dir="rtl">
-                            <p className="text-xs font-medium text-gray-500 mb-2 text-end">עסקאות — {c.comnum ?? c.id ?? "תעודה"}</p>
-                            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden bg-white border-collapse" dir="rtl">
+                        <td colSpan={8} className="px-4 py-3">
+                          <div className="me-auto ms-0 w-full max-w-4xl pe-2 ps-0 text-end" dir="rtl">
+                            <p className="mb-2 text-end text-xs font-medium text-gray-600">
+                              {c.comnum ?? c.id ?? "תעודה"} — עסקאות
+                            </p>
+                            <table className="w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 bg-white text-sm text-end">
+                              <colgroup>
+                                <col className="w-[26%]" />
+                                <col className="w-[48%]" />
+                                <col className="w-[26%]" />
+                              </colgroup>
                               <thead>
                                 <tr className="bg-gray-100">
-                                  <th className="py-1.5 px-3 font-medium text-end">תאריך עסקה</th>
-                                  <th className="py-1.5 px-3 font-medium text-end">שם הלקוח</th>
-                                  <th className="py-1.5 px-3 font-medium text-end">סכום עסקה</th>
+                                  <th className="px-3 py-2 align-bottom text-end text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    תאריך עסקה
+                                  </th>
+                                  <th className="px-3 py-2 align-bottom text-end text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    שם הלקוח
+                                  </th>
+                                  <th className="px-3 py-2 align-bottom text-end text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                    סכום עסקה
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(c.comitems ?? []).map((item, j) => {
                                   const row = item as ComItemRow;
                                   const itemAmount = row.IVPRICE ?? row.TOTPRICE ?? 0;
+                                  const lineLabel =
+                                    (typeof row.ITEMDES === "string" && row.ITEMDES.trim()) ||
+                                    (typeof row.ITEMCODE === "string" && row.ITEMCODE.trim()) ||
+                                    c.customer ||
+                                    "—";
                                   return (
                                     <tr key={j} className="border-t border-gray-100">
-                                      <td className="py-1.5 px-3 text-end">{formatCertDate(c.date)}</td>
-                                      <td className="py-1.5 px-3 text-end">{c.customer ?? "—"}</td>
-                                      <td className="py-1.5 px-3 text-end">{formatCertCurrency(itemAmount)}</td>
+                                      <td className="px-3 py-2 align-top tabular-nums text-end">{formatCertDate(c.date)}</td>
+                                      <td className="max-w-0 px-3 py-2 align-top break-words text-end">{lineLabel}</td>
+                                      <td className="px-3 py-2 align-top tabular-nums text-end">{formatCertCurrency(itemAmount)}</td>
                                     </tr>
                                   );
                                 })}
@@ -420,7 +487,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           </tbody>
         </table>
       </div>
-
-    </>
+    </div>
   );
 }

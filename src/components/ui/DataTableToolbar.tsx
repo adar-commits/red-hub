@@ -6,21 +6,28 @@ export function DataTableToolbar({
   onExportCsv,
   searchPlaceholder = "חיפוש...",
   exportLabel = "ייצוא CSV",
+  className,
+  dir: dirProp,
 }: {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onExportCsv: () => void;
   searchPlaceholder?: string;
   exportLabel?: string;
+  className?: string;
+  dir?: "rtl" | "ltr";
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-4">
+    <div
+      className={`flex flex-wrap items-center gap-3 mb-4 ${dirProp === "rtl" ? "flex-row-reverse justify-end" : ""} ${className ?? ""}`}
+      dir={dirProp}
+    >
       <input
         type="search"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
-        className="flex-1 min-w-[180px] rounded-lg border border-gray-300 px-4 py-2 text-sm placeholder:text-gray-500 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none transition-colors"
+        className={`flex-1 min-w-[180px] rounded-lg border border-gray-300 px-4 py-2 text-sm placeholder:text-gray-500 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none transition-colors ${dirProp === "rtl" ? "text-end" : ""}`}
         aria-label={searchPlaceholder}
       />
       <button
