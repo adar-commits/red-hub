@@ -9,15 +9,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await request.json();
-    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-    if (!phone) return NextResponse.json({ error: "טלפון חסר" }, { status: 400 });
+    const validationPhone = typeof body.validationPhone === "string" ? body.validationPhone.trim() : "";
+    const validationComSum = typeof body.validationComSum === "string" ? body.validationComSum.trim() : "";
+    const validationfieldType = typeof body.validationfieldType === "string" ? body.validationfieldType.trim() : "";
+    const validationfieldValue = typeof body.validationfieldValue === "string" ? body.validationfieldValue.trim() : "";
+
+    if (!validationPhone) return NextResponse.json({ error: "טלפון חסר" }, { status: 400 });
+    if (!validationComSum) return NextResponse.json({ error: "סכום חסר" }, { status: 400 });
+    if (!validationfieldType) return NextResponse.json({ error: "שדה אימות חסר" }, { status: 400 });
+    if (!validationfieldValue) return NextResponse.json({ error: "ערך שדה אימות חסר" }, { status: 400 });
+
     await erpSubmitReferral({
-      actionType: "assignment",
+      validationPhone,
+      validationComSum,
+      validationfieldType,
+      validationfieldValue,
+      eventType: "commisionRequest",
       agentCode: session.designerCode,
-      phone,
-      optionalField: body.optionalField,
-      optionalValue: body.optionalValue,
-      declarationAccepted: Boolean(body.declarationAccepted),
+      assignmentType: "invoice",
     });
     return NextResponse.json({ success: true });
   } catch (e) {

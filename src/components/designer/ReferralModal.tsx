@@ -5,12 +5,11 @@ import { Modal } from "@/components/ui/Modal";
 
 const TERMS_URL = "https://www.carpetshop.co.il/policies/terms-of-service";
 
-const OPTIONAL_FIELDS = [
-  { key: "customer_full_name", label: "שם מלא לקוח" },
-  { key: "secondary_phone", label: "טלפון משני" },
-  { key: "branch", label: "סניף" },
-  { key: "salesperson", label: "איש מכירות" },
-  { key: "amount_range", label: "טווח סכום" },
+const VALIDATION_FIELD_TYPES = [
+  "שם מלא לקוח",
+  "טלפון משני",
+  "סניף",
+  "איש מכירות",
 ] as const;
 
 export function ReferralModal({
@@ -25,8 +24,9 @@ export function ReferralModal({
   onSuccess: () => void;
 }) {
   const [phone, setPhone] = useState("");
-  const [optionalKey, setOptionalKey] = useState<string>(OPTIONAL_FIELDS[0].key);
-  const [optionalValue, setOptionalValue] = useState("");
+  const [commissionSum, setCommissionSum] = useState("");
+  const [fieldType, setFieldType] = useState<string>(VALIDATION_FIELD_TYPES[0]);
+  const [fieldValue, setFieldValue] = useState("");
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,6 +36,14 @@ export function ReferralModal({
     setError("");
     if (!phone.trim()) {
       setError("יש להזין טלפון");
+      return;
+    }
+    if (!commissionSum.trim()) {
+      setError("יש להזין סכום");
+      return;
+    }
+    if (!fieldValue.trim()) {
+      setError("יש להזין ערך לשדה הנוסף");
       return;
     }
     if (!declarationAccepted) {
@@ -48,10 +56,10 @@ export function ReferralModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: phone.trim(),
-          optionalField: optionalKey,
-          optionalValue: optionalValue.trim() || undefined,
-          declarationAccepted,
+          validationPhone: phone.trim(),
+          validationComSum: commissionSum.trim(),
+          validationfieldType: fieldType,
+          validationfieldValue: fieldValue.trim(),
         }),
       });
       const data = await res.json();
@@ -62,7 +70,10 @@ export function ReferralModal({
       onSuccess();
       onClose();
       setPhone("");
-      setOptionalValue("");
+      setCommissionSum("");
+      setFieldType(VALIDATION_FIELD_TYPES[0]);
+      setFieldValue("");
+      setDeclarationAccepted(false);
     } catch {
       setError("שגיאה בשליחה");
     } finally {
@@ -91,14 +102,27 @@ export function ReferralModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">בחר שדה נוסף (אופציונלי)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">סכום עסקה *</label>
+          <input
+            type="number"
+            value={commissionSum}
+            onChange={(e) => setCommissionSum(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
+            dir="ltr"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">בחר שדה אימות נוסף</label>
           <select
-            value={optionalKey}
-            onChange={(e) => setOptionalKey(e.target.value)}
+            value={fieldType}
+            onChange={(e) => setFieldType(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
           >
-            {OPTIONAL_FIELDS.map((f) => (
-              <option key={f.key} value={f.key}>{f.label}</option>
+            {VALIDATION_FIELD_TYPES.map((label) => (
+              <option key={label} value={label}>{label}</option>
             ))}
           </select>
         </div>
@@ -106,9 +130,10 @@ export function ReferralModal({
           <label className="block text-sm font-medium text-gray-700 mb-1 text-right">ערך</label>
           <input
             type="text"
-            value={optionalValue}
-            onChange={(e) => setOptionalValue(e.target.value)}
+            value={fieldValue}
+            onChange={(e) => setFieldValue(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
+            required
           />
         </div>
         <label className="flex items-start gap-2 cursor-pointer text-right">

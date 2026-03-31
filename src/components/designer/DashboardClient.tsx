@@ -60,7 +60,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         const annData = await annRes.json();
 
         const list = statsData?.deals ?? [];
-        setDeals(Array.isArray(list) ? list.slice(0, 20) : []);
+        setDeals(Array.isArray(list) ? list.slice(0, 5) : []);
         setDealsThisMonthCount(Number(statsData?.dealsThisMonthCount) || 0);
         setDealsThisMonthTotal(Number(statsData?.dealsThisMonthTotal) || 0);
         setAnnouncements(Array.isArray(annData) ? annData : []);

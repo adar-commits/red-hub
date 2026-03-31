@@ -103,14 +103,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     const parsed: CertRow[] = raw ? (JSON.parse(raw) as CertRow[]) : [];
     setCerts(parsed);
 
-    const סופית = "סופית";
-    const מבוטלת = "מבוטלת";
+    const נשלחה_לאישור = "נשלחה לאישור";
     const ממתין_לתשלום = "ממתין לתשלום";
-    const pendingApproval = parsed.filter(
-      (c) => (c.status ?? "").trim() !== סופית && (c.status ?? "").trim() !== מבוטלת
-    ).length;
+    const עמלות_שולמו = "עמלות שולמו";
+    const pendingApproval = parsed.filter((c) => (c.status ?? "").trim() === נשלחה_לאישור).length;
     const unpaidList = parsed.filter((c) => (c.status ?? "").trim() === ממתין_לתשלום);
-    const paidList = parsed.filter((c) => (c.status ?? "").trim() === סופית);
+    const paidList = parsed.filter((c) => (c.status ?? "").trim() === עמלות_שולמו);
     const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     setStats({

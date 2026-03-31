@@ -208,16 +208,18 @@ export async function erpUpdateProfile(agentCode: string, data: Record<string, u
   if (!res.ok) throw new Error(`ERP profile update failed: ${res.status}`);
 }
 
+const REFERRAL_WEBHOOK_URL = "https://hook.eu2.make.com/9yya0867dfwx3ivbx1au5wcqvmwl0pt5";
+
 export async function erpSubmitReferral(payload: {
-  actionType: "assignment";
+  validationPhone: string;
+  validationComSum: string;
+  validationfieldType: string;
+  validationfieldValue: string;
+  eventType: "commisionRequest";
   agentCode: string;
-  phone: string;
-  optionalField?: string;
-  optionalValue?: string;
-  declarationAccepted?: boolean;
-  [key: string]: unknown;
+  assignmentType: "invoice";
 }): Promise<void> {
-  const url = getEnv("ERP_REFERRAL_WEBHOOK");
+  const url = process.env.ERP_REFERRAL_WEBHOOK ?? REFERRAL_WEBHOOK_URL;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
