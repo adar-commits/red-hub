@@ -105,10 +105,19 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
     const נשלחה_לאישור = "נשלחה לאישור";
     const ממתין_לתשלום = "ממתין לתשלום";
-    const עמלות_שולמו = "עמלות שולמו";
-    const pendingApproval = parsed.filter((c) => (c.status ?? "").trim() === נשלחה_לאישור).length;
-    const unpaidList = parsed.filter((c) => (c.status ?? "").trim() === ממתין_לתשלום);
-    const paidList = parsed.filter((c) => (c.status ?? "").trim() === עמלות_שולמו);
+    const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
+    /** Matches ERP STATDES (e.g. שולמה, סופית) and recon — same rules as DashboardClient total earned */
+    const isPaidCommission = (c: CertRow) => {
+      const st = normalizedStatus(c.status);
+      return (
+        st === "סופית" ||
+        st === "שולמה" ||
+        (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת")
+      );
+    };
+    const pendingApproval = parsed.filter((c) => normalizedStatus(c.status) === נשלחה_לאישור).length;
+    const unpaidList = parsed.filter((c) => normalizedStatus(c.status) === ממתין_לתשלום);
+    const paidList = parsed.filter(isPaidCommission);
     const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     setStats({
