@@ -233,7 +233,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   }
 
   return (
-    <div dir="rtl" className="w-full text-start clear-both">
+    <div dir="rtl" className="w-full text-right clear-both">
       <input
         ref={fileInputRef}
         type="file"
@@ -247,7 +247,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           role="status"
           aria-live="polite"
         >
-          <span className="min-w-0 flex-1 text-start">{uploadSuccess}</span>
+          <span className="min-w-0 flex-1 text-right">{uploadSuccess}</span>
           <button
             type="button"
             onClick={() => {
@@ -263,7 +263,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         </div>
       )}
       {uploadError && (
-        <p className="text-red-600 text-sm mb-4 text-start" role="alert">
+        <p className="text-red-600 text-sm mb-4 text-right" role="alert">
           {uploadError}
         </p>
       )}
@@ -308,11 +308,11 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       />
 
       <div
-        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-start"
+        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-right"
         style={{ boxShadow: "var(--shadow-card)" }}
         dir="rtl"
       >
-        <table dir="rtl" className="w-full table-fixed border-collapse text-start text-sm">
+        <table dir="rtl" className="w-full table-fixed border-collapse text-right text-sm">
           <colgroup>
             <col className="w-10" />
             <col className="w-[6.75rem]" />
@@ -321,27 +321,30 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             <col className="w-[7.25rem]" />
             <col className="w-[3.75rem]" />
             <col />
-            <col className="w-[5.75rem]" />
+            <col className="w-[7.5rem]" />
           </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="py-2.5 px-2 text-start align-bottom" aria-label="הרחבה" />
+              <th className="py-2.5 px-2 text-right align-bottom" aria-label="הרחבה" />
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-3 py-2.5 text-start align-bottom cursor-pointer select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors"
+                  className="px-3 py-2.5 text-right align-bottom cursor-pointer select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors"
                   onClick={() => col.key !== "status" && toggleSort(col.key)}
                 >
-                  <span className="flex items-end justify-start gap-1">
+                  <span className="inline-block whitespace-nowrap">
                     {col.label}
                     {col.key === "status" ? (
-                      <span
-                        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white cursor-help"
-                        title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
-                        aria-label="הסבר סטטוסים"
-                      >
-                        ?
-                      </span>
+                      <>
+                        {" "}
+                        <span
+                          className="inline-flex h-5 w-5 align-middle items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white cursor-help"
+                          title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
+                          aria-label="הסבר סטטוסים"
+                        >
+                          ?
+                        </span>
+                      </>
                     ) : (
                       sortKey === col.key && (
                         <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
@@ -350,13 +353,15 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   </span>
                 </th>
               ))}
-              <th className="px-2 py-2.5 text-start align-bottom whitespace-nowrap">העלאת חשבונית</th>
+              <th className="min-w-[7.5rem] px-2 py-2.5 text-right align-bottom whitespace-normal break-words leading-tight">
+                העלאת חשבונית
+              </th>
             </tr>
           </thead>
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-start text-gray-500">
+                <td colSpan={8} className="py-8 text-right text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
@@ -374,7 +379,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                       tabIndex={hasComitems ? 0 : undefined}
                       onKeyDown={(e) => hasComitems && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleExpand(String(rowKey)))}
                     >
-                      <td className="px-2 py-2.5 text-start align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-2 py-2.5 text-right align-middle" onClick={(e) => e.stopPropagation()}>
                         {hasComitems ? (
                           <button
                             type="button"
@@ -396,13 +401,25 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-start align-top tabular-nums">{formatCertDate(c.date)}</td>
-                      <td className="max-w-0 px-3 py-2.5 text-start align-top break-words">{c.comnum ?? c.id ?? "—"}</td>
-                      <td className="px-3 py-2.5 text-start align-top tabular-nums">{formatCertCurrency(c.amount)}</td>
-                      <td className="px-3 py-2.5 text-start align-top tabular-nums">{formatCertCurrency(c.commission)}</td>
-                      <td className="px-3 py-2.5 text-start align-top tabular-nums">{(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}</td>
-                      <td className="px-3 py-2.5 text-start align-top break-words">{c.status ?? "—"}</td>
-                      <td className="px-2 py-2.5 text-start align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                        {formatCertDate(c.date)}
+                      </td>
+                      <td className="max-w-0 px-3 py-2.5 text-right align-top break-words" dir="rtl">
+                        {c.comnum ?? c.id ?? "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                        {formatCertCurrency(c.amount)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                        {formatCertCurrency(c.commission)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                        {(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}
+                      </td>
+                      <td className="px-3 py-2.5 text-right align-top break-words" dir="rtl">
+                        {c.status ?? "—"}
+                      </td>
+                      <td className="px-2 py-2.5 text-right align-middle" dir="rtl" onClick={(e) => e.stopPropagation()}>
                         {c.invoice_code ? (
                           <span className="inline-flex items-center justify-center w-8 h-8 rounded text-green-600" title="חשבונית הועלתה" aria-label="חשבונית הועלתה">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -434,12 +451,15 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
-                        <td colSpan={8} className="px-4 py-3">
-                          <div className="me-auto ms-0 w-full max-w-4xl pe-2 ps-0 text-start" dir="rtl">
-                            <p className="mb-2 text-start text-xs font-medium text-gray-600">
+                        <td colSpan={8} className="px-4 py-3 align-top">
+                          <div className="me-auto ms-0 w-full max-w-4xl pe-0 ps-2 text-right" dir="rtl">
+                            <p className="mb-2 text-right text-xs font-medium text-gray-600">
                               {c.comnum ?? c.id ?? "תעודה"} — עסקאות
                             </p>
-                            <table className="w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 bg-white text-sm text-start">
+                            <table
+                              dir="rtl"
+                              className="w-full table-fixed border-collapse overflow-hidden rounded-lg border border-gray-200 bg-white text-right text-sm"
+                            >
                               <colgroup>
                                 <col className="w-[26%]" />
                                 <col className="w-[48%]" />
@@ -447,13 +467,13 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                               </colgroup>
                               <thead>
                                 <tr className="bg-gray-100">
-                                  <th className="px-3 py-2 align-bottom text-start text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  <th className="px-3 py-2 text-right align-bottom text-xs font-semibold uppercase tracking-wide text-gray-600">
                                     תאריך עסקה
                                   </th>
-                                  <th className="px-3 py-2 align-bottom text-start text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  <th className="px-3 py-2 text-right align-bottom text-xs font-semibold uppercase tracking-wide text-gray-600">
                                     שם הלקוח
                                   </th>
-                                  <th className="px-3 py-2 align-bottom text-start text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                  <th className="px-3 py-2 text-right align-bottom text-xs font-semibold uppercase tracking-wide text-gray-600">
                                     סכום עסקה
                                   </th>
                                 </tr>
@@ -469,9 +489,15 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                                     "—";
                                   return (
                                     <tr key={j} className="border-t border-gray-100">
-                                      <td className="px-3 py-2 align-top tabular-nums text-start">{formatCertDate(c.date)}</td>
-                                      <td className="max-w-0 px-3 py-2 align-top break-words text-start">{lineLabel}</td>
-                                      <td className="px-3 py-2 align-top tabular-nums text-start">{formatCertCurrency(itemAmount)}</td>
+                                      <td className="px-3 py-2 text-right align-top tabular-nums" dir="rtl">
+                                        {formatCertDate(c.date)}
+                                      </td>
+                                      <td className="max-w-0 px-3 py-2 text-right align-top break-words" dir="rtl">
+                                        {lineLabel}
+                                      </td>
+                                      <td className="px-3 py-2 text-right align-top tabular-nums" dir="rtl">
+                                        {formatCertCurrency(itemAmount)}
+                                      </td>
                                     </tr>
                                   );
                                 })}
