@@ -7,7 +7,7 @@ export default async function DealsPage() {
   if (!session?.designerCode) redirect("/");
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-end" dir="rtl">
       <h1 className="text-2xl font-bold text-[var(--brand-red)]">העסקאות שלי</h1>
       <p className="text-sm text-gray-600">
         במסך זה יוצגו כל ההזמנות המשויכות אליך, לאחר 14 יום הם ישוכיו אוטומטית לתעודת עמלה.

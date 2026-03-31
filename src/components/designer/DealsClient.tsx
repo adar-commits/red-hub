@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ReferralModal } from "./ReferralModal";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
@@ -29,6 +29,15 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [referralSuccess, setReferralSuccess] = useState<string | null>(null);
+  const referralSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (referralSuccessTimeoutRef.current) clearTimeout(referralSuccessTimeoutRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     fetch("/api/deals")
@@ -62,12 +71,34 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
   }
 
   return (
-    <>
-      <div className="flex flex-wrap gap-2 mb-4">
+    <div dir="rtl" className="w-full text-end clear-both">
+      {referralSuccess && (
+        <div
+          className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="min-w-0 flex-1 text-end">{referralSuccess}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (referralSuccessTimeoutRef.current) clearTimeout(referralSuccessTimeoutRef.current);
+              referralSuccessTimeoutRef.current = null;
+              setReferralSuccess(null);
+            }}
+            className="shrink-0 rounded p-0.5 text-emerald-700 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+            aria-label="סגור הודעה"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
         <button
           type="button"
           onClick={() => setReferralOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--sidebar-bg)] text-white text-sm font-medium hover:bg-[var(--sidebar-bg)]/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
+          className="flex items-center gap-2 rounded-lg bg-[var(--sidebar-bg)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--sidebar-bg)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
         >
           הוספת עסקה חדשה
         </button>
@@ -79,27 +110,36 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         onExportCsv={() => exportCsv("deals.csv")}
         searchPlaceholder={searchPlaceholder}
         exportLabel="ייצוא CSV"
+        dir="rtl"
       />
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
-        <table className="w-full text-sm border-collapse">
+      <div
+        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-end"
+        style={{ boxShadow: "var(--shadow-card)" }}
+      >
+        <table className="w-full table-fixed border-collapse text-end text-sm">
           <colgroup>
-            {DEAL_COLUMNS.map((col) => (
-              <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
-            ))}
+            <col className="w-[6.75rem]" />
+            <col />
+            <col className="w-[8.5rem]" />
+            <col className="w-[7.5rem]" />
+            <col className="w-[min(11rem,24vw)]" />
+            <col className="w-[6.5rem]" />
           </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               {DEAL_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className={`py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
+                  className="cursor-pointer select-none px-3 py-2.5 text-end align-bottom whitespace-nowrap transition-colors hover:bg-[var(--brand-red-hover)]"
                   onClick={() => toggleSort(col.key)}
                 >
-                  {col.label}
-                  {sortKey === col.key && (
-                    <span className="mr-1" aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
-                  )}
+                  <span className="flex items-end justify-end gap-1">
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
+                    )}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -107,19 +147,29 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-500">
+                <td colSpan={6} className="py-8 text-end text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
             ) : (
               filteredSortedRows.map((d, i) => (
-                <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                  <td className="py-2.5 px-3 text-end">{d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}</td>
-                  <td className="py-2.5 px-3 text-end">{d.customer_name ?? "—"}</td>
-                  <td className="py-2.5 px-3 text-end min-w-[8rem]" dir="ltr">{d.phone ?? "—"}</td>
-                  <td className="py-2.5 px-3 text-end">{d.amount_excl_vat != null ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat) : "—"}</td>
-                  <td className="py-2.5 px-3 text-end">{d.id ?? "—"}</td>
-                  <td className="py-2.5 px-3 text-end"><StatusBadge status={d.status} /></td>
+                <tr key={d.id ?? i} className="border-t border-gray-100 transition-colors hover:bg-gray-50/80">
+                  <td className="px-3 py-2.5 text-end align-top tabular-nums">
+                    {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
+                  </td>
+                  <td className="max-w-0 px-3 py-2.5 text-end align-top break-words">{d.customer_name ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-end align-top tabular-nums" dir="ltr">
+                    {d.phone ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-end align-top tabular-nums">
+                    {d.amount_excl_vat != null
+                      ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
+                      : "—"}
+                  </td>
+                  <td className="max-w-0 px-3 py-2.5 text-end align-top break-words">{d.id ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-end align-top">
+                    <StatusBadge status={d.status} />
+                  </td>
                 </tr>
               ))
             )}
@@ -131,9 +181,16 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         open={referralOpen}
         onClose={() => setReferralOpen(false)}
         designerCode={designerCode}
-        onSuccess={() => setReferralOpen(false)}
+        onSuccess={() => {
+          if (referralSuccessTimeoutRef.current) clearTimeout(referralSuccessTimeoutRef.current);
+          setReferralSuccess("הבקשה נשלחה בהצלחה.");
+          referralSuccessTimeoutRef.current = setTimeout(() => {
+            setReferralSuccess(null);
+            referralSuccessTimeoutRef.current = null;
+          }, 6000);
+        }}
       />
-    </>
+    </div>
   );
 }
 
