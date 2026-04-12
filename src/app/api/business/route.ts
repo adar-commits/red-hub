@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const payload = {
       eventType: "updateInfo",
+      agentCode: session.designerCode,
       fullName: body.fullName ?? "",
       phoneNumber: body.phoneNumber ?? "",
       companyAddress: body.companyAddress ?? "",
