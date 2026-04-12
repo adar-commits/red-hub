@@ -79,7 +79,7 @@ function VerifyForm() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
               placeholder="00000"
-              className="w-full rounded-lg border-2 border-[var(--brand-red)]/30 px-4 py-3 text-xl text-center tracking-[0.4em] focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
+              className="w-full rounded-lg border-2 border-[var(--brand-red)]/30 px-4 py-3 text-xl text-center tracking-[0.4em] text-gray-900 placeholder:text-gray-400/70 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none"
               dir="ltr"
               autoComplete="one-time-code"
             />

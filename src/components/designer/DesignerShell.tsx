@@ -38,13 +38,6 @@ const navItems: { href: string; label: string; glyph: SidebarGlyphId }[] = [
   { href: "/contact", label: "כתבו לנו", glyph: "contact" },
 ];
 
-const mobileNavItems: { href: string; label: string; glyph: SidebarGlyphId }[] = [
-  { href: "/dashboard", label: "בית", glyph: "home" },
-  { href: "/deals", label: "עסקאות", glyph: "deals" },
-  { href: "/commissions", label: "עמלות", glyph: "commissions" },
-  { href: "/business", label: "פרטים", glyph: "business" },
-];
-
 export function DesignerShell({
   children,
   designerCode,
@@ -56,6 +49,20 @@ export function DesignerShell({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     try {
@@ -146,7 +153,7 @@ export function DesignerShell({
       </aside>
 
       {/* Main content */}
-      <main className={`flex-1 min-h-screen flex flex-col pb-20 md:pb-0 bg-[var(--main-shell-bg)] transition-[margin] duration-200 relative ${mainMargin}`}>
+      <main className={`flex-1 min-h-screen flex flex-col bg-[var(--main-shell-bg)] transition-[margin] duration-200 relative ${mainMargin}`}>
         <button
           type="button"
           onClick={toggleSidebar}
@@ -178,7 +185,7 @@ export function DesignerShell({
 
       {/* Bottom nav — mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--sidebar-bg)] border-t border-[var(--sidebar-border)] safe-area-pb flex justify-around py-1.5 shadow-[0_-6px_28px_rgba(15,23,42,0.1)]">
-        {mobileNavItems.map((item) => {
+        {navItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Link
