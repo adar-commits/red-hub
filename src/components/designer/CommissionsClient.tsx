@@ -208,11 +208,27 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     initialSort: { key: "date", dir: "desc" },
   });
 
+  function assertPdfFile(file: File): string | null {
+    if (!/\.pdf$/i.test(file.name.trim())) {
+      return "ניתן להעלות רק קובץ PDF (.pdf). בחרו קובץ אחר.";
+    }
+    if (file.type && file.type !== "application/pdf") {
+      return "הקובץ שבחרתם אינו מזוהה כ-PDF. נא לבחור קובץ PDF בלבד.";
+    }
+    return null;
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     const certId = uploadingRowId ?? undefined;
     e.target.value = "";
     if (!file) {
+      setUploadingRowId(null);
+      return;
+    }
+    const clientPdfErr = assertPdfFile(file);
+    if (clientPdfErr) {
+      setUploadError(clientPdfErr);
       setUploadingRowId(null);
       return;
     }
@@ -223,8 +239,19 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       form.append("file", file);
       if (certId) form.append("certId", certId);
       const res = await fetch("/api/commissions/upload-invoice", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "שגיאה");
+      let data: { error?: string; certId?: string; invoice_code?: string; id?: string } = {};
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        // non-JSON error body
+      }
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" && data.error.trim()
+            ? data.error
+            : "שגיאה בהעלאה. נסו שוב; אם הבעיה נמשכת, פנו לתמיכה."
+        );
+      }
       const returnedCertId = data.certId as string | undefined;
       const invoiceCode = data.invoice_code ?? data.id;
       if (returnedCertId != null && returnedCertId !== "" && invoiceCode) {
@@ -249,7 +276,9 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         uploadSuccessTimeoutRef.current = null;
       }, 6000);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "שגיאה בהעלאה");
+      setUploadError(
+        err instanceof Error ? err.message : "שגיאה בהעלאה. נסו שוב; אם הבעיה נמשכת, פנו לתמיכה."
+      );
     } finally {
       setUploadingRowId(null);
     }
@@ -273,7 +302,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,image/*"
+        accept="application/pdf,.pdf"
         className="hidden"
         onChange={handleUpload}
       />
@@ -478,11 +507,25 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                             type="button"
                             onClick={() => { setUploadingRowId(String(c.id ?? c.comnum ?? rowKey)); fileInputRef.current?.click(); }}
                             className="inline-flex items-center justify-center w-8 h-8 rounded text-gray-500 hover:bg-gray-100 hover:text-[var(--brand-red)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 transition-colors"
-                            title="העלאת חשבונית"
-                            aria-label="העלאת חשבונית"
+                            title="העלאת חשבונית PDF"
+                            aria-label="העלאת חשבונית PDF"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                              <path fillRule="evenodd" d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A7.5 7.5 0 018 20.25H6.75a5.25 5.25 0 01-2.25-10.5z" clipRule="evenodd" />
+                            {/* Document sheet + arrow up — clearer than a generic cloud */}
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="w-5 h-5"
+                              aria-hidden
+                            >
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <path d="M14 2v6h6" />
+                              <path d="M12 18V9" />
+                              <path d="m9 12 3-3 3 3" />
                             </svg>
                           </button>
                         )}
