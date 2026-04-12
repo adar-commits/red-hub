@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     if (!validationfieldType) return NextResponse.json({ error: "שדה אימות חסר" }, { status: 400 });
     if (!validationfieldValue) return NextResponse.json({ error: "ערך שדה אימות חסר" }, { status: 400 });
 
-    await erpSubmitReferral({
+    const webhookResult = await erpSubmitReferral({
       validationPhone,
       validationComSum,
       validationfieldType,
@@ -28,12 +28,17 @@ export async function POST(request: Request) {
       agentCode: session.designerCode,
       assignmentType: "invoice",
     });
-    return NextResponse.json({ success: true });
+    const description =
+      (typeof webhookResult?.response === "string" && webhookResult.response.trim()) ||
+      (typeof webhookResult?.respond === "string" && webhookResult.respond.trim()) ||
+      null;
+    return NextResponse.json({ success: true, message: description });
   } catch (e) {
     if (String(e).includes("Missing env")) {
       return NextResponse.json({ success: true });
     }
     console.error("referral", e);
-    return NextResponse.json({ error: "שגיאה בשליחה" }, { status: 500 });
+    const errorMessage = e instanceof Error && e.message ? e.message : "שגיאה בשליחה";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }

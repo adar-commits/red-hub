@@ -21,7 +21,7 @@ export function ReferralModal({
   open: boolean;
   onClose: () => void;
   designerCode: string;
-  onSuccess: () => void;
+  onSuccess: (message?: string | null) => void;
 }) {
   const [phone, setPhone] = useState("");
   const [commissionSum, setCommissionSum] = useState("");
@@ -62,12 +62,26 @@ export function ReferralModal({
           validationfieldValue: fieldValue.trim(),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "שגיאה");
+      let data: { success?: boolean; error?: string; message?: string | null; response?: string; respond?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+      if (!res.ok || data.success === false) {
+        const apiMsg =
+          (typeof data.error === "string" && data.error.trim()) ||
+          (typeof data.response === "string" && data.response.trim()) ||
+          (typeof data.respond === "string" && data.respond.trim());
+        setError(apiMsg || "שגיאה");
         return;
       }
-      onSuccess();
+      const okMessage =
+        (typeof data.message === "string" && data.message.trim()) ||
+        (typeof data.response === "string" && data.response.trim()) ||
+        (typeof data.respond === "string" && data.respond.trim()) ||
+        null;
+      onSuccess(okMessage);
       onClose();
       setPhone("");
       setCommissionSum("");
@@ -82,8 +96,31 @@ export function ReferralModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="הפניה חדשה">
-      <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
+    <Modal
+      open={open}
+      onClose={() => {
+        if (!loading) onClose();
+      }}
+      title="הפניה חדשה"
+      preventDismiss={loading}
+    >
+      <div className="relative">
+        {loading && (
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-white/85 backdrop-blur-[2px] px-4 py-8"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <div
+              className="h-10 w-10 rounded-full border-2 border-[var(--brand-red)]/30 border-t-[var(--brand-red)] animate-spin"
+              style={{ animationDuration: "var(--motion-duration-slow, 0.8s)" }}
+              aria-hidden
+            />
+            <p className="text-sm text-center text-gray-700 leading-relaxed">מעבדים את הבקשה, נא להמתין…</p>
+            <p className="text-xs text-center text-gray-500 leading-relaxed">התהליך עשוי לקחת מספר רגעים</p>
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className={`space-y-4 ${loading ? "pointer-events-none opacity-50" : ""}`} dir="rtl">
         <p className="text-sm text-gray-700 text-right leading-relaxed">
           באפשרותך לשייך לעצמך עסקה שבוצעה שאינה מופיעה ברשימה
           <br />
@@ -155,7 +192,8 @@ export function ReferralModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20 transition-colors"
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-lg border border-gray-300 bg-white font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20 transition-colors disabled:opacity-50 disabled:pointer-events-none"
           >
             ביטול
           </button>
@@ -164,10 +202,11 @@ export function ReferralModal({
             disabled={loading}
             className="flex-1 py-2.5 rounded-lg bg-[var(--brand-red)] text-white font-medium hover:bg-[var(--brand-red-hover)] disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 transition-colors active:scale-[0.99]"
           >
-            {loading ? "שולח..." : "שליחה"}
+            {loading ? "שולח…" : "שליחה"}
           </button>
         </div>
       </form>
+      </div>
     </Modal>
   );
 }

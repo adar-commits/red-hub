@@ -182,13 +182,16 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         open={referralOpen}
         onClose={() => setReferralOpen(false)}
         designerCode={designerCode}
-        onSuccess={() => {
+        onSuccess={(message) => {
           if (referralSuccessTimeoutRef.current) clearTimeout(referralSuccessTimeoutRef.current);
-          setReferralSuccess("הבקשה נשלחה בהצלחה.");
+          const text = message?.trim()
+            ? message.trim()
+            : "הבקשה נשלחה בהצלחה.";
+          setReferralSuccess(text);
           referralSuccessTimeoutRef.current = setTimeout(() => {
             setReferralSuccess(null);
             referralSuccessTimeoutRef.current = null;
-          }, 6000);
+          }, 8000);
         }}
       />
     </div>

@@ -210,6 +210,24 @@ export async function erpUpdateProfile(agentCode: string, data: Record<string, u
 
 const REFERRAL_WEBHOOK_URL = "https://hook.eu2.make.com/9yya0867dfwx3ivbx1au5wcqvmwl0pt5";
 
+type ReferralWebhookBody = {
+  status?: number;
+  response?: string;
+  respond?: string;
+  error?: string;
+  [key: string]: unknown;
+};
+
+function pickReferralWebhookUserMessage(parsed: ReferralWebhookBody | null): string | undefined {
+  if (!parsed || typeof parsed !== "object") return undefined;
+  for (const key of ["response", "respond", "error"] as const) {
+    const v = parsed[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
+/** Make.com may return HTTP 200 with JSON { status, response }; only 200/201 are success. */
 export async function erpSubmitReferral(payload: {
   validationPhone: string;
   validationComSum: string;
@@ -218,14 +236,35 @@ export async function erpSubmitReferral(payload: {
   eventType: "commisionRequest";
   agentCode: string;
   assignmentType: "invoice";
-}): Promise<void> {
+}): Promise<ReferralWebhookBody | null> {
   const url = process.env.ERP_REFERRAL_WEBHOOK ?? REFERRAL_WEBHOOK_URL;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`ERP referral failed: ${res.status}`);
+
+  const text = await res.text();
+  let parsed: ReferralWebhookBody | null = null;
+  if (text) {
+    try {
+      parsed = JSON.parse(text) as ReferralWebhookBody;
+    } catch {
+      parsed = { response: text };
+    }
+  }
+
+  const biz = parsed?.status;
+  const hasBizStatus = typeof biz === "number" && Number.isFinite(biz);
+  const bizOk = !hasBizStatus || biz === 200 || biz === 201;
+
+  if (!res.ok || !bizOk) {
+    const message =
+      pickReferralWebhookUserMessage(parsed) || `ERP referral failed: ${res.status}`;
+    throw new Error(message);
+  }
+
+  return parsed;
 }
 
 export async function erpContact(agentCode: string, message: string): Promise<void> {

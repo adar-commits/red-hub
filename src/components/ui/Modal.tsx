@@ -7,20 +7,23 @@ export function Modal({
   onClose,
   title,
   children,
+  preventDismiss = false,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  /** When true, overlay click and Escape do not close (e.g. during async submit). */
+  preventDismiss?: boolean;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !preventDismiss) onClose();
     },
-    [onClose]
+    [onClose, preventDismiss]
   );
 
   useEffect(() => {
@@ -68,7 +71,7 @@ export function Modal({
   }, [open]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) onClose();
+    if (e.target === overlayRef.current && !preventDismiss) onClose();
   };
 
   if (!open) return null;
