@@ -25,7 +25,7 @@ export function NotificationBell({ designerCode }: { designerCode: string }) {
       >
         <span className="text-xl">🔔</span>
         {unread > 0 && (
-          <span className="absolute top-0 left-0 min-w-[18px] h-[18px] rounded-full bg-[var(--brand-red)] text-white text-xs flex items-center justify-center">
+          <span className="absolute top-0 start-0 min-w-[18px] h-[18px] rounded-full bg-[var(--brand-red)] text-white text-xs flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -33,7 +33,7 @@ export function NotificationBell({ designerCode }: { designerCode: string }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 w-72 max-h-64 overflow-auto bg-white border rounded-lg shadow-lg z-50 p-2">
+          <div className="absolute start-0 top-full z-50 mt-1 max-h-64 w-[min(18rem,calc(100vw-1.5rem))] overflow-auto rounded-lg border bg-white p-2 shadow-lg">
             {list.length === 0 ? (
               <p className="text-sm text-gray-500 p-2">אין התראות</p>
             ) : (

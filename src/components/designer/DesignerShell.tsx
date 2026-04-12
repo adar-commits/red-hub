@@ -65,6 +65,15 @@ export function DesignerShell({
   }, [mobileMenuOpen]);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
       if (stored !== null) setCollapsed(stored === "true");
@@ -165,42 +174,105 @@ export function DesignerShell({
           <span className="w-5 h-0.5 bg-gray-600 rounded" aria-hidden />
           <span className="w-5 h-0.5 bg-gray-600 rounded" aria-hidden />
         </button>
-        <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-2.5 flex items-center justify-between md:hidden">
-          <Link href="/dashboard" className="flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-md" aria-label="HōM GROUP">
-            <Image
-              src="/brand/hom-group.png"
-              alt=""
-              width={200}
-              height={80}
-              className="h-9 w-auto max-w-[140px] object-contain object-right"
-            />
-          </Link>
-          <div className="flex items-center gap-2">
-            <NotificationBell designerCode={designerCode} />
-            <span className="text-sm text-gray-600">קוד {designerCode}</span>
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 md:hidden">
+          <div className="relative flex items-center justify-center min-h-[3.25rem]">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="absolute start-2 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-[5px] p-2.5 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="designer-mobile-nav"
+              aria-label="פתח תפריט"
+            >
+              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
+              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
+              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
+            </button>
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-lg"
+              aria-label="HōM GROUP — מסך הבית"
+            >
+              <Image
+                src="/brand/hom-group.png"
+                alt=""
+                width={440}
+                height={176}
+                className="h-12 w-auto max-w-[min(240px,72vw)] sm:h-14 sm:max-w-[260px] object-contain object-center"
+                priority
+              />
+            </Link>
           </div>
         </header>
-        <div className="flex-1 p-4 md:p-6 animate-in-fade-up">{children}</div>
+        <div className="flex-1 p-4 md:p-6 animate-in-fade-up pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
       </main>
 
-      {/* Bottom nav — mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--sidebar-bg)] border-t border-[var(--sidebar-border)] safe-area-pb flex justify-around py-1.5 shadow-[0_-6px_28px_rgba(15,23,42,0.1)]">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 px-2 py-1 text-[11px] transition-colors duration-[var(--motion-duration-fast)] rounded-xl min-h-[48px] min-w-[3.25rem] justify-center font-semibold ${
-                active ? "text-[var(--brand-red)]" : "text-slate-600"
-              }`}
+      {/* Mobile slide-out nav */}
+      <div className="md:hidden" aria-hidden={!mobileMenuOpen}>
+        <button
+          type="button"
+          aria-label="סגור תפריט"
+          tabIndex={mobileMenuOpen ? 0 : -1}
+          className={`fixed inset-0 z-40 cursor-default border-0 bg-slate-900/45 backdrop-blur-[2px] transition-opacity duration-200 ${
+            mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <div
+          id="designer-mobile-nav"
+          role="dialog"
+          aria-modal="true"
+          aria-label="תפריט ניווט"
+          className={`fixed top-0 bottom-0 right-0 z-50 flex w-[min(88vw,300px)] max-w-full flex-col border-s border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[-16px_0_48px_rgba(15,23,42,0.2)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+          }`}
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--sidebar-border)] bg-white/40 px-3 py-2.5">
+            <NotificationBell designerCode={designerCode} />
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 hover:bg-white/90 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30"
+              aria-label="סגור תפריט"
             >
-              <SidebarGlyph id={item.glyph} className="h-5 w-5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+              <span className="text-2xl font-light leading-none" aria-hidden>
+                ×
+              </span>
+            </button>
+          </div>
+          <div className="border-b border-[var(--sidebar-border)] bg-white/25 px-3 py-3 text-sm">
+            <SidebarGreeting fullName={fullName} />
+            <p className="mt-3 border-t border-[var(--sidebar-border)]/60 pt-3 text-xs leading-relaxed text-[var(--sidebar-text-muted)]">
+              קוד המעצב שלך{" "}
+              <span className="font-mono font-semibold tabular-nums text-[var(--sidebar-text)]">{designerCode}</span>
+            </p>
+          </div>
+          <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-2.5">
+            {navItems.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-3 py-3 text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] ${
+                    active
+                      ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-md"
+                      : "text-slate-800 hover:bg-white/85 hover:text-slate-950"
+                  }`}
+                >
+                  <SidebarGlyph id={item.glyph} className="h-5 w-5 shrink-0" />
+                  <span className="leading-snug">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="shrink-0 border-t border-[var(--sidebar-border)] bg-white/25 p-2">
+            <LogoutButton collapsed={false} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
