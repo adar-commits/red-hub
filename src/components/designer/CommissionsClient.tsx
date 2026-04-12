@@ -13,7 +13,26 @@ export interface ComItemRow {
   TOTPRICE?: number | null;
   IVPRICE?: number | null;
   COMMISSION?: number | null;
+  /** Customer name on invoice line (ERP) */
+  CDES?: string | null;
+  CUSTDES?: string | null;
+  IVDATE?: string | null;
+  CURDATE?: string | null;
   [key: string]: unknown;
+}
+
+function comItemStringField(row: ComItemRow, ...keys: string[]): string | undefined {
+  const raw = row as Record<string, unknown>;
+  for (const k of keys) {
+    const v = raw[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+    const found = Object.keys(raw).find((rk) => rk.toUpperCase() === k.toUpperCase());
+    if (found) {
+      const u = raw[found];
+      if (typeof u === "string" && u.trim()) return u.trim();
+    }
+  }
+  return undefined;
 }
 
 interface CertRow {
@@ -32,6 +51,7 @@ interface CertRow {
 
 interface CommissionStats {
   pendingApproval: number;
+  pendingApprovalTotal: number;
   unpaid: number;
   unpaidTotal: number;
   paid: number;
@@ -51,7 +71,16 @@ const COMMISSION_STATUS_EXPLANATIONS: Record<string, string> = {
 
 type CertRowWithCount = CertRow & { comitems_count?: number };
 const CERT_COLUMNS: SortFilterColumn<CertRowWithCount>[] = [
-  { key: "date", label: "תאריך הפקה" },
+  {
+    key: "date",
+    label: "תאריך עסקה",
+    sortValue: (row) => {
+      const d = row.date;
+      if (!d) return 0;
+      const t = Date.parse(String(d));
+      return Number.isFinite(t) ? t : 0;
+    },
+  },
   { key: "comnum", label: "מספר תעודה" },
   { key: "amount", label: "סכום" },
   { key: "commission", label: "עמלה" },
@@ -76,6 +105,7 @@ function formatCertDate(s: string | null | undefined): string {
 export function CommissionsClient({ designerCode }: { designerCode: string }) {
   const [stats, setStats] = useState<CommissionStats>({
     pendingApproval: 0,
+    pendingApprovalTotal: 0,
     unpaid: 0,
     unpaidTotal: 0,
     paid: 0,
@@ -124,13 +154,16 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת")
       );
     };
-    const pendingApproval = parsed.filter((c) => normalizedStatus(c.status) === נשלחה_לאישור).length;
+    const pendingList = parsed.filter((c) => normalizedStatus(c.status) === נשלחה_לאישור);
+    const pendingApproval = pendingList.length;
+    const pendingApprovalTotal = pendingList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     const unpaidList = parsed.filter((c) => normalizedStatus(c.status) === ממתין_לתשלום);
     const paidList = parsed.filter(isPaidCommission);
     const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     setStats({
       pendingApproval,
+      pendingApprovalTotal,
       unpaid: unpaidList.length,
       unpaidTotal,
       paid: paidList.length,
@@ -170,7 +203,10 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     toggleSort,
     exportCsv,
     searchPlaceholder,
-  } = useSortAndFilter(certsWithCount as CertRowWithCount[], CERT_COLUMNS, { searchPlaceholder: "חיפוש בתעודות..." });
+  } = useSortAndFilter(certsWithCount as CertRowWithCount[], CERT_COLUMNS, {
+    searchPlaceholder: "חיפוש בתעודות...",
+    initialSort: { key: "date", dir: "desc" },
+  });
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -275,6 +311,9 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         >
           <p className="text-sm opacity-90">עמלות הממתינות לאישור</p>
           <p className="text-2xl font-bold">{stats.pendingApproval}</p>
+          <p className="text-sm opacity-90 mt-1">
+            {formatCertCurrency(stats.pendingApprovalTotal)} · {stats.pendingApproval} תעודות
+          </p>
         </div>
         <div
           className="p-4 rounded-xl bg-teal-700 text-white transition-shadow hover:shadow-[var(--shadow-card)]"
@@ -482,18 +521,22 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                                 {(c.comitems ?? []).map((item, j) => {
                                   const row = item as ComItemRow;
                                   const itemAmount = row.IVPRICE ?? row.TOTPRICE ?? 0;
-                                  const lineLabel =
+                                  const itemDateRaw =
+                                    comItemStringField(row, "IVDATE", "CURDATE", "IV_DATE") ?? c.date;
+                                  const customerName =
+                                    comItemStringField(row, "CDES", "CUSTDES") ||
+                                    (typeof c.customer === "string" && c.customer.trim()) ||
+                                    comItemStringField(row, "ORDNAME") ||
                                     (typeof row.ITEMDES === "string" && row.ITEMDES.trim()) ||
                                     (typeof row.ITEMCODE === "string" && row.ITEMCODE.trim()) ||
-                                    c.customer ||
                                     "—";
                                   return (
                                     <tr key={j} className="border-t border-gray-100">
                                       <td className="px-3 py-2 text-right align-top tabular-nums" dir="rtl">
-                                        {formatCertDate(c.date)}
+                                        {formatCertDate(itemDateRaw)}
                                       </td>
                                       <td className="max-w-0 px-3 py-2 text-right align-top break-words" dir="rtl">
-                                        {lineLabel}
+                                        {customerName}
                                       </td>
                                       <td className="px-3 py-2 text-right align-top tabular-nums" dir="rtl">
                                         {formatCertCurrency(itemAmount)}

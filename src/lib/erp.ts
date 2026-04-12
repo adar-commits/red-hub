@@ -12,6 +12,10 @@ export interface ErpComItem {
   TOTPRICE?: number | null;
   IVPRICE?: number | null;
   COMMISSION?: number | null;
+  CDES?: string | null;
+  CUSTDES?: string | null;
+  IVDATE?: string | null;
+  CURDATE?: string | null;
   [key: string]: unknown;
 }
 

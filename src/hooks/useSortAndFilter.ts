@@ -9,6 +9,8 @@ export interface SortFilterColumn<T> {
   label: string;
   /** Optional: value for search/export; default is row[key] */
   getValue?: (row: T) => string | number | null | undefined;
+  /** Optional: used only for sorting (search/CSV still use key or getValue). */
+  sortValue?: (row: T) => string | number | null | undefined;
 }
 
 function getCellValue<T>(row: T, col: SortFilterColumn<T>): string {
@@ -69,7 +71,10 @@ export function useSortAndFilter<T>(
   const filteredSortedRows = useMemo(() => {
     if (!sortKey || !sortDir) return [...filteredRows];
     const col = columns.find((c) => (c.key as string) === sortKey);
-    const getVal = col?.getValue ?? ((row: T) => (row as Record<string, unknown>)[sortKey as string]);
+    const getVal =
+      col?.sortValue ??
+      col?.getValue ??
+      ((row: T) => (row as Record<string, unknown>)[sortKey as string]);
     return [...filteredRows].sort((a, b) => {
       const va = getVal(a);
       const vb = getVal(b);
