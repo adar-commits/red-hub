@@ -15,10 +15,10 @@ const FAVICON_URL =
   "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bb02cd6a669bc0af13867bc01d09091a.svg?v=1772032242";
 
 export const metadata: Metadata = {
-  title: "Red Hub — אדריכלים ומעצבים",
-  description: "פורטל אדריכלים ומעצבים — השטיח האדום",
+  title: "HōM GROUP — אדריכלים ומעצבים",
+  description: "פורטל אדריכלים ומעצבים — HōM GROUP",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, title: "Red Hub" },
+  appleWebApp: { capable: true, title: "HōM GROUP" },
   icons: {
     icon: [{ url: FAVICON_URL, type: "image/svg+xml" }],
     apple: "/icon-192.png",

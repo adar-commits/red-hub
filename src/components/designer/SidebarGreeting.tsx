@@ -46,13 +46,13 @@ export function SidebarGreeting({ fullName }: { fullName: string | null }) {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 text-sm text-white/90 flex-wrap">
+    <div className="flex items-center gap-2 text-sm text-[var(--sidebar-text)] flex-wrap">
       <span aria-hidden>{icon}</span>
       <span>
         {text}, {firstName}
       </span>
       {temp !== null && (
-        <span className="text-white/80" aria-label={`טמפרטורה ${temp} מעלות`}>
+        <span className="text-[var(--sidebar-text-muted)]" aria-label={`טמפרטורה ${temp} מעלות`}>
           {temp}°C
         </span>
       )}

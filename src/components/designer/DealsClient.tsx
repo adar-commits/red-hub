@@ -98,7 +98,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         <button
           type="button"
           onClick={() => setReferralOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--sidebar-bg)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--sidebar-bg)]/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
         >
           הוספת עסקה חדשה
         </button>
