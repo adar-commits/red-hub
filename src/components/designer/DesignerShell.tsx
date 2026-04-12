@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NotificationBell } from "./NotificationBell";
 import { SidebarGreeting } from "./SidebarGreeting";
 import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
 
@@ -229,7 +228,20 @@ export function DesignerShell({
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--sidebar-border)] bg-white/40 px-3 py-2.5">
-            <NotificationBell designerCode={designerCode} />
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-lg"
+              aria-label="HōM GROUP — מסך הבית"
+            >
+              <Image
+                src="/brand/hom-group.png"
+                alt=""
+                width={440}
+                height={176}
+                className="h-9 w-auto max-w-[min(200px,48vw)] object-contain object-center"
+              />
+            </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
