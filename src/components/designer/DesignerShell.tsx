@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "./NotificationBell";
 import { SidebarGreeting } from "./SidebarGreeting";
+import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
 
 const SIDEBAR_COLLAPSED_KEY = "redhub-sidebar-collapsed";
 
@@ -18,23 +19,30 @@ function LogoutButton({ collapsed }: { collapsed: boolean }) {
     <button
       type="button"
       onClick={handleLogout}
-      className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-[var(--sidebar-text-muted)] hover:bg-gray-100 transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2"}`}
+      className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2"}`}
       title="התנתק"
     >
-      <span aria-hidden>🚪</span>
+      <SidebarGlyph id="logout" className="h-5 w-5" />
       {!collapsed && <span>התנתק</span>}
     </button>
   );
 }
 
-const navItems = [
-  { href: "/dashboard", label: "מסך הבית", icon: "🏠" },
-  { href: "/deals", label: "העסקאות שלי", icon: "🤝" },
-  { href: "/commissions", label: "תעודות עמלה", icon: "💰" },
-  { href: "/business", label: "פרטי העסק", icon: "📋" },
-  { href: "/photos", label: "תמונות פרויקט", icon: "🖼️" },
-  { href: "/faq", label: "הדרכה + שאלות ותשובות", icon: "📖" },
-  { href: "/contact", label: "כתבו לנו", icon: "💬" },
+const navItems: { href: string; label: string; glyph: SidebarGlyphId }[] = [
+  { href: "/dashboard", label: "מסך הבית", glyph: "home" },
+  { href: "/deals", label: "העסקאות שלי", glyph: "deals" },
+  { href: "/commissions", label: "תעודות עמלה", glyph: "commissions" },
+  { href: "/business", label: "פרטי העסק", glyph: "business" },
+  { href: "/photos", label: "תמונות פרויקט", glyph: "photos" },
+  { href: "/faq", label: "הדרכה + שאלות ותשובות", glyph: "faq" },
+  { href: "/contact", label: "כתבו לנו", glyph: "contact" },
+];
+
+const mobileNavItems: { href: string; label: string; glyph: SidebarGlyphId }[] = [
+  { href: "/dashboard", label: "בית", glyph: "home" },
+  { href: "/deals", label: "עסקאות", glyph: "deals" },
+  { href: "/commissions", label: "עמלות", glyph: "commissions" },
+  { href: "/business", label: "פרטים", glyph: "business" },
 ];
 
 export function DesignerShell({
@@ -74,12 +82,12 @@ export function DesignerShell({
   const mainMargin = collapsed ? "md:ml-16 md:rtl:ml-0 md:rtl:mr-16" : "md:ml-64 md:rtl:ml-0 md:rtl:mr-64";
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--background)]">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--main-shell-bg)]">
       {/* Sidebar — desktop */}
       <aside
-        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-[var(--sidebar-border)] border-e shadow-[2px_0_24px_rgba(15,23,42,0.06)] transition-[width] duration-200 ${sidebarW}`}
+        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-[var(--sidebar-border)] border-e shadow-[4px_0_32px_rgba(15,23,42,0.08)] transition-[width] duration-200 ${sidebarW}`}
       >
-        <div className={`p-3 border-b border-[var(--sidebar-border)] ${collapsed ? "flex justify-center py-2" : ""}`}>
+        <div className={`p-3 border-b border-[var(--sidebar-border)] bg-white/35 ${collapsed ? "flex justify-center py-2" : ""}`}>
           <Link
             href="/dashboard"
             className={`block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 ${collapsed ? "" : "mx-auto max-w-[220px]"}`}
@@ -96,9 +104,11 @@ export function DesignerShell({
           </Link>
         </div>
         {!collapsed && (
-          <div className="p-3 text-sm border-b border-[var(--sidebar-border)]">
+          <div className="p-3 text-sm border-b border-[var(--sidebar-border)] bg-white/25">
             <SidebarGreeting fullName={fullName} />
-            <p className="text-[var(--sidebar-text-muted)] mt-4">קוד המעצב שלך {designerCode}</p>
+            <p className="text-[var(--sidebar-text-muted)] mt-3 text-xs leading-relaxed border-t border-[var(--sidebar-border)]/60 pt-3">
+              קוד המעצב שלך <span className="font-mono font-semibold text-[var(--sidebar-text)] tabular-nums">{designerCode}</span>
+            </p>
           </div>
         )}
         {collapsed && (
@@ -108,7 +118,7 @@ export function DesignerShell({
             </p>
           </div>
         )}
-        <nav className="flex-1 p-2 space-y-1 overflow-auto">
+        <nav className="flex-1 p-2.5 space-y-0.5 overflow-auto">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (
@@ -116,27 +126,27 @@ export function DesignerShell({
                 key={item.href}
                 href={item.href}
                 title={item.label}
-                className={`flex items-center rounded-lg text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] border-e-2 border-transparent ${
-                  collapsed ? "justify-center px-0 py-2.5 min-w-[2.5rem]" : "gap-2 px-3 py-2.5"
+                className={`flex items-center rounded-lg text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] border-e-[3px] border-transparent ${
+                  collapsed ? "justify-center px-0 py-2.5 min-w-[2.5rem]" : "gap-3 px-3 py-2.5"
                 } ${
                   active
-                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-sm"
-                    : "text-[var(--sidebar-text)] hover:bg-gray-100 border-transparent"
+                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-md"
+                    : "text-slate-800 hover:bg-white/80 hover:text-slate-950 border-transparent"
                 }`}
               >
-                <span>{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
+                <SidebarGlyph id={item.glyph} className="h-5 w-5" />
+                {!collapsed && <span className="leading-snug">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
-        <div className="p-2 border-t border-[var(--sidebar-border)]">
+        <div className="p-2 border-t border-[var(--sidebar-border)] bg-white/20">
           <LogoutButton collapsed={collapsed} />
         </div>
       </aside>
 
       {/* Main content */}
-      <main className={`flex-1 min-h-screen flex flex-col pb-20 md:pb-0 bg-gray-50/80 transition-[margin] duration-200 relative ${mainMargin}`}>
+      <main className={`flex-1 min-h-screen flex flex-col pb-20 md:pb-0 bg-[var(--main-shell-bg)] transition-[margin] duration-200 relative ${mainMargin}`}>
         <button
           type="button"
           onClick={toggleSidebar}
@@ -167,35 +177,22 @@ export function DesignerShell({
       </main>
 
       {/* Bottom nav — mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[var(--sidebar-border)] safe-area-pb flex justify-around py-1.5 shadow-[0_-4px_24px_rgba(15,23,42,0.06)]">
-        <Link
-          href="/dashboard"
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors duration-[var(--motion-duration-fast)] rounded-lg min-h-[44px] justify-center font-medium ${pathname === "/dashboard" ? "text-[var(--brand-red)]" : "text-gray-600"}`}
-        >
-          <span>🏠</span>
-          <span>בית</span>
-        </Link>
-        <Link
-          href="/deals"
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors duration-[var(--motion-duration-fast)] rounded-lg min-h-[44px] justify-center font-medium ${pathname === "/deals" ? "text-[var(--brand-red)]" : "text-gray-600"}`}
-        >
-          <span>🤝</span>
-          <span>עסקאות</span>
-        </Link>
-        <Link
-          href="/commissions"
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors duration-[var(--motion-duration-fast)] rounded-lg min-h-[44px] justify-center font-medium ${pathname === "/commissions" ? "text-[var(--brand-red)]" : "text-gray-600"}`}
-        >
-          <span>💰</span>
-          <span>עמלות</span>
-        </Link>
-        <Link
-          href="/business"
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 text-xs transition-colors duration-[var(--motion-duration-fast)] rounded-lg min-h-[44px] justify-center font-medium ${pathname === "/business" ? "text-[var(--brand-red)]" : "text-gray-600"}`}
-        >
-          <span>📋</span>
-          <span>פרטים</span>
-        </Link>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--sidebar-bg)] border-t border-[var(--sidebar-border)] safe-area-pb flex justify-around py-1.5 shadow-[0_-6px_28px_rgba(15,23,42,0.1)]">
+        {mobileNavItems.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 px-2 py-1 text-[11px] transition-colors duration-[var(--motion-duration-fast)] rounded-xl min-h-[48px] min-w-[3.25rem] justify-center font-semibold ${
+                active ? "text-[var(--brand-red)]" : "text-slate-600"
+              }`}
+            >
+              <SidebarGlyph id={item.glyph} className="h-5 w-5" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

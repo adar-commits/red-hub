@@ -5,10 +5,12 @@
   --foreground: #171717;
   --brand-red: #C8102E;
   --brand-red-hover: #a00d24;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-text: #111827;
-  --sidebar-text-muted: #6b7280;
+  /* Sidebar: slightly deeper than main canvas for clear separation */
+  --sidebar-bg: #e2e8f0;
+  --sidebar-border: #cbd5e1;
+  --sidebar-text: #0f172a;
+  --sidebar-text-muted: #475569;
+  --main-shell-bg: #f1f5f9;
   --card-bg: #ffffff;
   --muted: #6b7280;
   /* Design tokens: motion */
@@ -41,11 +43,11 @@
     --background: #0f0f0f;
     --foreground: #ededed;
     --card-bg: #1a1a1a;
-    /* Keep navigation surfaces light for readability */
-    --sidebar-bg: #f9fafb;
-    --sidebar-border: #e5e7eb;
-    --sidebar-text: #111827;
-    --sidebar-text-muted: #6b7280;
+    --sidebar-bg: #e2e8f0;
+    --sidebar-border: #94a3b8;
+    --sidebar-text: #0f172a;
+    --sidebar-text-muted: #475569;
+    --main-shell-bg: #cbd5e1;
   }
 }
 
