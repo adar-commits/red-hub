@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
 import { erpGetDeals } from "@/lib/erp";
+import { grossIlsToAmountExclVat } from "@/lib/invoice-amount";
 
 interface TInvoice {
   IVNUM?: string;
@@ -21,7 +22,7 @@ function mapTInvoiceToDealRow(iv: TInvoice) {
     invoice_date: iv.IVDATE,
     customer_name: iv.CDES,
     phone: iv.Y_151_0_ESHB,
-    amount_excl_vat: iv.TOTPRICE,
+    amount_excl_vat: grossIlsToAmountExclVat(iv.TOTPRICE),
     commission: undefined,
     status: iv.STATDES ?? iv.TYPEDES,
     seller_name: iv.LTRN_SELLERNAME,

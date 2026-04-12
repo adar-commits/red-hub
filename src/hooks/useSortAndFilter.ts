@@ -36,12 +36,19 @@ function nextSortDir(current: SortDir): SortDir {
 export function useSortAndFilter<T>(
   rows: T[],
   columns: SortFilterColumn<T>[],
-  options?: { searchPlaceholder?: string }
+  options?: {
+    searchPlaceholder?: string;
+    /** Applied on first mount only. */
+    initialSort?: { key: keyof T | string; dir: "asc" | "desc" };
+  }
 ) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortState, setSortState] = useState<{ key: keyof T | string; dir: SortDir }>({
-    key: "" as keyof T,
-    dir: null,
+  const [sortState, setSortState] = useState<{ key: keyof T | string; dir: SortDir }>(() => {
+    const init = options?.initialSort;
+    if (init?.key !== undefined && init?.key !== "" && init?.dir) {
+      return { key: init.key, dir: init.dir };
+    }
+    return { key: "" as keyof T, dir: null };
   });
 
   const sortKey = sortState.key || null;

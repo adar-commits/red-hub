@@ -45,7 +45,10 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
     sortDir,
     toggleSort,
     exportCsv,
-  } = useSortAndFilter(deals, DASHBOARD_DEAL_COLUMNS, { searchPlaceholder: "" });
+  } = useSortAndFilter(deals, DASHBOARD_DEAL_COLUMNS, {
+    searchPlaceholder: "",
+    initialSort: { key: "invoice_date", dir: "desc" },
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -152,7 +155,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           </button>
         </div>
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white" style={{ boxShadow: "var(--shadow-card)" }} dir="rtl">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-sm border-collapse text-right">
             <colgroup>
               {DASHBOARD_DEAL_COLUMNS.map((col) => (
                 <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
@@ -163,7 +166,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
                 {DASHBOARD_DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
-                    className={`py-2.5 px-3 text-end cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
+                    className={`py-2.5 px-3 text-right cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
                     onClick={() => toggleSort(col.key)}
                   >
                     {col.label}
@@ -177,18 +180,18 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
             <tbody>
               {sortedDeals.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td colSpan={5} className="text-right py-6 text-gray-500">
                     אין תוצאות
                   </td>
                 </tr>
               ) : (
                 sortedDeals.map((d, i) => (
                   <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                    <td className="py-2.5 px-3 text-end align-top">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
-                    <td className="py-2.5 px-3 text-end align-top">{d.customer_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-end align-top min-w-[8rem]" dir="ltr">{d.phone ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-end align-top">{d.seller_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-end align-top">{d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}</td>
+                    <td className="py-2.5 px-3 text-right align-top">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
+                    <td className="py-2.5 px-3 text-right align-top">{d.customer_name ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-right align-top min-w-[8rem]" dir="ltr">{d.phone ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-right align-top">{d.seller_name ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-right align-top">{d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}</td>
                   </tr>
                 ))
               )}
