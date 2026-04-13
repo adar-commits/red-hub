@@ -452,32 +452,65 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         onClick={(e) => e.target === e.currentTarget && closeUploadModal()}
       >
         <div
-          className="pointer-events-auto relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-2xl"
+          className="pointer-events-auto relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-200/90 bg-white shadow-2xl shadow-slate-900/15"
           role="dialog"
           aria-modal="true"
           aria-labelledby="upload-file-dialog-title"
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <h2 id="upload-file-dialog-title" className="text-lg font-bold text-gray-950">
-                העלאת קובץ
-              </h2>
+          <div className="relative overflow-hidden bg-gradient-to-l from-rose-900 via-[var(--brand-red)] to-amber-700 px-5 py-4 text-white">
+            <div className="pointer-events-none absolute -start-16 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner ring-1 ring-white/30"
+                  aria-hidden
+                >
+                  <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M14 2v6h6M12 18V9m-3 3 3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="min-w-0 text-right">
+                  <h2 id="upload-file-dialog-title" className="text-lg font-bold leading-tight">
+                    העלאת קובץ
+                  </h2>
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-amber-100">
+                    <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-0.5 text-xs font-bold text-white ring-1 ring-white/25">
+                      PDF בלבד
+                    </span>
+                    <span className="text-white/90">חשבונית לתשלום</span>
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={closeUploadModal}
                 disabled={modalUploading}
-                className="rounded p-1 text-gray-500 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 disabled:opacity-40"
+                className="shrink-0 rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-40"
                 aria-label="סגור"
               >
-                ×
+                <span className="text-2xl font-light leading-none" aria-hidden>
+                  ×
+                </span>
               </button>
             </div>
+          </div>
 
-            <h3 className="text-base font-semibold text-gray-950">העלאת חשבונית לתשלום</h3>
-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-              חשבונית חייבת לכלול פרטי חשבון מלאים ובסכום התואם לתעודות עמלה ״ממתינות לתשלום״ בלבד
-            </p>
+          <div className="space-y-4 p-5">
+            <div className="rounded-xl border-e-4 border-[var(--brand-red)] bg-gradient-to-l from-red-50/90 to-white pe-4 ps-3 py-3">
+              <h3 className="text-base font-bold text-gray-900">העלאת חשבונית לתשלום</h3>
+              <p className="mt-2 text-sm leading-relaxed text-gray-700">
+                חשבונית חייבת לכלול{" "}
+                <strong className="font-semibold text-amber-800">פרטי חשבון מלאים</strong>
+                {" "}ובסכום התואם לתעודות עמלה{" "}
+                <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200/80">
+                  ממתינות לתשלום
+                </span>
+                {" "}בלבד.
+              </p>
+            </div>
 
             <input
               ref={modalFileInputRef}
@@ -488,27 +521,80 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
               aria-label="בחירת קובץ PDF"
             />
 
-            <p className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2.5 text-right text-sm text-gray-600">
-              יש להעלות קובץ PDF בלבד. ודאו שהחשבונית כוללת את כל פרטי החשבון הנדרשים ושהסכום תואם לעמלות בסטטוס ״ממתין לתשלום״.
-            </p>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => modalFileInputRef.current?.click()}
-                disabled={modalUploading}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 disabled:opacity-50"
-              >
-                בחירת קובץ
-              </button>
-              {modalSelectedFile && (
-                <span className="min-w-0 flex-1 truncate text-sm text-gray-700" title={modalSelectedFile.name}>
-                  {modalSelectedFile.name}
+            <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-indigo-50/40 p-4 ring-1 ring-sky-100/80">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm"
+                  aria-hidden
+                >
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2 5 5h-5V4zM8 12h8v2H8v-2zm0 4h8v2H8v-2z" />
+                  </svg>
+                  PDF
                 </span>
-              )}
+                <span className="text-sm font-semibold text-sky-950">לפני ההעלאה — ודאו:</span>
+              </div>
+              <ul className="mt-3 space-y-2 text-sm text-sky-950/90">
+                <li className="flex gap-2 text-right">
+                  <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
+                    ✓
+                  </span>
+                  <span>
+                    הקובץ הוא <strong className="text-red-700">PDF בלבד</strong> (לא תמונה ולא Word).
+                  </span>
+                </li>
+                <li className="flex gap-2 text-right">
+                  <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
+                    ✓
+                  </span>
+                  <span>בחשבונית מופיעים כל פרטי החשבון הנדרשים לתשלום.</span>
+                </li>
+                <li className="flex gap-2 text-right">
+                  <span className="mt-0.5 shrink-0 text-emerald-600" aria-hidden>
+                    ✓
+                  </span>
+                  <span>
+                    הסכום <strong className="font-semibold text-indigo-900">תואם</strong> לסכומי העמלה ברשימת ״
+                    <span className="whitespace-nowrap text-amber-800">ממתין לתשלום</span>״.
+                  </span>
+                </li>
+              </ul>
             </div>
 
-            <div className="mt-4">
+            <div>
+              <p className="mb-2 text-xs font-medium text-gray-500">קובץ לשליחה</p>
+              <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => modalFileInputRef.current?.click()}
+                  disabled={modalUploading}
+                  className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--brand-red)]/50 bg-gradient-to-b from-red-50 to-orange-50/80 px-4 py-2.5 text-sm font-normal text-[var(--brand-red)] shadow-sm transition hover:border-[var(--brand-red)] hover:from-red-100/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35 disabled:opacity-50"
+                >
+                  <svg className="h-5 w-5 shrink-0 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeLinecap="round" />
+                    <polyline points="17 8 12 3 7 8" strokeLinecap="round" strokeLinejoin="round" />
+                    <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round" />
+                  </svg>
+                  בחירת קובץ
+                </button>
+                {modalSelectedFile ? (
+                  <div className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-sm text-emerald-950 ring-1 ring-emerald-100">
+                    <svg className="h-5 w-5 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2 5 5h-5V4z" />
+                    </svg>
+                    <span className="min-w-0 truncate font-medium" title={modalSelectedFile.name}>
+                      {modalSelectedFile.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex min-h-[44px] flex-1 items-center rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-3 text-sm text-gray-500">
+                    לא נבחר קובץ — לחצו &quot;בחירת קובץ&quot;
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
               <label className="sr-only" htmlFor="invoice-upload-submit">
                 שליחת הקובץ להעלאה
               </label>
@@ -517,21 +603,21 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                 type="button"
                 onClick={submitModalUpload}
                 disabled={modalUploading || !modalSelectedFile}
-                className="w-full rounded-lg bg-[var(--brand-red)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 disabled:opacity-50"
+                className="w-full rounded-xl bg-gradient-to-l from-rose-800 via-[var(--brand-red)] to-red-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-red-900/25 transition hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
               >
                 {modalUploading ? "מעלה…" : "העלאת חשבונית"}
               </button>
             </div>
 
             {(modalUploading || modalProgress === 100) && (
-              <div className="mt-4" aria-hidden={!modalUploading}>
-                <div className="mb-1 flex justify-between text-xs text-gray-600">
-                  <span>התקדמות</span>
-                  <span>{modalProgress != null ? `${modalProgress}%` : ""}</span>
+              <div className="rounded-xl border border-violet-100 bg-violet-50/60 p-3" aria-hidden={!modalUploading}>
+                <div className="mb-2 flex justify-between text-xs font-medium text-violet-900">
+                  <span>התקדמות העלאה</span>
+                  <span className="tabular-nums">{modalProgress != null ? `${modalProgress}%` : "—"}</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-violet-200/80">
                   <div
-                    className="h-full rounded-full bg-[var(--brand-red)] transition-[width] duration-300 ease-out"
+                    className="h-full rounded-full bg-gradient-to-l from-violet-600 via-fuchsia-500 to-[var(--brand-red)] transition-[width] duration-300 ease-out"
                     style={{ width: `${modalProgress ?? 0}%` }}
                   />
                 </div>
@@ -539,15 +625,28 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             )}
 
             {modalError ? (
-              <p className="mt-4 text-right text-sm text-red-600" role="alert">
-                {modalError}
-              </p>
+              <div
+                className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-right text-sm text-red-900"
+                role="alert"
+              >
+                <span className="shrink-0 text-lg text-red-600" aria-hidden>
+                  !
+                </span>
+                <p className="min-w-0 leading-relaxed">{modalError}</p>
+              </div>
             ) : null}
             {modalSuccess ? (
-              <p className="mt-4 text-right text-sm text-emerald-800" role="status">
-                {modalSuccess}
-              </p>
+              <div
+                className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-right text-sm text-emerald-900"
+                role="status"
+              >
+                <span className="shrink-0 text-lg text-emerald-600" aria-hidden>
+                  ✓
+                </span>
+                <p className="min-w-0 font-medium leading-relaxed">{modalSuccess}</p>
+              </div>
             ) : null}
+          </div>
         </div>
       </div>,
       document.body
