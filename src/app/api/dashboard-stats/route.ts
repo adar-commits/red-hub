@@ -16,14 +16,21 @@ interface TInvoice {
   [key: string]: unknown;
 }
 
+const DEFAULT_COMMISSION_RATE = 0.1;
+
 function mapTInvoiceToDealRow(iv: TInvoice) {
+  const amountExclVat = grossIlsToAmountExclVat(iv.TOTPRICE);
+  const commission =
+    amountExclVat != null && Number.isFinite(amountExclVat)
+      ? Math.round(amountExclVat * DEFAULT_COMMISSION_RATE * 100) / 100
+      : undefined;
   return {
     id: iv.IVNUM,
     invoice_date: iv.IVDATE,
     customer_name: iv.CDES,
     phone: iv.Y_151_0_ESHB,
-    amount_excl_vat: grossIlsToAmountExclVat(iv.TOTPRICE),
-    commission: undefined,
+    amount_excl_vat: amountExclVat,
+    commission,
     status: iv.STATDES ?? iv.TYPEDES,
     seller_name: iv.LTRN_SELLERNAME,
   };

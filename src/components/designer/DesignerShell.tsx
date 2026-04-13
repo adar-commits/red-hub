@@ -9,6 +9,38 @@ import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
 
 const SIDEBAR_COLLAPSED_KEY = "redhub-sidebar-collapsed";
 
+function SidebarCollapseToggle({
+  collapsed,
+  onClick,
+}: {
+  collapsed: boolean;
+  onClick: () => void;
+}) {
+  const label = collapsed ? "הרחב תפריט" : "כווץ תפריט";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--sidebar-border)] bg-white/70 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30"
+      title={label}
+      aria-label={label}
+      aria-expanded={!collapsed}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {collapsed ? (
+          <>
+            <path d="M15 18l-6-6 6-6" />
+          </>
+        ) : (
+          <>
+            <path d="M9 18l6-6-6-6" />
+          </>
+        )}
+      </svg>
+    </button>
+  );
+}
+
 function AdminShortcutLink({
   collapsed,
   onNavigate,
@@ -122,10 +154,15 @@ export function DesignerShell({
       <aside
         className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-[var(--sidebar-border)] border-e shadow-[4px_0_32px_rgba(15,23,42,0.08)] transition-[width] duration-200 ${sidebarW}`}
       >
-        <div className={`p-3 border-b border-[var(--sidebar-border)] bg-white/35 ${collapsed ? "flex justify-center py-2" : ""}`}>
+        <div
+          className={`border-b border-[var(--sidebar-border)] bg-white/35 p-3 ${
+            collapsed ? "flex flex-col items-center gap-2 py-2.5" : "flex items-center gap-2"
+          }`}
+        >
+          <SidebarCollapseToggle collapsed={collapsed} onClick={toggleSidebar} />
           <Link
             href="/dashboard"
-            className={`block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 ${collapsed ? "" : "mx-auto max-w-[220px]"}`}
+            className={`block min-w-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 ${collapsed ? "" : "flex-1 flex justify-center"}`}
             aria-label="HōM GROUP — מסך הבית"
           >
             <Image
@@ -183,17 +220,6 @@ export function DesignerShell({
 
       {/* Main content */}
       <main className={`flex-1 min-h-screen flex flex-col bg-[var(--main-shell-bg)] transition-[margin] duration-200 relative ${mainMargin}`}>
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="hidden md:flex fixed left-0 top-4 z-20 flex-col gap-1 p-2 rounded-r-lg bg-white border border-[var(--sidebar-border)] text-gray-700 hover:bg-gray-50 shadow-md"
-          title={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
-          aria-label={collapsed ? "הרחב תפריט" : "כווץ תפריט"}
-        >
-          <span className="w-5 h-0.5 bg-gray-600 rounded" aria-hidden />
-          <span className="w-5 h-0.5 bg-gray-600 rounded" aria-hidden />
-          <span className="w-5 h-0.5 bg-gray-600 rounded" aria-hidden />
-        </button>
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 md:hidden">
           <div className="relative flex items-center justify-center min-h-[3.25rem]">
             <button
