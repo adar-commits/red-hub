@@ -28,7 +28,7 @@ const inputClassBase =
   "min-h-[44px] rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-950 placeholder:text-[color:var(--input-placeholder)] transition-colors focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 focus:outline-none";
 
 const exportBtnClassBase =
-  "inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25";
+  "inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-normal text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25";
 
 export function DataTableToolbar({
   searchQuery,
@@ -66,6 +66,7 @@ export function DataTableToolbar({
       }
       dir={dirProp}
     >
+      {dirProp === "rtl" && afterSearch}
       <input
         type="search"
         value={searchQuery}
@@ -76,7 +77,7 @@ export function DataTableToolbar({
         }`}
         aria-label={searchPlaceholder}
       />
-      {afterSearch}
+      {dirProp !== "rtl" && afterSearch}
       <button
         type="button"
         onClick={onExportCsv}
@@ -87,16 +88,16 @@ export function DataTableToolbar({
         {compactExportOnNarrow ? (
           <>
             <span className="sm:hidden">
-              <ExportDownloadIcon className="text-gray-800" />
+              <ExportDownloadIcon className="text-emerald-600" />
             </span>
-            <span className="hidden items-center gap-2 text-sm font-semibold sm:inline-flex">
-              <ExportDownloadIcon className="text-gray-800" />
+            <span className="hidden items-center gap-2 text-sm font-normal sm:inline-flex">
+              <ExportDownloadIcon className="text-emerald-600" />
               {exportLabel}
             </span>
           </>
         ) : (
           <>
-            <ExportDownloadIcon className="text-gray-800" />
+            <ExportDownloadIcon className="text-emerald-600" />
             {exportLabel}
           </>
         )}

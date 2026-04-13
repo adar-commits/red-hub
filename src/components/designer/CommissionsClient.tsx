@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
 import { StatCard } from "@/components/ui/StatCard";
@@ -138,6 +139,46 @@ function formatCertDate(s: string | null | undefined): string {
     return new Date(s).toLocaleDateString("he-IL");
   } catch {
     return String(s);
+  }
+}
+
+function commissionHeaderClass(key: string): string {
+  const base =
+    "px-3 py-2.5 text-right align-bottom select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors";
+  const cursor = key === "status" ? "cursor-default" : "cursor-pointer";
+  switch (key) {
+    case "date":
+      return `${base} ${cursor} w-[11%] min-w-[5.75rem]`;
+    case "comnum":
+      return `${base} ${cursor} w-[18%] min-w-[6.5rem]`;
+    case "amount":
+    case "commission":
+      return `${base} ${cursor} w-[12%] min-w-[5.25rem]`;
+    case "comitems_count":
+      return `${base} ${cursor} w-[8%] min-w-[3.25rem]`;
+    case "status":
+      return `${base} ${cursor} w-[23%] min-w-[7rem]`;
+    default:
+      return `${base} ${cursor}`;
+  }
+}
+
+function commissionCellClass(key: string): string {
+  const base = "px-3 py-2.5 text-right align-top";
+  switch (key) {
+    case "date":
+      return `${base} tabular-nums w-[11%] min-w-[5.75rem]`;
+    case "comnum":
+      return `${base} w-[18%] min-w-[6.5rem] break-words`;
+    case "amount":
+    case "commission":
+      return `${base} tabular-nums w-[12%] min-w-[5.25rem]`;
+    case "comitems_count":
+      return `${base} tabular-nums w-[8%] min-w-[3.25rem]`;
+    case "status":
+      return `${base} w-[23%] min-w-[7rem] break-words`;
+    default:
+      return base;
   }
 }
 
@@ -401,22 +442,23 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     );
   }
 
-  return (
-    <div dir="rtl" className="w-full text-right clear-both">
-      {uploadModalOpen && (
+  const uploadModal =
+    uploadModalOpen &&
+    typeof document !== "undefined" &&
+    createPortal(
+      <div
+        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 p-4"
+        role="presentation"
+        onClick={(e) => e.target === e.currentTarget && closeUploadModal()}
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
-          role="presentation"
-          onClick={(e) => e.target === e.currentTarget && closeUploadModal()}
+          className="pointer-events-auto relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="upload-file-dialog-title"
+          dir="rtl"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="upload-file-dialog-title"
-            dir="rtl"
-            onClick={(e) => e.stopPropagation()}
-          >
             <div className="mb-4 flex items-start justify-between gap-3">
               <h2 id="upload-file-dialog-title" className="text-lg font-bold text-gray-950">
                 העלאת קובץ
@@ -506,9 +548,14 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                 {modalSuccess}
               </p>
             ) : null}
-          </div>
         </div>
-      )}
+      </div>,
+      document.body
+    );
+
+  return (
+    <div dir="rtl" className="w-full text-right clear-both">
+      {uploadModal}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard
@@ -542,7 +589,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <button
             type="button"
             onClick={openUploadModal}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25"
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-normal text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -552,7 +599,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5 text-gray-700"
+              className="h-5 w-5 text-[var(--brand-red)]"
               aria-hidden
             >
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -570,23 +617,14 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         style={{ boxShadow: "var(--shadow-card)" }}
         dir="rtl"
       >
-        <table dir="rtl" className="w-full table-fixed border-collapse text-right text-sm">
-          <colgroup>
-            <col className="w-10" />
-            <col className="w-[6.75rem]" />
-            <col className="w-[min(12rem,22vw)]" />
-            <col className="w-[7.25rem]" />
-            <col className="w-[7.25rem]" />
-            <col className="w-[3.75rem]" />
-            <col />
-          </colgroup>
+        <table dir="rtl" className="w-full min-w-[720px] table-auto border-collapse text-right text-sm">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
-              <th className="py-2.5 px-2 text-right align-bottom" aria-label="הרחבה" />
+              <th className="w-10 min-w-10 py-2.5 px-2 text-right align-bottom" aria-label="הרחבה" />
               {CERT_COLUMNS.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-3 py-2.5 text-right align-bottom cursor-pointer select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors"
+                  className={commissionHeaderClass(String(col.key))}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (col.key !== "status") toggleSort(col.key);
@@ -666,22 +704,22 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           <span className="inline-block w-6" aria-hidden />
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                      <td className={`${commissionCellClass("date")}`} dir="rtl">
                         {formatCertDate(c.date)}
                       </td>
-                      <td className="max-w-0 px-3 py-2.5 text-right align-top break-words" dir="rtl">
+                      <td className={`${commissionCellClass("comnum")}`} dir="rtl">
                         {c.comnum ?? c.id ?? "—"}
                       </td>
-                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                      <td className={`${commissionCellClass("amount")}`} dir="rtl">
                         {formatCertCurrency(c.amount)}
                       </td>
-                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                      <td className={`${commissionCellClass("commission")}`} dir="rtl">
                         {formatCertCurrency(c.commission)}
                       </td>
-                      <td className="px-3 py-2.5 text-right align-top tabular-nums" dir="rtl">
+                      <td className={`${commissionCellClass("comitems_count")}`} dir="rtl">
                         {(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}
                       </td>
-                      <td className="px-3 py-2.5 text-right align-top break-words" dir="rtl">
+                      <td className={`${commissionCellClass("status")}`} dir="rtl">
                         {c.status ?? "—"}
                       </td>
                     </tr>
