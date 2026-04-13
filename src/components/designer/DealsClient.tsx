@@ -21,8 +21,7 @@ const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
   { key: "customer_name", label: "שם לקוח" },
   { key: "phone", label: "טלפון" },
   { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
-  { key: "id", label: "הזמנה (IVNUM)" },
-  { key: "status", label: "סטטוס" },
+  { key: "id", label: "חשבונית" },
 ];
 
 function columnHeaderClass(key: keyof DealRow | string): string {
@@ -37,8 +36,6 @@ function columnHeaderClass(key: keyof DealRow | string): string {
       return "min-w-[7rem]";
     case "id":
       return "min-w-[7rem]";
-    case "status":
-      return "min-w-[6.5rem]";
     default:
       return "";
   }
@@ -143,17 +140,24 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         >
           <table
             dir="rtl"
-            className="w-full min-w-[720px] table-auto border-collapse text-start text-sm text-gray-950"
+            className="w-full min-w-[640px] table-fixed border-collapse text-start text-sm text-gray-950"
           >
+            <colgroup>
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "28%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "26%" }} />
+            </colgroup>
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
                 {DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
-                    className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-start align-bottom text-sm font-semibold transition-colors hover:bg-[var(--brand-red-hover)] ${columnHeaderClass(col.key)}`}
+                    className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-start align-middle text-sm font-semibold transition-colors hover:bg-[var(--brand-red-hover)] ${columnHeaderClass(col.key)}`}
                     onClick={() => toggleSort(col.key)}
                   >
-                    <span className="inline-flex flex-wrap items-end justify-start gap-1">
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
                       {col.label}
                       {sortKey === col.key && (
                         <span className="tabular-nums" aria-hidden>
@@ -168,32 +172,31 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
             <tbody>
               {filteredSortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-10 text-start text-base text-gray-800">
+                  <td colSpan={5} className="px-3 py-10 text-start text-base text-gray-800">
                     {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                   </td>
                 </tr>
               ) : (
                 filteredSortedRows.map((d, i) => (
                   <tr key={d.id ?? i} className="border-t border-gray-200 transition-colors hover:bg-gray-50/90">
-                    <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
                       {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
                     </td>
-                    <td className="min-w-[10rem] max-w-[14rem] px-3 py-2.5 text-start align-top break-words text-gray-950 leading-snug">
+                    <td className="px-3 py-2.5 text-start align-middle break-words text-gray-950 leading-snug">
                       {d.customer_name ?? "—"}
                     </td>
-                    <td className="min-w-[8.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950" dir="ltr">
-                      {d.phone ?? "—"}
+                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
+                      <span className="block" dir="ltr">
+                        {d.phone ?? "—"}
+                      </span>
                     </td>
-                    <td className="min-w-[7rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950">
+                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
                       {d.amount_excl_vat != null
                         ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
                         : "—"}
                     </td>
-                    <td className="min-w-[7rem] max-w-[12rem] break-all px-3 py-2.5 text-start align-top font-mono text-sm text-gray-950">
+                    <td className="break-all px-3 py-2.5 text-start align-middle font-mono text-sm text-gray-950">
                       {d.id ?? "—"}
-                    </td>
-                    <td className="min-w-[6.5rem] px-3 py-2.5 text-start align-top">
-                      <StatusBadge status={d.status} />
                     </td>
                   </tr>
                 ))
@@ -221,10 +224,4 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
       />
     </div>
   );
-}
-
-function StatusBadge({ status }: { status?: string }) {
-  const s = (status ?? "").toLowerCase();
-  const style = s.includes("אושר") || s.includes("approved") ? "bg-green-100 text-green-800" : s.includes("ממתין") || s.includes("pending") ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-700";
-  return <span className={`px-2 py-0.5 rounded text-xs ${style}`}>{status || "—"}</span>;
 }
