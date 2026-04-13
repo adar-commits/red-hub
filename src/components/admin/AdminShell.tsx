@@ -19,8 +19,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const isSettings = pathname?.startsWith(settingsPath);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--main-shell-bg)]">
-      <aside className="hidden md:flex md:w-56 flex-col bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-e border-[var(--sidebar-border)] shadow-[2px_0_20px_rgba(15,23,42,0.04)]">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+      <aside className="hidden md:flex md:w-56 flex-col bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-e border-[var(--sidebar-border)] shadow-[2px_0_24px_rgba(15,23,42,0.06)]">
         <div className="p-4 border-b border-[var(--sidebar-border)]">
           <Link href="/admin/dashboard" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-lg">
             <Image
@@ -41,7 +41,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname === item.href
                   ? "bg-[var(--brand-red)] text-white shadow-sm"
-                  : "text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]"
+                  : "text-[var(--sidebar-text)] hover:bg-gray-100"
               }`}
             >
               {item.label}
@@ -52,7 +52,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <Link
             href={settingsPath}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isSettings ? "bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text)]" : "text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]"
+              isSettings ? "bg-gray-100 text-[var(--sidebar-text)]" : "text-[var(--sidebar-text)] hover:bg-gray-100"
             }`}
             aria-label="הגדרות"
           >
@@ -62,7 +62,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/admin" })}
-            className="w-full text-right px-3 py-2 text-sm text-[var(--sidebar-text-muted)] hover:bg-[var(--sidebar-item-hover)] rounded-lg transition-colors"
+            className="w-full text-right px-3 py-2 text-sm text-[var(--sidebar-text-muted)] hover:bg-gray-100 rounded-lg transition-colors"
           >
             התנתק
           </button>
