@@ -50,7 +50,11 @@ export default function LoginPage() {
         className="absolute inset-0 w-full h-full object-cover object-center"
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/50"
+        aria-hidden
+      />
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-[2px] animate-in-fade-up">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-10 px-4" aria-live="polite" aria-busy="true">
             <div
@@ -73,7 +77,7 @@ export default function LoginPage() {
             <h2 className="text-xl font-bold text-[var(--brand-red)] text-center mb-4">
               אדריכלים ומעצבים
             </h2>
-            <p className="text-gray-600 text-center text-sm mb-6">
+            <p className="text-gray-800 text-center text-sm mb-6">
               יש לבצע התחברות למערכת
             </p>
 
@@ -88,7 +92,7 @@ export default function LoginPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="05xxxxxxxx"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors"
+                  className="w-full rounded-lg border-2 border-gray-400 bg-white px-4 py-3 text-lg text-gray-950 placeholder:text-[color:var(--input-placeholder)] focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 outline-none transition-colors"
                   required
                   dir="ltr"
                 />

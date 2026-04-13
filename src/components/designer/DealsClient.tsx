@@ -138,12 +138,12 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         dir="rtl"
       >
         <div
-          className="inline-block min-w-full rounded-lg border border-gray-200 bg-white text-start align-top"
+          className="inline-block min-w-full rounded-lg border border-gray-300 bg-[var(--card-bg)] text-start align-top"
           style={{ boxShadow: "var(--shadow-card)" }}
         >
           <table
             dir="rtl"
-            className="w-full min-w-[720px] table-auto border-collapse text-start text-sm text-gray-900"
+            className="w-full min-w-[720px] table-auto border-collapse text-start text-sm text-gray-950"
           >
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
@@ -168,28 +168,28 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
             <tbody>
               {filteredSortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-10 text-start text-base text-gray-600">
+                  <td colSpan={6} className="px-3 py-10 text-start text-base text-gray-800">
                     {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                   </td>
                 </tr>
               ) : (
                 filteredSortedRows.map((d, i) => (
-                  <tr key={d.id ?? i} className="border-t border-gray-100 transition-colors hover:bg-gray-50/90">
-                    <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900">
+                  <tr key={d.id ?? i} className="border-t border-gray-200 transition-colors hover:bg-gray-50/90">
+                    <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950">
                       {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
                     </td>
-                    <td className="min-w-[10rem] max-w-[14rem] px-3 py-2.5 text-start align-top break-words text-gray-900 leading-snug">
+                    <td className="min-w-[10rem] max-w-[14rem] px-3 py-2.5 text-start align-top break-words text-gray-950 leading-snug">
                       {d.customer_name ?? "—"}
                     </td>
-                    <td className="min-w-[8.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900" dir="ltr">
+                    <td className="min-w-[8.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950" dir="ltr">
                       {d.phone ?? "—"}
                     </td>
-                    <td className="min-w-[7rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900">
+                    <td className="min-w-[7rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-950">
                       {d.amount_excl_vat != null
                         ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
                         : "—"}
                     </td>
-                    <td className="min-w-[7rem] max-w-[12rem] break-all px-3 py-2.5 text-start align-top font-mono text-sm text-gray-900">
+                    <td className="min-w-[7rem] max-w-[12rem] break-all px-3 py-2.5 text-start align-top font-mono text-sm text-gray-950">
                       {d.id ?? "—"}
                     </td>
                     <td className="min-w-[6.5rem] px-3 py-2.5 text-start align-top">

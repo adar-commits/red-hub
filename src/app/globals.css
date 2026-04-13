@@ -19,23 +19,23 @@
    * App shell: white navigation rail + warm neutral workspace.
    * Clear separation without cold blue-grays (slate-200/100).
    */
-  --main-shell-bg: #f2f1ef;
+  --main-shell-bg: #e6e4e0;
   --sidebar-bg: #ffffff;
-  --sidebar-border: #e4e2df;
-  --sidebar-text: #161616;
-  --sidebar-text-muted: #5c5a57;
+  --sidebar-border: #d4d1cc;
+  --sidebar-text: #0f0f0f;
+  --sidebar-text-muted: #4a4744;
   --sidebar-subtle-fill: #f7f6f4;
   --sidebar-item-hover: #efecea;
   --sidebar-footer-fill: #f4f3f1;
   --sidebar-toggle-bg: #f6f5f3;
 
   --card-bg: #ffffff;
-  --muted: #6b6560;
+  --muted: #524e4a;
   /* Full-page backdrops (login, verify) */
-  --page-backdrop-deep: #e9e7e4;
+  --page-backdrop-deep: #dddad5;
 
-  /* Input/textarea placeholder — explicit contrast (avoids faint browser defaults) */
-  --input-placeholder: #64748b;
+  /* Input/textarea placeholder — strong contrast on white fields */
+  --input-placeholder: #3d4a54;
   /* Design tokens: motion */
   --motion-duration-fast: 150ms;
   --motion-duration-normal: 250ms;
@@ -63,21 +63,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0c0c;
-    --foreground: #f5f5f4;
-    --card-bg: #171717;
-    --main-shell-bg: #141414;
-    --sidebar-bg: #0f0f0f;
-    --sidebar-border: #2a2a2a;
-    --sidebar-text: #f5f5f4;
-    --sidebar-text-muted: #a3a3a3;
-    --sidebar-subtle-fill: #161616;
-    --sidebar-item-hover: #222222;
-    --sidebar-footer-fill: #121212;
-    --sidebar-toggle-bg: #1a1a1a;
-    --page-backdrop-deep: #0a0a0a;
-    --muted: #a3a3a3;
-    --input-placeholder: #8c8c8c;
+    --background: #0a0a0a;
+    --foreground: #fafaf9;
+    --card-bg: #141414;
+    --main-shell-bg: #0f0f0f;
+    --sidebar-bg: #121212;
+    --sidebar-border: #3a3a3a;
+    --sidebar-text: #fafaf9;
+    --sidebar-text-muted: #c4c4c2;
+    --sidebar-subtle-fill: #181818;
+    --sidebar-item-hover: #262626;
+    --sidebar-footer-fill: #101010;
+    --sidebar-toggle-bg: #1c1c1c;
+    --page-backdrop-deep: #050505;
+    --muted: #b8b8b5;
+    --input-placeholder: #b0b0ae;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 24px rgba(0, 0, 0, 0.25);
   }
 }

@@ -26,7 +26,6 @@ const DASHBOARD_DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
   { key: "invoice_date", label: "תאריך החשבונית" },
   { key: "customer_name", label: "שם לקוח" },
   { key: "phone", label: "טלפון" },
-  { key: "seller_name", label: "מוכרן" },
   { key: "amount_excl_vat", label: "סכום ללא מע״מ" },
   {
     key: "commission",
@@ -173,16 +172,16 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
             {(announcements ?? []).map((a) => (
               <div
                 key={a.id}
-                className="p-4 rounded-xl bg-white border border-gray-200 transition-shadow hover:shadow-[var(--shadow-card)]"
+                className="p-4 rounded-xl bg-[var(--card-bg)] border border-gray-300 transition-shadow hover:shadow-[var(--shadow-card)]"
                 style={{ boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}
               >
-                <h3 className="font-medium text-gray-900">{a.title}</h3>
-                {a.content && <p className="text-sm text-gray-600 mt-1">{a.content}</p>}
+                <h3 className="font-medium text-gray-950">{a.title}</h3>
+                {a.content && <p className="text-sm text-gray-800 mt-1">{a.content}</p>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">אין עדכונים</p>
+          <p className="text-gray-700 text-sm">אין עדכונים</p>
         )}
       </section>
 
@@ -214,67 +213,81 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           <button
             type="button"
             onClick={() => exportCsv("dashboard-deals.csv")}
-            className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/20"
+            className="px-4 py-2 rounded-lg border-2 border-gray-400 bg-white text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25"
           >
             ייצוא CSV
           </button>
         </div>
+        {/* Mobile: horizontal scroll + min-width so text stays readable (matches deals table) */}
         <div
-          className="overflow-x-auto rounded-lg border border-gray-200 bg-white"
-          style={{ boxShadow: "var(--shadow-card)" }}
+          className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-gutter:stable] sm:mx-0 sm:px-0 sm:pb-0"
           dir="rtl"
         >
-          <table className="w-full text-sm border-collapse text-right">
-            <colgroup>
-              {DASHBOARD_DEAL_COLUMNS.map((col) => (
-                <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
-              ))}
-            </colgroup>
-            <thead>
-              <tr className="bg-[var(--brand-red)] text-white">
+          <div
+            className="inline-block min-w-full rounded-lg border border-gray-300 bg-white align-top"
+            style={{ boxShadow: "var(--shadow-card)" }}
+          >
+            <table className="w-full min-w-[560px] table-auto border-collapse text-right text-sm text-gray-900">
+              <colgroup>
                 {DASHBOARD_DEAL_COLUMNS.map((col) => (
-                  <th
-                    key={String(col.key)}
-                    className={`py-2.5 px-3 text-right cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap ${col.key === "phone" ? "min-w-[8rem]" : ""}`}
-                    onClick={() => toggleSort(col.key)}
-                  >
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span className="mr-1" aria-hidden>
-                        {sortDir === "asc" ? " ↑" : " ↓"}
-                      </span>
-                    )}
-                  </th>
+                  <col key={String(col.key)} style={col.key === "phone" ? { minWidth: "8rem" } : undefined} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedDeals.length === 0 ? (
-                <tr>
-                  <td colSpan={columnCount} className="text-right py-6 text-gray-500">
-                    אין תוצאות
-                  </td>
+              </colgroup>
+              <thead>
+                <tr className="bg-[var(--brand-red)] text-white">
+                  {DASHBOARD_DEAL_COLUMNS.map((col) => (
+                    <th
+                      key={String(col.key)}
+                      className={`py-3 px-3 text-right text-sm font-semibold cursor-pointer select-none hover:bg-[var(--brand-red-hover)] transition-colors whitespace-nowrap text-white ${col.key === "phone" ? "min-w-[8.5rem]" : col.key === "customer_name" ? "min-w-[10rem]" : col.key === "invoice_date" ? "min-w-[6.5rem]" : ""}`}
+                      onClick={() => toggleSort(col.key)}
+                    >
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span className="mr-1 tabular-nums" aria-hidden>
+                          {sortDir === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                sortedDeals.map((d, i) => (
-                  <tr key={d.id ?? i} className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors">
-                    <td className="py-2.5 px-3 text-right align-top">{d.invoice_date ? formatDate(d.invoice_date) : "—"}</td>
-                    <td className="py-2.5 px-3 text-right align-top">{d.customer_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-right align-top min-w-[8rem]" dir="ltr">
-                      {d.phone ?? "—"}
-                    </td>
-                    <td className="py-2.5 px-3 text-right align-top">{d.seller_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-right align-top tabular-nums">
-                      {d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}
-                    </td>
-                    <td className="py-2.5 px-3 text-right align-top tabular-nums">
-                      {d.commission != null ? formatCurrency(d.commission) : "—"}
+              </thead>
+              <tbody>
+                {sortedDeals.length === 0 ? (
+                  <tr>
+                    <td colSpan={columnCount} className="text-right py-8 px-3 text-base text-gray-800">
+                      אין תוצאות
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  sortedDeals.map((d, i) => (
+                    <tr
+                      key={d.id ?? i}
+                      className="border-t border-gray-200 transition-colors hover:bg-gray-50/90"
+                    >
+                      <td className="min-w-[6.5rem] whitespace-nowrap py-2.5 px-3 text-right align-top tabular-nums text-gray-950">
+                        {d.invoice_date ? formatDate(d.invoice_date) : "—"}
+                      </td>
+                      <td className="min-w-[10rem] max-w-[16rem] py-2.5 px-3 text-right align-top break-words leading-snug text-gray-950">
+                        {d.customer_name ?? "—"}
+                      </td>
+                      <td
+                        className="min-w-[8.5rem] whitespace-nowrap py-2.5 px-3 text-right align-top tabular-nums text-gray-950"
+                        dir="ltr"
+                      >
+                        {d.phone ?? "—"}
+                      </td>
+                      <td className="min-w-[7rem] whitespace-nowrap py-2.5 px-3 text-right align-top tabular-nums text-gray-950">
+                        {d.amount_excl_vat != null ? formatCurrency(d.amount_excl_vat) : "—"}
+                      </td>
+                      <td className="min-w-[7rem] whitespace-nowrap py-2.5 px-3 text-right align-top tabular-nums text-gray-950">
+                        {d.commission != null ? formatCurrency(d.commission) : "—"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
@@ -294,7 +307,7 @@ function StatCard({
 }) {
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border border-gray-200/90 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow duration-200 hover:shadow-md"
+      className="group relative overflow-hidden rounded-2xl border border-gray-300 bg-[var(--card-bg)] p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-shadow duration-200 hover:shadow-md"
       style={{ borderRadius: "var(--radius-card)" }}
     >
       <div
@@ -303,8 +316,8 @@ function StatCard({
       />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{title}</p>
-          <p className="mt-1.5 text-lg font-bold leading-tight text-gray-900 tabular-nums">{value}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-700">{title}</p>
+          <p className="mt-1.5 text-lg font-bold leading-tight text-gray-950 tabular-nums">{value}</p>
         </div>
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${iconClassName}`}
