@@ -25,6 +25,25 @@ const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
   { key: "status", label: "סטטוס" },
 ];
 
+function columnHeaderClass(key: keyof DealRow | string): string {
+  switch (key) {
+    case "invoice_date":
+      return "min-w-[6.5rem]";
+    case "customer_name":
+      return "min-w-[10rem]";
+    case "phone":
+      return "min-w-[8.5rem]";
+    case "amount_excl_vat":
+      return "min-w-[7rem]";
+    case "id":
+      return "min-w-[7rem]";
+    case "status":
+      return "min-w-[6.5rem]";
+    default:
+      return "";
+  }
+}
+
 export function DealsClient({ designerCode }: { designerCode: string }) {
   const [deals, setDeals] = useState<DealRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,69 +132,75 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         dir="rtl"
       />
 
+      {/* Mobile: edge-to-edge scroll; min-width table avoids squashed columns / per-letter wrapping */}
       <div
-        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-start"
-        style={{ boxShadow: "var(--shadow-card)" }}
+        className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-gutter:stable] sm:mx-0 sm:px-0 sm:pb-0"
         dir="rtl"
       >
-        <table dir="rtl" className="w-full table-fixed border-collapse text-start text-sm">
-          <colgroup>
-            <col className="w-[6.75rem]" />
-            <col />
-            <col className="w-[8.5rem]" />
-            <col className="w-[7.5rem]" />
-            <col className="w-[min(11rem,24vw)]" />
-            <col className="w-[6.5rem]" />
-          </colgroup>
-          <thead>
-            <tr className="bg-[var(--brand-red)] text-white">
-              {DEAL_COLUMNS.map((col) => (
-                <th
-                  key={String(col.key)}
-                  className="cursor-pointer select-none px-3 py-2.5 text-start align-bottom whitespace-nowrap transition-colors hover:bg-[var(--brand-red-hover)]"
-                  onClick={() => toggleSort(col.key)}
-                >
-                  <span className="flex items-end justify-start gap-1">
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span aria-hidden>{sortDir === "asc" ? " ↑" : " ↓"}</span>
-                    )}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSortedRows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-8 text-start text-gray-500">
-                  {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
-                </td>
+        <div
+          className="inline-block min-w-full rounded-lg border border-gray-200 bg-white text-start align-top"
+          style={{ boxShadow: "var(--shadow-card)" }}
+        >
+          <table
+            dir="rtl"
+            className="w-full min-w-[720px] table-auto border-collapse text-start text-sm text-gray-900"
+          >
+            <thead>
+              <tr className="bg-[var(--brand-red)] text-white">
+                {DEAL_COLUMNS.map((col) => (
+                  <th
+                    key={String(col.key)}
+                    className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-start align-bottom text-sm font-semibold transition-colors hover:bg-[var(--brand-red-hover)] ${columnHeaderClass(col.key)}`}
+                    onClick={() => toggleSort(col.key)}
+                  >
+                    <span className="inline-flex flex-wrap items-end justify-start gap-1">
+                      {col.label}
+                      {sortKey === col.key && (
+                        <span className="tabular-nums" aria-hidden>
+                          {sortDir === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                ))}
               </tr>
-            ) : (
-              filteredSortedRows.map((d, i) => (
-                <tr key={d.id ?? i} className="border-t border-gray-100 transition-colors hover:bg-gray-50/80">
-                  <td className="px-3 py-2.5 text-start align-top tabular-nums">
-                    {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
-                  </td>
-                  <td className="max-w-0 px-3 py-2.5 text-start align-top break-words">{d.customer_name ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-start align-top tabular-nums" dir="ltr">
-                    {d.phone ?? "—"}
-                  </td>
-                  <td className="px-3 py-2.5 text-start align-top tabular-nums">
-                    {d.amount_excl_vat != null
-                      ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
-                      : "—"}
-                  </td>
-                  <td className="max-w-0 px-3 py-2.5 text-start align-top break-words">{d.id ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-start align-top">
-                    <StatusBadge status={d.status} />
+            </thead>
+            <tbody>
+              {filteredSortedRows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-10 text-start text-base text-gray-600">
+                    {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredSortedRows.map((d, i) => (
+                  <tr key={d.id ?? i} className="border-t border-gray-100 transition-colors hover:bg-gray-50/90">
+                    <td className="min-w-[6.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900">
+                      {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
+                    </td>
+                    <td className="min-w-[10rem] max-w-[14rem] px-3 py-2.5 text-start align-top break-words text-gray-900 leading-snug">
+                      {d.customer_name ?? "—"}
+                    </td>
+                    <td className="min-w-[8.5rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900" dir="ltr">
+                      {d.phone ?? "—"}
+                    </td>
+                    <td className="min-w-[7rem] whitespace-nowrap px-3 py-2.5 text-start align-top tabular-nums text-gray-900">
+                      {d.amount_excl_vat != null
+                        ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
+                        : "—"}
+                    </td>
+                    <td className="min-w-[7rem] max-w-[12rem] break-all px-3 py-2.5 text-start align-top font-mono text-sm text-gray-900">
+                      {d.id ?? "—"}
+                    </td>
+                    <td className="min-w-[6.5rem] px-3 py-2.5 text-start align-top">
+                      <StatusBadge status={d.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <ReferralModal

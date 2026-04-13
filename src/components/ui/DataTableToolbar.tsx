@@ -19,7 +19,7 @@ export function DataTableToolbar({
 }) {
   return (
     <div
-      className={`flex flex-wrap items-center gap-3 mb-4 ${className ?? ""}`}
+      className={`mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center ${className ?? ""}`}
       dir={dirProp}
     >
       <input
@@ -27,13 +27,13 @@ export function DataTableToolbar({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
-        className={`flex-1 min-w-[180px] rounded-lg border border-gray-300 px-4 py-2 text-sm placeholder:text-slate-600 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none transition-colors ${dirProp === "rtl" ? "text-right" : ""}`}
+        className={`w-full min-h-[44px] rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-slate-600 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none transition-colors sm:min-w-[200px] sm:flex-1 ${dirProp === "rtl" ? "text-right" : ""}`}
         aria-label={searchPlaceholder}
       />
       <button
         type="button"
         onClick={onExportCsv}
-        className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[var(--brand-red)]/20 focus:outline-none transition-colors"
+        className="w-full min-h-[44px] shrink-0 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/20 sm:w-auto"
       >
         {exportLabel}
       </button>
