@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+import { StatCard } from "@/components/ui/StatCard";
 
 /** Line item (COMITEMS) for a commission certificate */
 export interface ComItemRow {
@@ -56,6 +57,44 @@ interface CommissionStats {
   unpaidTotal: number;
   paid: number;
   paidTotal: number;
+}
+
+function StatIconApproval({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 12h6M9 16h4M7 4h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M14 4v4h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function StatIconUnpaid({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function StatIconPaidCert({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 /** Status explanations for the modal — you can edit this text */
@@ -287,12 +326,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded-xl" style={{ borderRadius: "var(--radius-card)" }} />
+            <div key={i} className="h-28 rounded-2xl bg-gray-200" style={{ borderRadius: "var(--radius-card)" }} />
           ))}
         </div>
-        <div className="h-48 bg-gray-200 rounded-xl" />
+        <div className="h-48 rounded-xl bg-gray-200" />
       </div>
     );
   }
@@ -333,37 +372,25 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         </p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <div
-          className="p-4 rounded-xl bg-red-600 text-white transition-shadow hover:shadow-[var(--shadow-card)]"
-          style={{ borderRadius: "var(--radius-card)" }}
-        >
-          <p className="text-sm opacity-90">עמלות הממתינות לאישור</p>
-          <p className="text-2xl font-bold">{stats.pendingApproval}</p>
-          <p className="text-sm opacity-90 mt-1">
-            {formatCertCurrency(stats.pendingApprovalTotal)} · {stats.pendingApproval} תעודות
-          </p>
-        </div>
-        <div
-          className="p-4 rounded-xl bg-teal-700 text-white transition-shadow hover:shadow-[var(--shadow-card)]"
-          style={{ borderRadius: "var(--radius-card)" }}
-        >
-          <p className="text-sm opacity-90">עמלות שטרם שולמו</p>
-          <p className="text-2xl font-bold">{stats.unpaid}</p>
-          <p className="text-sm opacity-90 mt-1">
-            {formatCertCurrency(stats.unpaidTotal)} · {stats.unpaid} תעודות
-          </p>
-        </div>
-        <div
-          className="p-4 rounded-xl bg-green-600 text-white transition-shadow hover:shadow-[var(--shadow-card)]"
-          style={{ borderRadius: "var(--radius-card)" }}
-        >
-          <p className="text-sm opacity-90">עמלות שולמו</p>
-          <p className="text-2xl font-bold">{stats.paid}</p>
-          <p className="text-sm opacity-90 mt-1">
-            {formatCertCurrency(stats.paidTotal)} · {stats.paid} תעודות
-          </p>
-        </div>
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+        <StatCard
+          title="עמלות הממתינות לאישור"
+          value={`${stats.pendingApproval} תעודות · ${formatCertCurrency(stats.pendingApprovalTotal)}`}
+          icon={<StatIconApproval className="text-orange-700" />}
+          iconClassName="bg-orange-50 ring-1 ring-orange-200/80"
+        />
+        <StatCard
+          title="עמלות שטרם שולמו"
+          value={`${stats.unpaid} תעודות · ${formatCertCurrency(stats.unpaidTotal)}`}
+          icon={<StatIconUnpaid className="text-amber-700" />}
+          iconClassName="bg-amber-50 ring-1 ring-amber-200/80"
+        />
+        <StatCard
+          title="עמלות שולמו"
+          value={`${stats.paid} תעודות · ${formatCertCurrency(stats.paidTotal)}`}
+          icon={<StatIconPaidCert className="text-emerald-700" />}
+          iconClassName="bg-emerald-50 ring-1 ring-emerald-200/80"
+        />
       </div>
 
       <DataTableToolbar

@@ -5,7 +5,8 @@ export default async function AdminAnnouncementsPage() {
   const supabase = createServerSupabaseClient();
   const { data: list } = await supabase
     .from("announcements")
-    .select("id, title, content, is_published, created_at")
+    .select("id, title, content, is_published, created_at, updated_at, sort_order")
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
   return (

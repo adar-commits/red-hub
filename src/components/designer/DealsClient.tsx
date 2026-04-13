@@ -127,6 +127,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         searchPlaceholder={searchPlaceholder}
         exportLabel="ייצוא CSV"
         dir="rtl"
+        compactExportOnNarrow
       />
 
       {/* Mobile: edge-to-edge scroll; min-width table avoids squashed columns / per-letter wrapping */}
@@ -135,7 +136,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         dir="rtl"
       >
         <div
-          className="inline-block min-w-full rounded-lg border border-gray-300 bg-[var(--card-bg)] text-start align-top"
+          className="inline-block min-w-full rounded-lg border border-gray-300 bg-white text-start align-top text-gray-950"
           style={{ boxShadow: "var(--shadow-card)" }}
         >
           <table

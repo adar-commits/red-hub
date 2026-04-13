@@ -10,6 +10,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("announcements")
     .select("*")
+    .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data ?? []);
@@ -33,10 +34,23 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await request.json();
   const supabase = createServerSupabaseClient();
+  const { data: topOrder } = await supabase
+    .from("announcements")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextSort =
+    typeof topOrder?.sort_order === "number" && Number.isFinite(topOrder.sort_order)
+      ? topOrder.sort_order + 1
+      : 0;
+
   const insert: Record<string, unknown> = {
     title: body.title ?? "",
     content: body.content ?? body.subtitle ?? null,
     is_published: !!body.is_published,
+    sort_order: nextSort,
+    updated_at: new Date().toISOString(),
   };
   const displayAt = parseDisplayAt(body.display_at ?? body.displayAt);
   if (displayAt) insert.display_at = displayAt;
@@ -56,6 +70,7 @@ export async function PATCH(request: Request) {
     title: body.title,
     content: body.content ?? body.subtitle,
     is_published: body.is_published,
+    updated_at: new Date().toISOString(),
   };
   const displayAt = parseDisplayAt(body.display_at ?? body.displayAt);
   if (displayAt != null) update.display_at = displayAt;

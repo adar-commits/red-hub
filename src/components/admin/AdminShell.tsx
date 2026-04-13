@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 const navItems = [
-  { href: "/admin/dashboard", label: "דשבורד" },
-  { href: "/admin/designers", label: "מעצבים" },
   { href: "/admin/announcements", label: "הודעות" },
   { href: "/admin/photos", label: "תמונות" },
 ];
@@ -22,7 +20,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       <aside className="hidden md:flex md:w-56 flex-col bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-e border-[var(--sidebar-border)] shadow-[2px_0_24px_rgba(15,23,42,0.06)]">
         <div className="p-4 border-b border-[var(--sidebar-border)]">
-          <Link href="/admin/dashboard" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-lg">
+          <Link href="/admin/announcements" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 rounded-lg">
             <Image
               src="/brand/hom-group.png"
               alt="HōM GROUP"

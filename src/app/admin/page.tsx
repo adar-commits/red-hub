@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/admin/dashboard");
+      router.replace("/admin/announcements");
     }
   }, [status, router]);
 
@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
     const res = await signIn("credentials", {
       code: code.trim(),
       redirect: false,
-      callbackUrl: "/admin/dashboard",
+      callbackUrl: "/admin/announcements",
     });
     setPending(false);
     if (res?.error) {
@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
       return;
     }
     if (res?.ok) {
-      router.replace("/admin/dashboard");
+      router.replace("/admin/announcements");
       router.refresh();
     }
   }
