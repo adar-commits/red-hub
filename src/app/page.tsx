@@ -42,7 +42,7 @@ export default function LoginPage() {
     "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center p-4 relative bg-[var(--main-shell-bg)]">
       {/* Background image as element so it loads reliably */}
       <img
         src={bgUrl}

@@ -12,16 +12,28 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --brand-red: #C8102E;
+  --brand-red: #c8102e;
   --brand-red-hover: #a00d24;
-  /* Sidebar: slightly deeper than main canvas for clear separation */
-  --sidebar-bg: #e2e8f0;
-  --sidebar-border: #cbd5e1;
-  --sidebar-text: #0f172a;
-  --sidebar-text-muted: #475569;
-  --main-shell-bg: #f1f5f9;
+
+  /*
+   * App shell: white navigation rail + warm neutral workspace.
+   * Clear separation without cold blue-grays (slate-200/100).
+   */
+  --main-shell-bg: #f2f1ef;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e4e2df;
+  --sidebar-text: #161616;
+  --sidebar-text-muted: #5c5a57;
+  --sidebar-subtle-fill: #f7f6f4;
+  --sidebar-item-hover: #efecea;
+  --sidebar-footer-fill: #f4f3f1;
+  --sidebar-toggle-bg: #f6f5f3;
+
   --card-bg: #ffffff;
-  --muted: #6b7280;
+  --muted: #6b6560;
+  /* Full-page backdrops (login, verify) */
+  --page-backdrop-deep: #e9e7e4;
+
   /* Input/textarea placeholder — explicit contrast (avoids faint browser defaults) */
   --input-placeholder: #64748b;
   /* Design tokens: motion */
@@ -30,7 +42,7 @@
   --motion-duration-slow: 800ms;
   --motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
   /* Design tokens: surfaces */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 4px 20px rgba(16, 24, 40, 0.04);
   --radius-modal: 1rem;
   --radius-card: 0.75rem;
 }
@@ -51,20 +63,27 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f0f0f;
-    --foreground: #ededed;
-    --card-bg: #1a1a1a;
-    --sidebar-bg: #e2e8f0;
-    --sidebar-border: #94a3b8;
-    --sidebar-text: #0f172a;
-    --sidebar-text-muted: #475569;
-    --main-shell-bg: #cbd5e1;
-    --input-placeholder: #94a3b8;
+    --background: #0c0c0c;
+    --foreground: #f5f5f4;
+    --card-bg: #171717;
+    --main-shell-bg: #141414;
+    --sidebar-bg: #0f0f0f;
+    --sidebar-border: #2a2a2a;
+    --sidebar-text: #f5f5f4;
+    --sidebar-text-muted: #a3a3a3;
+    --sidebar-subtle-fill: #161616;
+    --sidebar-item-hover: #222222;
+    --sidebar-footer-fill: #121212;
+    --sidebar-toggle-bg: #1a1a1a;
+    --page-backdrop-deep: #0a0a0a;
+    --muted: #a3a3a3;
+    --input-placeholder: #8c8c8c;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 24px rgba(0, 0, 0, 0.25);
   }
 }
 
 body {
-  background: var(--background);
+  background: var(--main-shell-bg);
   color: var(--foreground);
   font-family: var(--font-noto-sans-hebrew), system-ui, sans-serif;
 }

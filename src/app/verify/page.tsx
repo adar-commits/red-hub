@@ -56,7 +56,7 @@ function VerifyForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[var(--main-shell-bg)] to-[var(--page-backdrop-deep)] p-4">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
         <h1 className="text-2xl font-bold text-center mb-1 text-foreground">
           אימות קוד
