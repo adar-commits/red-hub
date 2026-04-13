@@ -173,6 +173,12 @@ const getEnv = (key: string): string => {
   return v;
 };
 
+/** ERP webhooks expect `agentCode`, never a `designerCode` JSON key. */
+function withoutDesignerCodeKey(data: Record<string, unknown>): Record<string, unknown> {
+  const { designerCode: _omit, ...rest } = data;
+  return rest;
+}
+
 export async function erpValidatePhone(phone: string): Promise<{
   found: boolean;
   designerCode?: string;
@@ -207,7 +213,7 @@ export async function erpUpdateProfile(agentCode: string, data: Record<string, u
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ agentCode, ...data }),
+    body: JSON.stringify({ agentCode, ...withoutDesignerCodeKey(data) }),
   });
   if (!res.ok) throw new Error(`ERP profile update failed: ${res.status}`);
 }
@@ -283,10 +289,11 @@ export async function erpContact(agentCode: string, message: string): Promise<vo
 
 export async function erpSubmitInvoice(agentCode: string, invoiceUrl: string, metadata?: Record<string, unknown>): Promise<void> {
   const url = getEnv("ERP_INVOICE_WEBHOOK");
+  const extra = metadata ? withoutDesignerCodeKey(metadata) : {};
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ agentCode, invoiceUrl, ...metadata }),
+    body: JSON.stringify({ agentCode, invoiceUrl, ...extra }),
   });
   if (!res.ok) throw new Error(`ERP invoice failed: ${res.status}`);
 }
@@ -351,7 +358,7 @@ export async function erpUpdateBusinessInfo(payload: Record<string, unknown>): P
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(withoutDesignerCodeKey(payload)),
   });
   if (!res.ok) throw new Error(`Business update webhook failed: ${res.status}`);
 }

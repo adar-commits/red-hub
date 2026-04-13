@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const webhookBody = {
       eventType: "invoice" as const,
       file: { buffer: bufferBase64 },
-      designerCode: session.designerCode,
+      agentCode: session.designerCode,
       certId: certId ?? null,
       fileName: file.name || "invoice.pdf",
     };
