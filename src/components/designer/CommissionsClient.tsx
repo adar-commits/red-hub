@@ -152,19 +152,31 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   });
   const [certs, setCerts] = useState<CertRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploadingRowId, setUploadingRowId] = useState<string | null>(null);
-  const [uploadError, setUploadError] = useState("");
-  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [modalSelectedFile, setModalSelectedFile] = useState<File | null>(null);
+  const [modalUploading, setModalUploading] = useState(false);
+  const [modalProgress, setModalProgress] = useState<number | null>(null);
+  const [modalError, setModalError] = useState("");
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+  const modalFileInputRef = useRef<HTMLInputElement>(null);
+  const modalSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   useEffect(
     () => () => {
-      if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
+      if (modalSuccessTimeoutRef.current) clearTimeout(modalSuccessTimeoutRef.current);
     },
     []
   );
+
+  useEffect(() => {
+    if (!uploadModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !modalUploading) setUploadModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [uploadModalOpen, modalUploading]);
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -247,51 +259,103 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     initialSort: { key: "date", dir: "desc" },
   });
 
+  const PDF_ONLY_MESSAGE = "ניתן להעלות רק קבצים מסוג PDF בלבד";
+
   function assertPdfFile(file: File): string | null {
-    if (!/\.pdf$/i.test(file.name.trim())) {
-      return "ניתן להעלות רק קובץ PDF (.pdf). בחרו קובץ אחר.";
-    }
-    if (file.type && file.type !== "application/pdf") {
-      return "הקובץ שבחרתם אינו מזוהה כ-PDF. נא לבחור קובץ PDF בלבד.";
-    }
+    const nameOk = /\.pdf$/i.test(file.name.trim());
+    const typeOk = !file.type || file.type === "application/pdf";
+    if (!nameOk || !typeOk) return PDF_ONLY_MESSAGE;
     return null;
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function openUploadModal() {
+    setModalError("");
+    setModalSuccess(null);
+    setModalSelectedFile(null);
+    setModalProgress(null);
+    setUploadModalOpen(true);
+    if (modalFileInputRef.current) modalFileInputRef.current.value = "";
+  }
+
+  function closeUploadModal() {
+    if (modalUploading) return;
+    setUploadModalOpen(false);
+    setModalSelectedFile(null);
+    setModalProgress(null);
+    setModalError("");
+    if (modalFileInputRef.current) modalFileInputRef.current.value = "";
+  }
+
+  function onModalFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    const certId = uploadingRowId ?? undefined;
-    e.target.value = "";
+    setModalSuccess(null);
+    setModalError("");
     if (!file) {
-      setUploadingRowId(null);
+      setModalSelectedFile(null);
+      return;
+    }
+    const err = assertPdfFile(file);
+    if (err) {
+      setModalError(err);
+      setModalSelectedFile(null);
+      e.target.value = "";
+      return;
+    }
+    setModalSelectedFile(file);
+  }
+
+  async function submitModalUpload() {
+    const file = modalSelectedFile;
+    if (!file) {
+      setModalError("נא לבחור קובץ PDF.");
       return;
     }
     const clientPdfErr = assertPdfFile(file);
     if (clientPdfErr) {
-      setUploadError(clientPdfErr);
-      setUploadingRowId(null);
+      setModalError(clientPdfErr);
       return;
     }
-    setUploadError("");
-    setUploadSuccess(null);
+    setModalError("");
+    setModalSuccess(null);
+    setModalUploading(true);
+    setModalProgress(0);
+
+    const form = new FormData();
+    form.append("file", file);
+
+    type UploadJson = { error?: string; certId?: string; invoice_code?: string; id?: string };
+
     try {
-      const form = new FormData();
-      form.append("file", file);
-      if (certId) form.append("certId", certId);
-      const res = await fetch("/api/commissions/upload-invoice", { method: "POST", body: form });
-      let data: { error?: string; certId?: string; invoice_code?: string; id?: string } = {};
-      try {
-        data = (await res.json()) as typeof data;
-      } catch {
-        // non-JSON error body
-      }
-      if (!res.ok) {
-        throw new Error(
+      const { ok, data } = await new Promise<{ ok: boolean; data: UploadJson }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/commissions/upload-invoice");
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            setModalProgress(Math.max(0, Math.min(100, Math.round((ev.loaded * 100) / ev.total))));
+          }
+        };
+        xhr.onerror = () => reject(new Error("שגיאת רשת. נסו שוב."));
+        xhr.onload = () => {
+          let parsed: UploadJson = {};
+          try {
+            parsed = JSON.parse(xhr.responseText || "{}") as UploadJson;
+          } catch {
+            // ignore
+          }
+          resolve({ ok: xhr.status >= 200 && xhr.status < 300, data: parsed });
+        };
+        xhr.send(form);
+      });
+
+      if (!ok) {
+        const msg =
           typeof data.error === "string" && data.error.trim()
             ? data.error
-            : "שגיאה בהעלאה. נסו שוב; אם הבעיה נמשכת, פנו לתמיכה."
-        );
+            : "שגיאה בהעלאה. נסו שוב; אם הבעיה נמשכת, פנו לתמיכה.";
+        throw new Error(msg);
       }
-      const returnedCertId = data.certId as string | undefined;
+
+      const returnedCertId = data.certId;
       const invoiceCode = data.invoice_code ?? data.id;
       if (returnedCertId != null && returnedCertId !== "" && invoiceCode) {
         setCerts((prev) => {
@@ -308,18 +372,19 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           return next;
         });
       }
-      if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
-      setUploadSuccess("החשבונית הועלתה בהצלחה.");
-      uploadSuccessTimeoutRef.current = setTimeout(() => {
-        setUploadSuccess(null);
-        uploadSuccessTimeoutRef.current = null;
+
+      setModalProgress(100);
+      if (modalSuccessTimeoutRef.current) clearTimeout(modalSuccessTimeoutRef.current);
+      setModalSuccess("החשבונית הועלתה בהצלחה.");
+      modalSuccessTimeoutRef.current = setTimeout(() => {
+        setModalSuccess(null);
+        modalSuccessTimeoutRef.current = null;
       }, 6000);
     } catch (err) {
-      setUploadError(
-        err instanceof Error ? err.message : "שגיאה בהעלאה. נסו שוב; אם הבעיה נמשכת, פנו לתמיכה."
-      );
+      setModalError(err instanceof Error ? err.message : "שגיאה בהעלאה. נסו שוב.");
+      setModalProgress(null);
     } finally {
-      setUploadingRowId(null);
+      setModalUploading(false);
     }
   }
 
@@ -338,38 +403,111 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
   return (
     <div dir="rtl" className="w-full text-right clear-both">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf,.pdf"
-        className="hidden"
-        onChange={handleUpload}
-      />
-      {uploadSuccess && (
+      {uploadModalOpen && (
         <div
-          className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
-          role="status"
-          aria-live="polite"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+          role="presentation"
+          onClick={(e) => e.target === e.currentTarget && closeUploadModal()}
         >
-          <span className="min-w-0 flex-1 text-right">{uploadSuccess}</span>
-          <button
-            type="button"
-            onClick={() => {
-              if (uploadSuccessTimeoutRef.current) clearTimeout(uploadSuccessTimeoutRef.current);
-              uploadSuccessTimeoutRef.current = null;
-              setUploadSuccess(null);
-            }}
-            className="shrink-0 rounded p-0.5 text-emerald-700 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
-            aria-label="סגור הודעה"
+          <div
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upload-file-dialog-title"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
           >
-            ×
-          </button>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <h2 id="upload-file-dialog-title" className="text-lg font-bold text-gray-950">
+                העלאת קובץ
+              </h2>
+              <button
+                type="button"
+                onClick={closeUploadModal}
+                disabled={modalUploading}
+                className="rounded p-1 text-gray-500 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 disabled:opacity-40"
+                aria-label="סגור"
+              >
+                ×
+              </button>
+            </div>
+
+            <h3 className="text-base font-semibold text-gray-950">העלאת חשבונית לתשלום</h3>
+            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+              חשבונית חייבת לכלול פרטי חשבון מלאים ובסכום התואם לתעודות עמלה ״ממתינות לתשלום״ בלבד
+            </p>
+
+            <input
+              ref={modalFileInputRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="sr-only"
+              onChange={onModalFilePicked}
+              aria-label="בחירת קובץ PDF"
+            />
+
+            <p className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2.5 text-right text-sm text-gray-600">
+              יש להעלות קובץ PDF בלבד. ודאו שהחשבונית כוללת את כל פרטי החשבון הנדרשים ושהסכום תואם לעמלות בסטטוס ״ממתין לתשלום״.
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => modalFileInputRef.current?.click()}
+                disabled={modalUploading}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 disabled:opacity-50"
+              >
+                בחירת קובץ
+              </button>
+              {modalSelectedFile && (
+                <span className="min-w-0 flex-1 truncate text-sm text-gray-700" title={modalSelectedFile.name}>
+                  {modalSelectedFile.name}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <label className="sr-only" htmlFor="invoice-upload-submit">
+                שליחת הקובץ להעלאה
+              </label>
+              <button
+                id="invoice-upload-submit"
+                type="button"
+                onClick={submitModalUpload}
+                disabled={modalUploading || !modalSelectedFile}
+                className="w-full rounded-lg bg-[var(--brand-red)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 disabled:opacity-50"
+              >
+                {modalUploading ? "מעלה…" : "העלאת חשבונית"}
+              </button>
+            </div>
+
+            {(modalUploading || modalProgress === 100) && (
+              <div className="mt-4" aria-hidden={!modalUploading}>
+                <div className="mb-1 flex justify-between text-xs text-gray-600">
+                  <span>התקדמות</span>
+                  <span>{modalProgress != null ? `${modalProgress}%` : ""}</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-[var(--brand-red)] transition-[width] duration-300 ease-out"
+                    style={{ width: `${modalProgress ?? 0}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {modalError ? (
+              <p className="mt-4 text-right text-sm text-red-600" role="alert">
+                {modalError}
+              </p>
+            ) : null}
+            {modalSuccess ? (
+              <p className="mt-4 text-right text-sm text-emerald-800" role="status">
+                {modalSuccess}
+              </p>
+            ) : null}
+          </div>
         </div>
-      )}
-      {uploadError && (
-        <p className="text-red-600 text-sm mb-4 text-right" role="alert">
-          {uploadError}
-        </p>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -398,8 +536,33 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         onSearchChange={setSearchQuery}
         onExportCsv={() => exportCsv("commissions.csv")}
         searchPlaceholder={searchPlaceholder}
-        exportLabel="ייצוא CSV"
+        exportLabel="ייצוא"
         dir="rtl"
+        afterSearch={
+          <button
+            type="button"
+            onClick={openUploadModal}
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5 text-gray-700"
+              aria-hidden
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <path d="M14 2v6h6" />
+              <path d="M12 18V9" />
+              <path d="m9 12 3-3 3 3" />
+            </svg>
+            העלאת חשבונית
+          </button>
+        }
       />
 
       <div
@@ -416,7 +579,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             <col className="w-[7.25rem]" />
             <col className="w-[3.75rem]" />
             <col />
-            <col className="w-[7.5rem]" />
           </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
@@ -425,7 +587,10 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                 <th
                   key={String(col.key)}
                   className="px-3 py-2.5 text-right align-bottom cursor-pointer select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors"
-                  onClick={() => col.key !== "status" && toggleSort(col.key)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (col.key !== "status") toggleSort(col.key);
+                  }}
                 >
                   <span className="inline-block whitespace-nowrap">
                     {col.label}
@@ -436,6 +601,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                           className="inline-flex h-5 w-5 align-middle items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white cursor-help"
                           title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
                           aria-label="הסבר סטטוסים"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           ?
                         </span>
@@ -448,15 +614,12 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   </span>
                 </th>
               ))}
-              <th className="min-w-[7.5rem] px-2 py-2.5 text-right align-bottom whitespace-normal break-words leading-tight">
-                העלאת חשבונית
-              </th>
             </tr>
           </thead>
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-right text-gray-500">
+                <td colSpan={7} className="py-8 text-right text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
@@ -468,17 +631,24 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                 return (
                   <React.Fragment key={rowKey}>
                     <tr
-                      className="border-t border-gray-100 hover:bg-gray-50/80 transition-colors"
+                      className={`border-t border-gray-100 transition-colors ${hasComitems ? "cursor-pointer hover:bg-gray-50/80" : ""}`}
                       onClick={() => hasComitems && toggleExpand(String(rowKey))}
                       role={hasComitems ? "button" : undefined}
                       tabIndex={hasComitems ? 0 : undefined}
-                      onKeyDown={(e) => hasComitems && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleExpand(String(rowKey)))}
+                      onKeyDown={(e) =>
+                        hasComitems &&
+                        (e.key === "Enter" || e.key === " ") &&
+                        (e.preventDefault(), toggleExpand(String(rowKey)))
+                      }
                     >
-                      <td className="px-2 py-2.5 text-right align-middle" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-2 py-2.5 text-right align-middle">
                         {hasComitems ? (
                           <button
                             type="button"
-                            onClick={() => toggleExpand(String(rowKey))}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleExpand(String(rowKey));
+                            }}
                             className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40"
                             aria-expanded={isExpanded}
                             aria-label={isExpanded ? "סגור עסקאות" : "הצג עסקאות"}
@@ -514,53 +684,10 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                       <td className="px-3 py-2.5 text-right align-top break-words" dir="rtl">
                         {c.status ?? "—"}
                       </td>
-                      <td className="px-2 py-2.5 text-right align-middle" dir="rtl" onClick={(e) => e.stopPropagation()}>
-                        {c.invoice_code ? (
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded text-green-600" title="חשבונית הועלתה" aria-label="חשבונית הועלתה">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                              <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clipRule="evenodd" />
-                              <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
-                            </svg>
-                          </span>
-                        ) : uploadingRowId === String(c.id ?? c.comnum ?? rowKey) ? (
-                          <span className="inline-flex items-center justify-center w-8 h-8 text-gray-400" aria-label="מעלה...">
-                            <svg className="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => { setUploadingRowId(String(c.id ?? c.comnum ?? rowKey)); fileInputRef.current?.click(); }}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded text-gray-500 hover:bg-gray-100 hover:text-[var(--brand-red)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/40 transition-colors"
-                            title="העלאת חשבונית PDF"
-                            aria-label="העלאת חשבונית PDF"
-                          >
-                            {/* Document sheet + arrow up — clearer than a generic cloud */}
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="w-5 h-5"
-                              aria-hidden
-                            >
-                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                              <path d="M14 2v6h6" />
-                              <path d="M12 18V9" />
-                              <path d="m9 12 3-3 3 3" />
-                            </svg>
-                          </button>
-                        )}
-                      </td>
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
-                        <td colSpan={8} className="px-4 py-3 align-top">
+                        <td colSpan={7} className="px-4 py-3 align-top">
                           <div className="me-auto ms-0 w-full max-w-4xl pe-0 ps-2 text-right" dir="rtl">
                             <p className="mb-2 text-right text-xs font-medium text-gray-600">
                               {c.comnum ?? c.id ?? "תעודה"} — עסקאות

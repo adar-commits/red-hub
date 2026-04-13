@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 function ExportDownloadIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -22,12 +24,19 @@ function ExportDownloadIcon({ className }: { className?: string }) {
   );
 }
 
+const inputClassBase =
+  "min-h-[44px] rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-950 placeholder:text-[color:var(--input-placeholder)] transition-colors focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 focus:outline-none";
+
+const exportBtnClassBase =
+  "inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25";
+
 export function DataTableToolbar({
   searchQuery,
   onSearchChange,
   onExportCsv,
   searchPlaceholder = "חיפוש...",
   exportLabel = "ייצוא CSV",
+  afterSearch,
   className,
   dir: dirProp,
   /** When true: single row with icon-only export on small screens (physical left under RTL). */
@@ -38,20 +47,22 @@ export function DataTableToolbar({
   onExportCsv: () => void;
   searchPlaceholder?: string;
   exportLabel?: string;
+  /** Rendered after the search field (e.g. action button); kept on one row when space allows. */
+  afterSearch?: ReactNode;
   className?: string;
   dir?: "rtl" | "ltr";
   compactExportOnNarrow?: boolean;
 }) {
   const exportBtnClass = compactExportOnNarrow
-    ? "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 border-gray-400 bg-white text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
-    : "w-full min-h-[44px] shrink-0 rounded-lg border-2 border-gray-400 bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25 sm:w-auto";
+    ? `h-11 w-11 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 ${exportBtnClassBase}`
+    : `${exportBtnClassBase} w-full sm:w-auto`;
 
   return (
     <div
       className={
         compactExportOnNarrow
           ? `mb-4 flex flex-row flex-wrap items-center gap-2 ${className ?? ""}`
-          : `mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center ${className ?? ""}`
+          : `mb-4 flex flex-row flex-wrap items-center gap-2 ${className ?? ""}`
       }
       dir={dirProp}
     >
@@ -60,11 +71,12 @@ export function DataTableToolbar({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={searchPlaceholder}
-        className={`min-h-[44px] w-full rounded-lg border-2 border-gray-400 bg-white px-4 py-2.5 text-sm text-gray-950 placeholder:text-[color:var(--input-placeholder)] transition-colors focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 focus:outline-none ${
-          compactExportOnNarrow ? "min-w-0 flex-1" : "sm:min-w-[200px] sm:flex-1"
-        } ${dirProp === "rtl" ? "text-right" : ""}`}
+        className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] ${
+          dirProp === "rtl" ? "text-right" : ""
+        }`}
         aria-label={searchPlaceholder}
       />
+      {afterSearch}
       <button
         type="button"
         onClick={onExportCsv}
@@ -77,10 +89,16 @@ export function DataTableToolbar({
             <span className="sm:hidden">
               <ExportDownloadIcon className="text-gray-800" />
             </span>
-            <span className="hidden text-sm font-semibold sm:inline">{exportLabel}</span>
+            <span className="hidden items-center gap-2 text-sm font-semibold sm:inline-flex">
+              <ExportDownloadIcon className="text-gray-800" />
+              {exportLabel}
+            </span>
           </>
         ) : (
-          exportLabel
+          <>
+            <ExportDownloadIcon className="text-gray-800" />
+            {exportLabel}
+          </>
         )}
       </button>
     </div>
