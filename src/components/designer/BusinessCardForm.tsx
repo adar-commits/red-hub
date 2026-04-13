@@ -67,7 +67,7 @@ const emptyForm: BusinessInfo = {
 };
 
 const inputBase =
-  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-shadow";
+  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-slate-600 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-shadow";
 
 const labelBase = "block text-sm font-medium text-gray-700 mb-1.5";
 

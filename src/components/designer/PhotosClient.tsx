@@ -88,7 +88,7 @@ export function PhotosClient({ designerCode }: { designerCode: string }) {
             onChange={(e) => setProjectDescription(e.target.value)}
             placeholder="הזן תיאור קצר לפרויקט"
             rows={3}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none resize-y"
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-slate-600 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none resize-y"
             required
           />
         </div>

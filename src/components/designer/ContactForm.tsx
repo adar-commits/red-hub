@@ -48,7 +48,7 @@ export function ContactForm({ designerCode }: { designerCode: string }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors placeholder:text-gray-400"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors placeholder:text-slate-600"
           placeholder="כתוב כאן..."
         />
       </div>

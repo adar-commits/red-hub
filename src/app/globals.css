@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@layer base {
+  /* Default placeholder color + full opacity (Firefox fades placeholders otherwise) */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--input-placeholder);
+    opacity: 1;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -13,6 +22,8 @@
   --main-shell-bg: #f1f5f9;
   --card-bg: #ffffff;
   --muted: #6b7280;
+  /* Input/textarea placeholder — explicit contrast (avoids faint browser defaults) */
+  --input-placeholder: #64748b;
   /* Design tokens: motion */
   --motion-duration-fast: 150ms;
   --motion-duration-normal: 250ms;
@@ -48,6 +59,7 @@
     --sidebar-text: #0f172a;
     --sidebar-text-muted: #475569;
     --main-shell-bg: #cbd5e1;
+    --input-placeholder: #94a3b8;
   }
 }
 
