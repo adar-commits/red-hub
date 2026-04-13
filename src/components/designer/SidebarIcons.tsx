@@ -29,6 +29,7 @@ export type SidebarGlyphId =
   | "photos"
   | "faq"
   | "contact"
+  | "admin"
   | "logout";
 
 export function SidebarGlyph({ id, className = "h-5 w-5 shrink-0" }: { id: SidebarGlyphId; className?: string }) {
@@ -81,6 +82,15 @@ export function SidebarGlyph({ id, className = "h-5 w-5 shrink-0" }: { id: Sideb
         <Svg className={className}>
           <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6Z" />
           <path d="M8 10h.01M12 10h.01M16 10h.01" />
+        </Svg>
+      );
+    case "admin":
+      return (
+        <Svg className={className}>
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
         </Svg>
       );
     case "logout":

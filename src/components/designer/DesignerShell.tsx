@@ -9,6 +9,26 @@ import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
 
 const SIDEBAR_COLLAPSED_KEY = "redhub-sidebar-collapsed";
 
+function AdminShortcutLink({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      href="/admin"
+      onClick={onNavigate}
+      className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2"}`}
+      title="ניהול"
+    >
+      <SidebarGlyph id="admin" className="h-5 w-5" />
+      {!collapsed && <span>ניהול</span>}
+    </Link>
+  );
+}
+
 function LogoutButton({ collapsed }: { collapsed: boolean }) {
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -155,7 +175,8 @@ export function DesignerShell({
             );
           })}
         </nav>
-        <div className="p-2 border-t border-[var(--sidebar-border)] bg-white/20">
+        <div className="p-2 border-t border-[var(--sidebar-border)] bg-white/20 space-y-0.5">
+          <AdminShortcutLink collapsed={collapsed} />
           <LogoutButton collapsed={collapsed} />
         </div>
       </aside>
@@ -280,7 +301,8 @@ export function DesignerShell({
               );
             })}
           </nav>
-          <div className="shrink-0 border-t border-[var(--sidebar-border)] bg-white/25 p-2">
+          <div className="shrink-0 border-t border-[var(--sidebar-border)] bg-white/25 p-2 space-y-0.5">
+            <AdminShortcutLink collapsed={false} onNavigate={() => setMobileMenuOpen(false)} />
             <LogoutButton collapsed={false} />
           </div>
         </div>
