@@ -1,24 +1,25 @@
 import type { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 
-const hasGoogle = Boolean(
-  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-);
+/** Default matches product request; set ADMIN_ACCESS_CODE in env to rotate without code changes. */
+const ADMIN_ACCESS_CODE = process.env.ADMIN_ACCESS_CODE ?? "L1234!";
 
 export const authOptions: NextAuthOptions = {
-  providers: hasGoogle
-    ? [
-        GoogleProvider({
-          clientId: process.env.GOOGLE_CLIENT_ID!,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        }),
-      ]
-    : [],
+  providers: [
+    CredentialsProvider({
+      id: "credentials",
+      name: "קוד גישה",
+      credentials: {
+        code: { label: "קוד גישה", type: "password" },
+      },
+      async authorize(credentials) {
+        const code = credentials?.code?.trim();
+        if (!code || code !== ADMIN_ACCESS_CODE) return null;
+        return { id: "admin", name: "מנהל" };
+      },
+    }),
+  ],
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   secret: process.env.NEXTAUTH_SECRET ?? "red-hub-fallback-secret",
   pages: { signIn: "/admin" },
-  callbacks: {
-    async signIn() {
-      return true;
-    },
-  },
 };
