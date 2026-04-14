@@ -7,18 +7,11 @@ import { usePathname } from "next/navigation";
 import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
 import { SidebarUserHeadline } from "./SidebarUserHeadline";
 
-/** Pastel tiles + strong icon color (inactive). Active row uses brand red — icon goes light on red. */
-const NAV_ICON_TILE: Record<SidebarGlyphId, string> = {
-  home: "bg-sky-100/90 text-sky-700 border-sky-200/50",
-  deals: "bg-emerald-100/90 text-emerald-800 border-emerald-200/50",
-  commissions: "bg-amber-100/90 text-amber-800 border-amber-200/50",
-  business: "bg-violet-100/90 text-violet-800 border-violet-200/50",
-  photos: "bg-rose-100/90 text-rose-700 border-rose-200/50",
-  faq: "bg-cyan-100/90 text-cyan-800 border-cyan-200/50",
-  contact: "bg-teal-100/90 text-teal-800 border-teal-200/50",
-  admin: "bg-indigo-100/90 text-indigo-800 border-indigo-200/50",
-  logout: "bg-red-50 text-red-700 border-red-100",
-};
+/** Compact neutral tile when inactive; active row uses brand red + light icon. */
+const NAV_ICON_IDLE =
+  "bg-white/80 text-stone-500 border-stone-200/60 shadow-none";
+const GLYPH_SM = "h-3.5 w-3.5 shrink-0";
+const ICON_TILE = "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-colors";
 
 const SIDEBAR_COLLAPSED_KEY = "redhub-sidebar-collapsed";
 
@@ -57,14 +50,11 @@ function AdminShortcutLink({
     <Link
       href="/admin"
       onClick={onNavigate}
-      className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-3"}`}
+      className={`flex items-center w-full px-2.5 py-2 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2.5"}`}
       title="ניהול"
     >
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${NAV_ICON_TILE.admin}`}
-        aria-hidden
-      >
-        <SidebarGlyph id="admin" className="h-5 w-5" />
+      <span className={`${ICON_TILE} ${NAV_ICON_IDLE}`} aria-hidden>
+        <SidebarGlyph id="admin" className={GLYPH_SM} />
       </span>
       {!collapsed && <span>ניהול</span>}
     </Link>
@@ -80,14 +70,11 @@ function LogoutButton({ collapsed }: { collapsed: boolean }) {
     <button
       type="button"
       onClick={handleLogout}
-      className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-3"}`}
+      className={`flex items-center w-full px-2.5 py-2 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2.5"}`}
       title="התנתק"
     >
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${NAV_ICON_TILE.logout}`}
-        aria-hidden
-      >
-        <SidebarGlyph id="logout" className="h-5 w-5" />
+      <span className={`${ICON_TILE} ${NAV_ICON_IDLE}`} aria-hidden>
+        <SidebarGlyph id="logout" className={GLYPH_SM} />
       </span>
       {!collapsed && <span>התנתק</span>}
     </button>
@@ -203,30 +190,29 @@ export function DesignerShell({
             </p>
           </div>
         )}
-        <nav className="flex-1 p-2.5 space-y-1 overflow-auto">
+        <nav className="flex-1 p-2 space-y-0.5 overflow-auto">
           {navItems.map((item) => {
             const active = pathname === item.href;
-            const tile = NAV_ICON_TILE[item.glyph];
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 title={item.label}
-                className={`flex items-center rounded-xl text-sm font-medium transition-all duration-[var(--motion-duration-fast)] border-e-[3px] border-transparent ${
-                  collapsed ? "justify-center px-0 py-2 min-w-[2.5rem]" : "gap-3 px-2.5 py-2"
+                className={`flex items-center rounded-lg text-sm font-medium transition-all duration-[var(--motion-duration-fast)] border-e-[3px] border-transparent ${
+                  collapsed ? "justify-center px-0 py-1.5 min-w-[2.25rem]" : "gap-2.5 px-2 py-1.5"
                 } ${
                   active
-                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-md ring-1 ring-black/5"
+                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-sm ring-1 ring-black/[0.04]"
                     : "text-stone-800 hover:bg-[var(--designer-sidebar-elevated)] hover:shadow-sm border-transparent"
                 }`}
               >
                 <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-colors ${
-                    active ? "border-white/25 bg-white/15 text-white" : tile
+                  className={`${ICON_TILE} ${
+                    active ? "border-white/25 bg-white/15 text-white" : NAV_ICON_IDLE
                   }`}
                   aria-hidden
                 >
-                  <SidebarGlyph id={item.glyph} className="h-[1.15rem] w-[1.15rem]" />
+                  <SidebarGlyph id={item.glyph} className={GLYPH_SM} />
                 </span>
                 {!collapsed && <span className="leading-snug">{item.label}</span>}
               </Link>
@@ -326,28 +312,27 @@ export function DesignerShell({
           <div className="border-b border-[var(--sidebar-border)] bg-[var(--designer-sidebar-surface)] px-3 py-3.5">
             <SidebarUserHeadline fullName={fullName} designerCode={designerCode} />
           </div>
-          <nav className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-2.5">
+          <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-2">
             {navItems.map((item) => {
               const active = pathname === item.href;
-              const tile = NAV_ICON_TILE[item.glyph];
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-2.5 py-2 text-sm font-medium transition-all duration-[var(--motion-duration-fast)] ${
+                  className={`flex items-center gap-2.5 rounded-lg border-e-[3px] border-transparent px-2 py-1.5 text-sm font-medium transition-all duration-[var(--motion-duration-fast)] ${
                     active
-                      ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-md ring-1 ring-black/5"
+                      ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-sm ring-1 ring-black/[0.04]"
                       : "text-stone-800 hover:bg-[var(--designer-sidebar-elevated)] hover:shadow-sm"
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${
-                      active ? "border-white/25 bg-white/15 text-white" : tile
+                    className={`${ICON_TILE} ${
+                      active ? "border-white/25 bg-white/15 text-white" : NAV_ICON_IDLE
                     }`}
                     aria-hidden
                   >
-                    <SidebarGlyph id={item.glyph} className="h-[1.15rem] w-[1.15rem]" />
+                    <SidebarGlyph id={item.glyph} className={GLYPH_SM} />
                   </span>
                   <span className="leading-snug">{item.label}</span>
                 </Link>
