@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { recordDesignerActivity } from "@/lib/designer-activity";
+import { ensureDesignerRowInDb } from "@/lib/ensure-designer-in-db";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getDesignerSession, getOtpSession } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -44,6 +46,18 @@ export async function POST(request: Request) {
     session.fullName = payload.fullName;
     session.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     await session.save();
+
+    try {
+      const supabase = createServerSupabaseClient();
+      const ensured = await ensureDesignerRowInDb(supabase, {
+        designerCode: payload.designerCode,
+        phone,
+        fullName: payload.fullName,
+      });
+      if (!ensured.ok) console.error("verify-otp ensureDesignerRowInDb:", ensured.message);
+    } catch (e) {
+      console.error("verify-otp ensureDesignerRowInDb", e);
+    }
 
     void recordDesignerActivity({
       activity_type: "login",

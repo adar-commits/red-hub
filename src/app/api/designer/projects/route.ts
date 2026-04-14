@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireDesignerSession } from "@/lib/designer-api-auth";
+import { ensureDesignerRowInDb } from "@/lib/ensure-designer-in-db";
 import { carpetModelsToJson, ERR_INVALID_BODY, normalizeProjectBody } from "@/lib/designer-project-body";
 import { PROJECT_CREATE_MAX_PER_DESIGNER_PER_DAY } from "@/lib/designer-project-photos";
 
@@ -45,6 +46,15 @@ export async function POST(request: Request) {
 
   try {
     const supabase = createServerSupabaseClient();
+    const ensured = await ensureDesignerRowInDb(supabase, auth.session);
+    if (!ensured.ok) {
+      console.error("designer projects create ensureDesigner", ensured.message);
+      return NextResponse.json(
+        { error: "לא ניתן לסנכרן את חשבון המעצב. נסו שוב או פנו לתמיכה." },
+        { status: 503 }
+      );
+    }
+
     const start = new Date();
     start.setUTCHours(0, 0, 0, 0);
 
@@ -81,8 +91,12 @@ export async function POST(request: Request) {
       .single();
 
     if (error || !data) {
-      console.error("designer projects insert", error);
-      return NextResponse.json({ error: "לא ניתן ליצור פרויקט" }, { status: 500 });
+      console.error("designer projects insert", error?.message ?? error, error?.code, error?.details);
+      const hint =
+        error?.code === "23503"
+          ? "חשבון המעצב חסר במערכת. התנתקו והתחברו שוב, או פנו לתמיכה."
+          : "לא ניתן ליצור פרויקט";
+      return NextResponse.json({ error: hint }, { status: 500 });
     }
     return NextResponse.json(data);
   } catch (e) {
