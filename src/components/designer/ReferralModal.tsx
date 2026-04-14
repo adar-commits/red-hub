@@ -25,7 +25,7 @@ export function ReferralModal({
 }) {
   const [phone, setPhone] = useState("");
   const [commissionSum, setCommissionSum] = useState("");
-  const [fieldType, setFieldType] = useState<string>(VALIDATION_FIELD_TYPES[0]);
+  const [fieldType, setFieldType] = useState("");
   const [fieldValue, setFieldValue] = useState("");
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,8 +42,12 @@ export function ReferralModal({
       setError("יש להזין סכום");
       return;
     }
+    if (!fieldType.trim()) {
+      setError("יש לבחור שדה אימות נוסף");
+      return;
+    }
     if (!fieldValue.trim()) {
-      setError("יש להזין ערך לשדה הנוסף");
+      setError(`יש להזין ${fieldType.trim()}`);
       return;
     }
     if (!declarationAccepted) {
@@ -85,7 +89,7 @@ export function ReferralModal({
       onClose();
       setPhone("");
       setCommissionSum("");
-      setFieldType(VALIDATION_FIELD_TYPES[0]);
+      setFieldType("");
       setFieldValue("");
       setDeclarationAccepted(false);
     } catch {
@@ -120,14 +124,21 @@ export function ReferralModal({
             <p className="text-xs text-center text-gray-500 leading-relaxed">התהליך עשוי לקחת מספר רגעים</p>
           </div>
         )}
-        <form onSubmit={handleSubmit} className={`space-y-4 ${loading ? "pointer-events-none opacity-50" : ""}`} dir="rtl">
+        <form
+          noValidate
+          onSubmit={handleSubmit}
+          className={`space-y-4 ${loading ? "pointer-events-none opacity-50" : ""}`}
+          dir="rtl"
+        >
         <p className="text-sm text-gray-700 text-right leading-relaxed">
           באפשרותך לשייך לעצמך עסקה שבוצעה שאינה מופיעה ברשימה
           <br />
           ע״י מתן מידע על העסקה והצהרת נכונות
         </p>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">טלפון הלקוח/ה *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
+            טלפון הלקוח/ה <span className="text-red-500" aria-hidden>*</span>
+          </label>
           <input
             type="tel"
             value={phone}
@@ -135,11 +146,12 @@ export function ReferralModal({
             placeholder="05xxxxxxxx"
             className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
             dir="ltr"
-            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">סכום עסקה *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
+            סכום עסקה <span className="text-red-500" aria-hidden>*</span>
+          </label>
           <input
             type="number"
             value={commissionSum}
@@ -148,31 +160,40 @@ export function ReferralModal({
             dir="ltr"
             min="0"
             step="0.01"
-            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">בחר שדה אימות נוסף</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
+            בחר שדה אימות נוסף <span className="text-red-500" aria-hidden>*</span>
+          </label>
           <select
             value={fieldType}
-            onChange={(e) => setFieldType(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setFieldType(v);
+              if (!v) setFieldValue("");
+            }}
             className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
           >
+            <option value="">— בחר שדה —</option>
             {VALIDATION_FIELD_TYPES.map((label) => (
               <option key={label} value={label}>{label}</option>
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">ערך</label>
-          <input
-            type="text"
-            value={fieldValue}
-            onChange={(e) => setFieldValue(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
-            required
-          />
-        </div>
+        {fieldType ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
+              {fieldType} <span className="text-red-500" aria-hidden>*</span>
+            </label>
+            <input
+              type="text"
+              value={fieldValue}
+              onChange={(e) => setFieldValue(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
+            />
+          </div>
+        ) : null}
         <label className="flex items-start gap-2 cursor-pointer text-right">
           <input
             type="checkbox"
@@ -181,6 +202,7 @@ export function ReferralModal({
             className="mt-1 rounded border-gray-300 text-[var(--brand-red)] focus:ring-[var(--brand-red)]/20"
           />
           <span className="text-sm text-gray-700">
+            <span className="text-red-500" aria-hidden>* </span>
             בשליחת טופס זה אני מצהיר/ה כי המידע שציינתי מהימן וכי עסקה זו הגיעה דרכי.{" "}
             <a href={TERMS_URL} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-red)] underline hover:no-underline">
               תקנון תנאי שימוש

@@ -47,6 +47,8 @@ export function DataTableToolbar({
   compactExportOnNarrow = false,
   /** Hide the search input (export / afterSearch only). */
   hideSearch = false,
+  /** Appended to the search+actions row flex (e.g. `max-sm:gap-0` to tighten mobile). */
+  searchRowClassName = "",
 }: {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -59,6 +61,7 @@ export function DataTableToolbar({
   dir?: "rtl" | "ltr";
   compactExportOnNarrow?: boolean;
   hideSearch?: boolean;
+  searchRowClassName?: string;
 }) {
   const exportBtnClass = compactExportOnNarrow
     ? `h-10 w-10 max-sm:h-10 max-sm:w-10 sm:h-auto sm:min-h-[44px] sm:w-auto sm:px-4 sm:py-2.5 ${exportBtnClassBase}`
@@ -74,21 +77,38 @@ export function DataTableToolbar({
       dir={dirProp}
     >
       {hasSearchRow ? (
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 max-sm:order-2 sm:min-w-0 sm:flex-1">
-          {dirProp === "rtl" && afterSearch}
-          {!hideSearch ? (
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={searchPlaceholder}
-              className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] ${
-                dirProp === "rtl" ? "text-right" : ""
-              }`}
-              aria-label={searchPlaceholder}
-            />
-          ) : null}
-          {dirProp !== "rtl" && afterSearch}
+        <div
+          className={`flex min-w-0 flex-1 flex-wrap items-center gap-2 max-sm:order-2 sm:min-w-0 sm:flex-1 ${searchRowClassName}`}
+        >
+          {dirProp === "rtl" ? (
+            <>
+              {!hideSearch ? (
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] text-right`}
+                  aria-label={searchPlaceholder}
+                />
+              ) : null}
+              {afterSearch}
+            </>
+          ) : (
+            <>
+              {afterSearch}
+              {!hideSearch ? (
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)]`}
+                  aria-label={searchPlaceholder}
+                />
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
       <button

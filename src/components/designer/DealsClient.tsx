@@ -127,16 +127,6 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         </div>
       )}
 
-      <div className="mb-4 flex flex-wrap justify-start gap-2">
-        <button
-          type="button"
-          onClick={() => setReferralOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--brand-red)] px-4 py-2 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2"
-        >
-          הוספת עסקה חדשה
-        </button>
-      </div>
-
       <DataTableToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -145,6 +135,16 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         exportLabel="ייצוא CSV"
         dir="rtl"
         compactExportOnNarrow
+        searchRowClassName="max-sm:gap-0"
+        afterSearch={
+          <button
+            type="button"
+            onClick={() => setReferralOpen(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--brand-red)] px-3 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 sm:px-4 sm:py-2"
+          >
+            הוספת עסקה חדשה
+          </button>
+        }
       />
 
       {/* Mobile: edge-to-edge scroll; min-width table avoids squashed columns / per-letter wrapping */}
