@@ -27,35 +27,19 @@ const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
 
 function columnHeaderClass(key: keyof DealRow | string): string {
   switch (key) {
-    case "invoice_date":
-      return "min-w-[12rem] max-w-[14rem]";
     case "customer_name":
-      return "min-w-[13rem]";
-    case "phone":
-      return "min-w-[9rem]";
-    case "amount_excl_vat":
-      return "min-w-[8rem]";
-    case "id":
-      return "min-w-[8rem]";
+      return "min-w-0 max-w-[min(16rem,55vw)]";
     default:
-      return "";
+      return "w-max whitespace-nowrap";
   }
 }
 
 function columnCellClass(key: keyof DealRow | string): string {
   switch (key) {
-    case "invoice_date":
-      return "min-w-[12rem] max-w-[14rem]";
     case "customer_name":
-      return "min-w-[13rem]";
-    case "phone":
-      return "min-w-[9rem]";
-    case "amount_excl_vat":
-      return "min-w-[8rem]";
-    case "id":
-      return "min-w-[8rem]";
+      return "min-w-0 max-w-[min(16rem,55vw)]";
     default:
-      return "";
+      return "w-max whitespace-nowrap";
   }
 }
 
@@ -143,7 +127,7 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         onSearchChange={setSearchQuery}
         searchPlaceholder={searchPlaceholder}
         dir="rtl"
-        searchRowClassName="max-sm:gap-0"
+        searchInputClassName="max-sm:max-w-[10rem] max-sm:flex-[0_1_auto] sm:max-w-none"
         afterSearch={
           <button
             type="button"

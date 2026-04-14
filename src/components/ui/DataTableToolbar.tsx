@@ -16,6 +16,8 @@ export function DataTableToolbar({
   hideSearch = false,
   /** Appended to the search+actions row flex (e.g. `max-sm:gap-0` to tighten mobile). */
   searchRowClassName = "",
+  /** Extra classes for the search input (e.g. max width on mobile). */
+  searchInputClassName = "",
 }: {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -26,6 +28,7 @@ export function DataTableToolbar({
   dir?: "rtl" | "ltr";
   hideSearch?: boolean;
   searchRowClassName?: string;
+  searchInputClassName?: string;
 }) {
   const hasSearchRow = !hideSearch || afterSearch != null;
 
@@ -33,7 +36,7 @@ export function DataTableToolbar({
 
   return (
     <div className={`mb-4 flex flex-wrap items-center gap-2 ${className ?? ""}`} dir={dirProp}>
-      <div className={`flex min-w-0 flex-1 flex-wrap items-center gap-2 ${searchRowClassName}`}>
+      <div className={`flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3 ${searchRowClassName}`}>
         {dirProp === "rtl" ? (
           <>
             {!hideSearch ? (
@@ -42,7 +45,7 @@ export function DataTableToolbar({
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder={searchPlaceholder}
-                className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] text-right`}
+                className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] text-right ${searchInputClassName}`}
                 aria-label={searchPlaceholder}
               />
             ) : null}
@@ -57,7 +60,7 @@ export function DataTableToolbar({
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder={searchPlaceholder}
-                className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)]`}
+                className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] ${searchInputClassName}`}
                 aria-label={searchPlaceholder}
               />
             ) : null}

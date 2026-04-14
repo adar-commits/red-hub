@@ -179,8 +179,11 @@ function formatCertDate(s: string | null | undefined): string {
 }
 
 function commissionHeaderClass(key: string): string {
-  const base =
-    "px-3 py-2.5 text-right align-bottom select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors";
+  const nowrap =
+    key === "status"
+      ? "min-w-[12rem] max-w-[min(20rem,70vw)] whitespace-normal"
+      : "whitespace-nowrap";
+  const base = `px-3 py-2.5 text-right align-bottom select-none ${nowrap} hover:bg-[var(--brand-red-hover)] transition-colors`;
   const cursor = key === "status" ? "cursor-default" : "cursor-pointer";
   return `${base} ${cursor}`;
 }
@@ -191,10 +194,11 @@ function commissionCellClass(key: string): string {
     case "date":
     case "commission":
     case "comitems_count":
-      return `${base} tabular-nums`;
+      return `${base} whitespace-nowrap tabular-nums`;
     case "comnum":
+      return `${base} whitespace-nowrap tabular-nums font-mono text-[0.8125rem]`;
     case "status":
-      return `${base} break-words`;
+      return `${base} min-w-[12rem] max-w-[min(20rem,70vw)] whitespace-normal break-words`;
     default:
       return base;
   }
@@ -775,19 +779,14 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       />
 
       <div
-        className="block w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-right"
-        style={{ boxShadow: "var(--shadow-card)" }}
+        className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-gutter:stable] sm:mx-0 sm:px-0 sm:pb-0"
         dir="rtl"
       >
-        <table dir="rtl" className="w-full min-w-[min(100%,36rem)] table-fixed border-collapse text-right text-sm">
-          <colgroup>
-            <col className="w-10" />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "16%" }} />
-            <col style={{ width: "36%" }} />
-          </colgroup>
+        <div
+          className="inline-block min-w-full rounded-lg border border-gray-200 bg-white text-right align-top"
+          style={{ boxShadow: "var(--shadow-card)" }}
+        >
+          <table dir="rtl" className="w-max min-w-full border-collapse text-right text-sm">
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               <th className="w-10 min-w-10 py-2.5 px-2 text-right align-bottom" aria-label="הרחבה" />
@@ -800,7 +799,9 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                     if (col.key !== "status") toggleSort(col.key);
                   }}
                 >
-                  <span className="inline-block whitespace-nowrap">
+                  <span
+                    className={`inline-block ${col.key === "status" ? "whitespace-normal" : "whitespace-nowrap"}`}
+                  >
                     {col.label}
                     {col.key === "status" ? (
                       <>
@@ -958,6 +959,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

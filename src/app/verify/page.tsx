@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const RESEND_COOLDOWN_SEC = 60;
+
+const VERIFY_BG_URL =
+  "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
 
 function VerifyForm() {
   const searchParams = useSearchParams();
@@ -13,9 +16,20 @@ function VerifyForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resendSecs, setResendSecs] = useState(0);
+  const codeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setResendSecs(RESEND_COOLDOWN_SEC);
+  }, []);
+
+  useEffect(() => {
+    const el = codeInputRef.current;
+    if (!el) return;
+    const t = requestAnimationFrame(() => {
+      el.focus();
+      el.select?.();
+    });
+    return () => cancelAnimationFrame(t);
   }, []);
 
   useEffect(() => {
@@ -56,8 +70,18 @@ function VerifyForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-[0_8px_30px_rgba(15,23,42,0.08)] animate-in-fade-up">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4">
+      <img
+        src={VERIFY_BG_URL}
+        alt=""
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/35 to-black/45 md:from-black/45 md:via-black/35 md:to-black/50"
+        aria-hidden
+      />
+      <div className="animate-in-fade-up relative z-10 w-full max-w-md rounded-2xl border border-gray-200/80 bg-white/95 p-8 shadow-[0_8px_30px_rgba(15,23,42,0.12)] backdrop-blur-[2px] md:border-white/20 md:shadow-2xl">
         <h1 className="text-2xl font-bold text-center mb-1 text-foreground">
           אימות קוד
         </h1>
@@ -72,6 +96,7 @@ function VerifyForm() {
               קוד
             </label>
             <input
+              ref={codeInputRef}
               id="code"
               type="text"
               inputMode="numeric"
@@ -123,8 +148,15 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[var(--main-shell-bg)] p-6">
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-300 bg-white px-8 py-6 shadow-[var(--shadow-card)]">
+        <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-6">
+          <img
+            src={VERIFY_BG_URL}
+            alt=""
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-90"
+            aria-hidden
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-black/30 to-black/40" aria-hidden />
+          <div className="relative z-10 flex flex-col items-center gap-3 rounded-2xl border border-gray-300/90 bg-white/95 px-8 py-6 shadow-[var(--shadow-card)] backdrop-blur-[2px]">
             <div
               className="h-9 w-9 rounded-full border-2 border-[var(--brand-red)]/30 border-t-[var(--brand-red)] animate-spin"
               style={{ animationDuration: "var(--motion-duration-slow, 0.8s)" }}
