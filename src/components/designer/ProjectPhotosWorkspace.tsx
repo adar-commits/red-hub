@@ -55,6 +55,7 @@ function uploadOneFile(
       }
     });
     xhr.addEventListener("error", () => reject(new Error("שגיאת רשת")));
+    xhr.withCredentials = true;
     xhr.open("POST", `/api/designer/projects/${projectId}/photos`);
     xhr.send(form);
   });

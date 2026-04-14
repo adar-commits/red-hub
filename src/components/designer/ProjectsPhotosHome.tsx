@@ -10,7 +10,13 @@ function asStringArray(models: unknown): string[] {
   return models.filter((x): x is string => typeof x === "string");
 }
 
-export function ProjectsPhotosHome({ initialProjects }: { initialProjects: DesignerProject[] }) {
+export function ProjectsPhotosHome({
+  initialProjects,
+  listError = null,
+}: {
+  initialProjects: DesignerProject[];
+  listError?: string | null;
+}) {
   const router = useRouter();
   const [projects, setProjects] = useState(initialProjects);
   const [projectName, setProjectName] = useState("");
@@ -83,6 +89,14 @@ export function ProjectsPhotosHome({ initialProjects }: { initialProjects: Desig
 
   return (
     <div className="space-y-8">
+      {listError && (
+        <div
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="alert"
+        >
+          {listError}
+        </div>
+      )}
       <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
         <h2 className="text-lg font-bold text-[var(--brand-red)]">פרויקט חדש</h2>
         <form onSubmit={handleCreate} className="space-y-4">

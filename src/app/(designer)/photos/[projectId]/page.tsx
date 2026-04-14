@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getDesignerSession } from "@/lib/session";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -25,7 +26,21 @@ export default async function PhotosProjectPage({
     .eq("designer_code", session.designerCode)
     .maybeSingle();
 
-  if (error || !project) notFound();
+  if (error) {
+    console.error("photos project page: designer_projects", error);
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl">שגיאה בטעינת פרויקט</h1>
+        <p className="text-sm text-gray-700 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          לא ניתן לטעון את הפרויקט. ודאו שמיגרציית מסד הנתונים הורצה בסופאבייס (כולל טבלת designer_projects).
+        </p>
+        <Link href="/photos" className="text-sm font-medium text-[var(--brand-red)] hover:underline">
+          ← חזרה לרשימת פרויקטים
+        </Link>
+      </div>
+    );
+  }
+  if (!project) notFound();
 
   return (
     <div className="space-y-4">
