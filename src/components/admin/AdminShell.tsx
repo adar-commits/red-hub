@@ -24,8 +24,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Image
               src="/brand/hom-group.png"
               alt="HōM GROUP"
-              width={360}
-              height={180}
+              width={571}
+              height={241}
               className="h-auto w-full max-h-[3.25rem] object-contain object-center"
             />
           </Link>

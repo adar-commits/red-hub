@@ -168,8 +168,8 @@ export function DesignerShell({
             <Image
               src="/brand/hom-group.png"
               alt="HōM GROUP"
-              width={440}
-              height={220}
+              width={571}
+              height={241}
               className={collapsed ? "h-10 w-auto max-w-[2.75rem] object-contain object-center" : "h-auto w-full max-h-[4.5rem] object-contain object-center"}
               priority
             />
@@ -242,8 +242,8 @@ export function DesignerShell({
               <Image
                 src="/brand/hom-group.png"
                 alt=""
-                width={440}
-                height={176}
+                width={571}
+                height={241}
                 className="h-10 w-auto max-w-[min(220px,68vw)] object-contain object-center sm:h-12 sm:max-w-[240px]"
                 priority
               />
@@ -286,8 +286,8 @@ export function DesignerShell({
               <Image
                 src="/brand/hom-group.png"
                 alt=""
-                width={440}
-                height={176}
+                width={571}
+                height={241}
                 className="h-9 w-auto max-w-[min(200px,48vw)] object-contain object-center"
               />
             </Link>
