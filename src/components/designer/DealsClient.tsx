@@ -27,15 +27,32 @@ const DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
 function columnHeaderClass(key: keyof DealRow | string): string {
   switch (key) {
     case "invoice_date":
-      return "min-w-[6.5rem]";
+      return "min-w-[12rem] max-w-[14rem]";
     case "customer_name":
-      return "min-w-[10rem]";
+      return "min-w-[13rem]";
     case "phone":
-      return "min-w-[8.5rem]";
+      return "min-w-[9rem]";
     case "amount_excl_vat":
-      return "min-w-[7rem]";
+      return "min-w-[8rem]";
     case "id":
-      return "min-w-[7rem]";
+      return "min-w-[8rem]";
+    default:
+      return "";
+  }
+}
+
+function columnCellClass(key: keyof DealRow | string): string {
+  switch (key) {
+    case "invoice_date":
+      return "min-w-[12rem] max-w-[14rem]";
+    case "customer_name":
+      return "min-w-[13rem]";
+    case "phone":
+      return "min-w-[9rem]";
+    case "amount_excl_vat":
+      return "min-w-[8rem]";
+    case "id":
+      return "min-w-[8rem]";
     default:
       return "";
   }
@@ -141,27 +158,22 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         >
           <table
             dir="rtl"
-            className="w-full min-w-[640px] table-fixed border-collapse text-start text-sm text-gray-950"
+            className="w-max min-w-full border-collapse text-start text-sm text-gray-950"
           >
-            <colgroup>
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "28%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "26%" }} />
-            </colgroup>
             <thead>
               <tr className="bg-[var(--brand-red)] text-white">
                 {DEAL_COLUMNS.map((col) => (
                   <th
                     key={String(col.key)}
-                    className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 text-start align-middle text-sm font-semibold transition-colors hover:bg-[var(--brand-red-hover)] ${columnHeaderClass(col.key)}`}
+                    className={`cursor-pointer select-none px-3 py-3 text-start align-middle text-sm font-semibold transition-colors hover:bg-[var(--brand-red-hover)] ${columnHeaderClass(col.key)} ${col.key === "customer_name" ? "whitespace-normal leading-snug" : "whitespace-nowrap"}`}
                     onClick={() => toggleSort(col.key)}
                   >
-                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                    <span
+                      className={`inline-flex items-center gap-1 ${col.key === "customer_name" ? "whitespace-normal" : "whitespace-nowrap"}`}
+                    >
                       {col.label}
                       {sortKey === col.key && (
-                        <span className="tabular-nums" aria-hidden>
+                        <span className="shrink-0 tabular-nums" aria-hidden>
                           {sortDir === "asc" ? "↑" : "↓"}
                         </span>
                       )}
@@ -180,23 +192,33 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
               ) : (
                 filteredSortedRows.map((d, i) => (
                   <tr key={d.id ?? i} className="border-t border-gray-200 transition-colors hover:bg-gray-50/90">
-                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
+                    <td
+                      className={`whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950 ${columnCellClass("invoice_date")}`}
+                    >
                       {d.invoice_date ? new Date(d.invoice_date).toLocaleDateString("he-IL") : "—"}
                     </td>
-                    <td className="px-3 py-2.5 text-start align-middle break-words text-gray-950 leading-snug">
+                    <td
+                      className={`px-3 py-2.5 text-start align-middle break-words text-gray-950 leading-snug ${columnCellClass("customer_name")}`}
+                    >
                       {d.customer_name ?? "—"}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
+                    <td
+                      className={`whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950 ${columnCellClass("phone")}`}
+                    >
                       <span className="block" dir="ltr">
                         {d.phone ?? "—"}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950">
+                    <td
+                      className={`whitespace-nowrap px-3 py-2.5 text-start align-middle tabular-nums text-gray-950 ${columnCellClass("amount_excl_vat")}`}
+                    >
                       {d.amount_excl_vat != null
                         ? new Intl.NumberFormat("he-IL", { style: "currency", currency: "ILS" }).format(d.amount_excl_vat)
                         : "—"}
                     </td>
-                    <td className="break-all px-3 py-2.5 text-start align-middle font-mono text-sm text-gray-950">
+                    <td
+                      className={`break-all px-3 py-2.5 text-start align-middle font-mono text-sm text-gray-950 ${columnCellClass("id")}`}
+                    >
                       {d.id ?? "—"}
                     </td>
                   </tr>
