@@ -85,16 +85,12 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
   const [loading, setLoading] = useState(true);
 
   const {
-    searchQuery,
-    setSearchQuery,
     filteredSortedRows: sortedDeals,
     sortKey,
     sortDir,
     toggleSort,
     exportCsv,
-    searchPlaceholder,
   } = useSortAndFilter(deals, DASHBOARD_DEAL_COLUMNS, {
-    searchPlaceholder: "חיפוש בעסקאות אחרונות...",
     initialSort: { key: "invoice_date", dir: "desc" },
   });
 
@@ -215,12 +211,12 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
       <section className="animate-in-fade-up">
         <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">סופקו לאחרונה</h2>
         <DataTableToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          searchQuery=""
+          onSearchChange={() => {}}
           onExportCsv={() => exportCsv("dashboard-deals.csv")}
-          searchPlaceholder={searchPlaceholder}
           exportLabel="ייצוא"
           dir="rtl"
+          hideSearch
         />
         {/* Mobile: horizontal scroll + min-width so text stays readable (matches deals table) */}
         <div

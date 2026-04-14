@@ -41,6 +41,8 @@ export function DataTableToolbar({
   dir: dirProp,
   /** When true: single row with icon-only export on small screens (physical left under RTL). */
   compactExportOnNarrow = false,
+  /** Hide the search input (export / afterSearch only). */
+  hideSearch = false,
 }: {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -52,10 +54,11 @@ export function DataTableToolbar({
   className?: string;
   dir?: "rtl" | "ltr";
   compactExportOnNarrow?: boolean;
+  hideSearch?: boolean;
 }) {
   const exportBtnClass = compactExportOnNarrow
     ? `h-11 w-11 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 ${exportBtnClassBase}`
-    : `${exportBtnClassBase} w-full sm:w-auto`;
+    : `${exportBtnClassBase} ${hideSearch ? "w-auto" : "w-full sm:w-auto"}`;
 
   return (
     <div
@@ -67,16 +70,18 @@ export function DataTableToolbar({
       dir={dirProp}
     >
       {dirProp === "rtl" && afterSearch}
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder={searchPlaceholder}
-        className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] ${
-          dirProp === "rtl" ? "text-right" : ""
-        }`}
-        aria-label={searchPlaceholder}
-      />
+      {!hideSearch ? (
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder={searchPlaceholder}
+          className={`${inputClassBase} min-w-0 flex-1 basis-[min(100%,12rem)] ${
+            dirProp === "rtl" ? "text-right" : ""
+          }`}
+          aria-label={searchPlaceholder}
+        />
+      ) : null}
       {dirProp !== "rtl" && afterSearch}
       <button
         type="button"
