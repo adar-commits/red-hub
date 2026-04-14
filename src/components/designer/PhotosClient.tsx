@@ -8,6 +8,12 @@ interface PendingFile {
   url: string;
 }
 
+/** Safari/iOS often leaves `file.type` empty for camera-roll picks; `accept="image/*"` can then fail HTML validation with "pattern" errors. */
+function isProbablyImageFile(file: File): boolean {
+  if (file.type && file.type.startsWith("image/")) return true;
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?)$/i.test(file.name.trim());
+}
+
 export function PhotosClient({ designerCode }: { designerCode: string }) {
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [projectDescription, setProjectDescription] = useState("");
@@ -29,7 +35,7 @@ export function PhotosClient({ designerCode }: { designerCode: string }) {
     const newPending: PendingFile[] = [];
     for (let i = 0; i < selected.length; i++) {
       const file = selected[i];
-      if (!file.type.startsWith("image/")) continue;
+      if (!isProbablyImageFile(file)) continue;
       newPending.push({
         id: `${Date.now()}-${i}-${file.name}`,
         file,
@@ -59,7 +65,13 @@ export function PhotosClient({ designerCode }: { designerCode: string }) {
       form.append("projectDescription", desc);
       pendingFiles.forEach((p) => form.append("files", p.file));
       const res = await fetch("/api/photos", { method: "POST", body: form });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = raw ? (JSON.parse(raw) as { error?: string }) : {};
+      } catch {
+        throw new Error("שגיאה בהעלאה");
+      }
       if (!res.ok) throw new Error(data.error || "שגיאה בהעלאה");
       setLastUploaded((prev) => {
         prev.forEach((p) => URL.revokeObjectURL(p.url));
@@ -78,7 +90,7 @@ export function PhotosClient({ designerCode }: { designerCode: string }) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form noValidate onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             תיאור פרויקט <span className="text-red-500">*</span>
@@ -98,7 +110,7 @@ export function PhotosClient({ designerCode }: { designerCode: string }) {
           <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--brand-red)] text-white font-medium cursor-pointer hover:bg-[var(--brand-red-hover)] transition-colors focus-within:ring-2 focus-within:ring-[var(--brand-red)]/50">
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.gif,.webp"
               multiple
               className="hidden"
               onChange={handleFileSelect}

@@ -20,6 +20,20 @@ async function fileToBase64(file: File): Promise<string> {
   return buf.toString("base64");
 }
 
+function isProbablyImageFile(f: File): boolean {
+  if (f.type && f.type.startsWith("image/")) return true;
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?)$/i.test(f.name.trim());
+}
+
+function resolveWebhookUrl(fallback: string): string {
+  const raw = (process.env.PHOTOS_WEBHOOK_URL?.trim() || fallback).trim();
+  const u = new URL(raw);
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    throw new Error("Invalid webhook protocol");
+  }
+  return u.href;
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getDesignerSession();
@@ -35,10 +49,10 @@ export async function POST(request: Request) {
     const files: File[] = [];
     const fileList = formData.getAll("files") as File[];
     for (const f of fileList) {
-      if (f && f instanceof File && f.type.startsWith("image/")) files.push(f);
+      if (f && f instanceof File && isProbablyImageFile(f)) files.push(f);
     }
     const single = formData.get("file") as File | null;
-    if (single && single instanceof File && single.type.startsWith("image/")) {
+    if (single && single instanceof File && isProbablyImageFile(single)) {
       files.push(single);
     }
     if (files.length === 0) {
@@ -53,7 +67,14 @@ export async function POST(request: Request) {
       }))
     );
 
-    const webhookUrl = process.env.PHOTOS_WEBHOOK_URL ?? PHOTOS_WEBHOOK_URL;
+    let webhookUrl: string;
+    try {
+      webhookUrl = resolveWebhookUrl(PHOTOS_WEBHOOK_URL);
+    } catch {
+      console.error("photos: invalid PHOTOS_WEBHOOK_URL");
+      return NextResponse.json({ error: "השרת לא הוגדר נכון לקבלת תמונות" }, { status: 500 });
+    }
+
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
