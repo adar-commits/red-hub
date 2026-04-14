@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { isAdminSettingsUser } from "@/lib/admin-settings-access";
 import { authOptions } from "@/lib/auth-options";
 import { isDesignerActivityType } from "@/lib/designer-activity-types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -10,9 +9,8 @@ const DEFAULT_LIMIT = 50;
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isAdminSettingsUser(session.user?.email)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);

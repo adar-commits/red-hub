@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { isAdminSettingsUser } from "@/lib/admin-settings-access";
 
 const navItems = [{ href: "/admin/announcements", label: "הודעות" }];
 
@@ -12,8 +11,8 @@ const settingsPath = "/admin/settings";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const showSettings = isAdminSettingsUser(session?.user?.email);
+  const { data: session, status } = useSession();
+  const showSettings = status === "authenticated" && !!session?.user?.email;
   const isSettings = pathname?.startsWith(settingsPath);
 
   return (
