@@ -10,6 +10,8 @@
 }
 
 :root {
+  /* Force light UI: ignore system dark mode so mobile/desktop never flip to black canvas */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
   --brand-red: #C8102E;
@@ -47,20 +49,6 @@
   --color-foreground: var(--foreground);
   --color-brand-red: var(--brand-red);
   --font-sans: var(--font-noto-sans-hebrew), system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f0f0f;
-    --foreground: #ededed;
-    --card-bg: #1a1a1a;
-    --sidebar-bg: #e2e8f0;
-    --sidebar-border: #94a3b8;
-    --sidebar-text: #0f172a;
-    --sidebar-text-muted: #475569;
-    --main-shell-bg: #cbd5e1;
-    --input-placeholder: #94a3b8;
-  }
 }
 
 body {
