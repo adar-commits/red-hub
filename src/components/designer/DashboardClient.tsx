@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
+import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
 import { StatCard } from "@/components/ui/StatCard";
 
 interface Announcement {
@@ -84,13 +85,16 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
   const [loading, setLoading] = useState(true);
 
   const {
+    searchQuery,
+    setSearchQuery,
     filteredSortedRows: sortedDeals,
     sortKey,
     sortDir,
     toggleSort,
     exportCsv,
+    searchPlaceholder,
   } = useSortAndFilter(deals, DASHBOARD_DEAL_COLUMNS, {
-    searchPlaceholder: "",
+    searchPlaceholder: "חיפוש בעסקאות אחרונות...",
     initialSort: { key: "invoice_date", dir: "desc" },
   });
 
@@ -209,16 +213,15 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
       </div>
 
       <section className="animate-in-fade-up">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="text-lg font-semibold text-[var(--brand-red)]">סופקו לאחרונה</h2>
-          <button
-            type="button"
-            onClick={() => exportCsv("dashboard-deals.csv")}
-            className="px-4 py-2 rounded-lg border-2 border-gray-400 bg-white text-sm font-semibold text-gray-950 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25"
-          >
-            ייצוא CSV
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">סופקו לאחרונה</h2>
+        <DataTableToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onExportCsv={() => exportCsv("dashboard-deals.csv")}
+          searchPlaceholder={searchPlaceholder}
+          exportLabel="ייצוא"
+          dir="rtl"
+        />
         {/* Mobile: horizontal scroll + min-width so text stays readable (matches deals table) */}
         <div
           className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-gutter:stable] sm:mx-0 sm:px-0 sm:pb-0"
