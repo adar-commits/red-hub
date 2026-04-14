@@ -3,11 +3,14 @@ import type { ReactNode } from "react";
 export function StatCard({
   title,
   value,
+  explanation,
   icon,
   iconClassName,
 }: {
   title: string;
   value: string;
+  /** Optional short line below the value (e.g. product copy). */
+  explanation?: string;
   icon: ReactNode;
   iconClassName: string;
 }) {
@@ -24,6 +27,9 @@ export function StatCard({
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium uppercase tracking-wide text-gray-700">{title}</p>
           <p className="mt-1.5 text-lg font-bold leading-tight text-gray-950 tabular-nums">{value}</p>
+          {explanation ? (
+            <p className="mt-2 text-xs leading-relaxed text-gray-600">{explanation}</p>
+          ) : null}
         </div>
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${iconClassName}`}

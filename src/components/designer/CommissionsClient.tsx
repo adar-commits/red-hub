@@ -98,10 +98,26 @@ function StatIconPaidCert({ className }: { className?: string }) {
   );
 }
 
-/** Status explanations for the modal — you can edit this text */
+const STATUS_SENT_FOR_APPROVAL = "נשלחה לאישור";
+const VAT_FACTOR = 1.18;
+const MIN_INVOICE_UPLOAD_ACCRUAL_ILS = 500;
+const UPLOAD_INVOICE_DISABLED_TOOLTIP =
+  "ניתן להעלות חשבונית רק כאשר יתרה גדולה מ-500 ש״ח";
+
+const COMMISSION_STATUS_TABLE_DISPLAY: Record<string, string> = {
+  [STATUS_SENT_FOR_APPROVAL]: "עמלה בצבירה",
+};
+
+function displayCommissionStatus(status: string | null | undefined): string {
+  const t = (status ?? "").trim();
+  if (!t) return "—";
+  return COMMISSION_STATUS_TABLE_DISPLAY[t] ?? t;
+}
+
+/** Status explanations for the ? tooltip (keys are raw ERP statuses). */
 const COMMISSION_STATUS_EXPLANATIONS: Record<string, string> = {
   "חדשה/בבדיקה": "נוצרה לאחרונה וטרם הספקנו לאמת אותה",
-  "נשלחה לאישור": "תעודת העמלה נשלחה לאדריכל/ית לאישורו הסופי",
+  [STATUS_SENT_FOR_APPROVAL]: "תעודת העמלה נשלחה לאדריכל/ית לאישורו הסופי",
   "חשבונית חסרה": "התעודה אושרה ע״י שני הצדדים וכעת ממתינה לחשבונית בכדי להתקדם לביצוע תשלום",
   "ממתין לתשלום": "ממתינה לביצוע העברת תשלום",
   "שולמה": "הועבר תשלום על תעודה זו.",
@@ -109,11 +125,15 @@ const COMMISSION_STATUS_EXPLANATIONS: Record<string, string> = {
   מבוטלת: "תעודה בוטלה ידנית ע״י מנהל/ת קשרי אדריכלים ומעצבים",
 };
 
+const COMMISSION_STATUS_HELP_TITLE = Object.entries(COMMISSION_STATUS_EXPLANATIONS)
+  .map(([k, v]) => `${COMMISSION_STATUS_TABLE_DISPLAY[k] ?? k}: ${v}`)
+  .join("\n");
+
 type CertRowWithCount = CertRow & { comitems_count?: number };
 const CERT_COLUMNS: SortFilterColumn<CertRowWithCount>[] = [
   {
     key: "date",
-    label: "תאריך עסקה",
+    label: "נוצרה בתאריך",
     sortValue: (row) => {
       const d = row.date;
       if (!d) return 0;
@@ -121,11 +141,26 @@ const CERT_COLUMNS: SortFilterColumn<CertRowWithCount>[] = [
       return Number.isFinite(t) ? t : 0;
     },
   },
-  { key: "comnum", label: "מספר תעודה" },
-  { key: "amount", label: "סכום" },
-  { key: "commission", label: "עמלה" },
-  { key: "comitems_count", label: "עסקאות" },
-  { key: "status", label: "סטטוס" },
+  { key: "comnum", label: "מס׳ תעודה" },
+  {
+    key: "comitems_count",
+    label: "כמות עסקאות",
+    sortValue: (row) => Number(row.comitems_count) || 0,
+    getValue: (row) =>
+      String((row as CertRowWithCount).comitems_count ?? (row.comitems ?? []).length),
+  },
+  {
+    key: "commission",
+    label: "עמלה",
+    sortValue: (row) => Number(row.commission) || 0,
+    getValue: (row) =>
+      row.commission != null && Number.isFinite(row.commission) ? String(row.commission) : "",
+  },
+  {
+    key: "status",
+    label: "סטטוס",
+    getValue: (row) => displayCommissionStatus(row.status),
+  },
 ];
 
 function formatCertCurrency(n: number | null | undefined): string {
@@ -146,37 +181,19 @@ function commissionHeaderClass(key: string): string {
   const base =
     "px-3 py-2.5 text-right align-bottom select-none whitespace-nowrap hover:bg-[var(--brand-red-hover)] transition-colors";
   const cursor = key === "status" ? "cursor-default" : "cursor-pointer";
-  switch (key) {
-    case "date":
-      return `${base} ${cursor} w-[11%] min-w-[5.75rem]`;
-    case "comnum":
-      return `${base} ${cursor} w-[18%] min-w-[6.5rem]`;
-    case "amount":
-    case "commission":
-      return `${base} ${cursor} w-[12%] min-w-[5.25rem]`;
-    case "comitems_count":
-      return `${base} ${cursor} w-[8%] min-w-[3.25rem]`;
-    case "status":
-      return `${base} ${cursor} w-[23%] min-w-[7rem]`;
-    default:
-      return `${base} ${cursor}`;
-  }
+  return `${base} ${cursor}`;
 }
 
 function commissionCellClass(key: string): string {
   const base = "px-3 py-2.5 text-right align-top";
   switch (key) {
     case "date":
-      return `${base} tabular-nums w-[11%] min-w-[5.75rem]`;
-    case "comnum":
-      return `${base} w-[18%] min-w-[6.5rem] break-words`;
-    case "amount":
     case "commission":
-      return `${base} tabular-nums w-[12%] min-w-[5.25rem]`;
     case "comitems_count":
-      return `${base} tabular-nums w-[8%] min-w-[3.25rem]`;
+      return `${base} tabular-nums`;
+    case "comnum":
     case "status":
-      return `${base} w-[23%] min-w-[7rem] break-words`;
+      return `${base} break-words`;
     default:
       return base;
   }
@@ -234,7 +251,6 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     const parsed: CertRow[] = raw ? (JSON.parse(raw) as CertRow[]) : [];
     setCerts(parsed);
 
-    const נשלחה_לאישור = "נשלחה לאישור";
     const ממתין_לתשלום = "ממתין לתשלום";
     const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
     /** Matches ERP STATDES (e.g. שולמה, סופית) and recon — same rules as DashboardClient total earned */
@@ -246,7 +262,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת")
       );
     };
-    const pendingList = parsed.filter((c) => normalizedStatus(c.status) === נשלחה_לאישור);
+    const pendingList = parsed.filter((c) => normalizedStatus(c.status) === STATUS_SENT_FOR_APPROVAL);
     const pendingApproval = pendingList.length;
     const pendingApprovalTotal = pendingList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
     const unpaidList = parsed.filter((c) => normalizedStatus(c.status) === ממתין_לתשלום);
@@ -300,6 +316,15 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     initialSort: { key: "date", dir: "desc" },
   });
 
+  const accrualTotalVatInclusive = useMemo(() => {
+    const norm = (s: string | null | undefined) => (s ?? "").trim();
+    return certsWithCount
+      .filter((c) => norm(c.status) === STATUS_SENT_FOR_APPROVAL)
+      .reduce((sum, c) => sum + (Number(c.commission) || 0) * VAT_FACTOR, 0);
+  }, [certsWithCount]);
+
+  const canUploadInvoice = accrualTotalVatInclusive >= MIN_INVOICE_UPLOAD_ACCRUAL_ILS;
+
   const PDF_ONLY_MESSAGE = "ניתן להעלות רק קבצים מסוג PDF בלבד";
 
   function assertPdfFile(file: File): string | null {
@@ -310,6 +335,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
   }
 
   function openUploadModal() {
+    if (!canUploadInvoice) return;
     setModalError("");
     setModalSuccess(null);
     setModalSelectedFile(null);
@@ -459,56 +485,39 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           dir="rtl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="relative overflow-hidden bg-gradient-to-l from-rose-900 via-[var(--brand-red)] to-amber-700 px-5 py-4 text-white">
-            <div className="pointer-events-none absolute -start-16 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden />
-            <div className="relative flex items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 shadow-inner ring-1 ring-white/30"
-                  aria-hidden
-                >
-                  <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M14 2v6h6M12 18V9m-3 3 3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div className="min-w-0 text-right">
-                  <h2 id="upload-file-dialog-title" className="text-lg font-bold leading-tight">
-                    העלאת קובץ
-                  </h2>
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-amber-100">
-                    <span className="inline-flex items-center rounded-md bg-white/20 px-2 py-0.5 text-xs font-bold text-white ring-1 ring-white/25">
-                      PDF בלבד
-                    </span>
-                    <span className="text-white/90">חשבונית לתשלום</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={closeUploadModal}
-                disabled={modalUploading}
-                className="shrink-0 rounded-lg p-1.5 text-white/90 transition-colors hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-40"
-                aria-label="סגור"
+          <div className="flex items-start justify-between gap-3 border-b border-gray-200 bg-white px-5 py-4">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-[var(--brand-red)]"
+                aria-hidden
               >
-                <span className="text-2xl font-light leading-none" aria-hidden>
-                  ×
-                </span>
-              </button>
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 2v6h6M12 18V9m-3 3 3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h2 id="upload-file-dialog-title" className="text-lg font-bold leading-tight text-gray-900">
+                העלאת קובץ
+              </h2>
             </div>
+            <button
+              type="button"
+              onClick={closeUploadModal}
+              disabled={modalUploading}
+              className="shrink-0 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 disabled:opacity-40"
+              aria-label="סגור"
+            >
+              <span className="text-2xl font-light leading-none" aria-hidden>
+                ×
+              </span>
+            </button>
           </div>
 
           <div className="space-y-4 p-5">
             <div className="rounded-xl border-e-4 border-[var(--brand-red)] bg-gradient-to-l from-red-50/90 to-white pe-4 ps-3 py-3">
               <h3 className="text-base font-bold text-gray-900">העלאת חשבונית לתשלום</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-700">
-                חשבונית חייבת לכלול{" "}
-                <strong className="font-semibold text-amber-800">פרטי חשבון מלאים</strong>
-                {" "}ובסכום התואם לתעודות עמלה{" "}
-                <span className="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200/80">
-                  ממתינות לתשלום
-                </span>
-                {" "}בלבד.
+                ניתן להעלות חשבונית לתשלום אך ורק במידה וסכום העמלות הממתינות לתשלום הינו 500 ש״ח
               </p>
             </div>
 
@@ -658,20 +667,23 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard
-          title="עמלות הממתינות לאישור"
+          title="עמלות בצבירה"
           value={`${stats.pendingApproval} תעודות · ${formatCertCurrency(stats.pendingApprovalTotal)}`}
+          explanation={"בצבירה: העמלות שצברת עד כה. לתשלום נדרש סכום מצטבר של לפחות 500 ש״ח."}
           icon={<StatIconApproval className="text-orange-700" />}
           iconClassName="bg-orange-50 ring-1 ring-orange-200/80"
         />
         <StatCard
-          title="עמלות שטרם שולמו"
+          title="ממתינות לתשלום"
           value={`${stats.unpaid} תעודות · ${formatCertCurrency(stats.unpaidTotal)}`}
+          explanation="ממתינה לתשלום: ממתינות לתשלום - יש להעלות חשבונית במערכת."
           icon={<StatIconUnpaid className="text-amber-700" />}
           iconClassName="bg-amber-50 ring-1 ring-amber-200/80"
         />
         <StatCard
           title="עמלות שולמו"
           value={`${stats.paid} תעודות · ${formatCertCurrency(stats.paidTotal)}`}
+          explanation="עמלות שולמו: עמלות ששולמו והועברו לחשבונך."
           icon={<StatIconPaidCert className="text-emerald-700" />}
           iconClassName="bg-emerald-50 ring-1 ring-emerald-200/80"
         />
@@ -688,7 +700,10 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <button
             type="button"
             onClick={openUploadModal}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-normal text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25"
+            disabled={!canUploadInvoice}
+            title={!canUploadInvoice ? UPLOAD_INVOICE_DISABLED_TOOLTIP : undefined}
+            aria-disabled={!canUploadInvoice}
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-normal text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -712,11 +727,19 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       />
 
       <div
-        className="w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-right"
+        className="block w-full max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white text-right"
         style={{ boxShadow: "var(--shadow-card)" }}
         dir="rtl"
       >
-        <table dir="rtl" className="w-full min-w-[720px] table-auto border-collapse text-right text-sm">
+        <table dir="rtl" className="w-full min-w-[min(100%,36rem)] table-fixed border-collapse text-right text-sm">
+          <colgroup>
+            <col className="w-10" />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "22%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "36%" }} />
+          </colgroup>
           <thead>
             <tr className="bg-[var(--brand-red)] text-white">
               <th className="w-10 min-w-10 py-2.5 px-2 text-right align-bottom" aria-label="הרחבה" />
@@ -736,7 +759,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                         {" "}
                         <span
                           className="inline-flex h-5 w-5 align-middle items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white cursor-help"
-                          title={Object.entries(COMMISSION_STATUS_EXPLANATIONS).map(([k, v]) => `${k}: ${v}`).join("\n")}
+                          title={COMMISSION_STATUS_HELP_TITLE}
                           aria-label="הסבר סטטוסים"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -756,7 +779,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <tbody>
             {filteredSortedRows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-right text-gray-500">
+                <td colSpan={6} className="py-8 text-right text-gray-500">
                   {searchQuery.trim() ? "אין תוצאות לחיפוש" : "אין תוצאות"}
                 </td>
               </tr>
@@ -809,22 +832,19 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                       <td className={`${commissionCellClass("comnum")}`} dir="rtl">
                         {c.comnum ?? c.id ?? "—"}
                       </td>
-                      <td className={`${commissionCellClass("amount")}`} dir="rtl">
-                        {formatCertCurrency(c.amount)}
+                      <td className={`${commissionCellClass("comitems_count")}`} dir="rtl">
+                        {(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}
                       </td>
                       <td className={`${commissionCellClass("commission")}`} dir="rtl">
                         {formatCertCurrency(c.commission)}
                       </td>
-                      <td className={`${commissionCellClass("comitems_count")}`} dir="rtl">
-                        {(c as CertRowWithCount).comitems_count ?? (c.comitems ?? []).length}
-                      </td>
                       <td className={`${commissionCellClass("status")}`} dir="rtl">
-                        {c.status ?? "—"}
+                        {displayCommissionStatus(c.status)}
                       </td>
                     </tr>
                     {isExpanded && hasComitems && (
                       <tr className="border-t border-gray-100 bg-gray-50/60">
-                        <td colSpan={7} className="px-4 py-3 align-top">
+                        <td colSpan={6} className="px-4 py-3 align-top">
                           <div className="me-auto ms-0 w-full max-w-4xl pe-0 ps-2 text-right" dir="rtl">
                             <p className="mb-2 text-right text-xs font-medium text-gray-600">
                               {c.comnum ?? c.id ?? "תעודה"} — עסקאות
