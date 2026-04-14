@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
-import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+import { ExportCsvButton } from "@/components/ui/ExportCsvButton";
 import { StatCard } from "@/components/ui/StatCard";
 
 interface Announcement {
@@ -188,7 +188,12 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
+      <header className="flex items-center gap-2 sm:gap-3">
+        <h1 className="min-w-0 flex-1 text-start text-xl font-bold text-[var(--brand-red)] sm:text-2xl">מסך הבית</h1>
+        <ExportCsvButton onClick={() => exportCsv("dashboard-deals.csv")} label="ייצוא" />
+      </header>
+
       <section className="animate-in-fade-up">
         <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">עדכונים אחרונים</h2>
         {(announcements ?? []).length > 0 ? (
@@ -233,14 +238,6 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
 
       <section className="animate-in-fade-up">
         <h2 className="text-lg font-semibold text-[var(--brand-red)] mb-3">סופקו לאחרונה</h2>
-        <DataTableToolbar
-          searchQuery=""
-          onSearchChange={() => {}}
-          onExportCsv={() => exportCsv("dashboard-deals.csv")}
-          exportLabel="ייצוא"
-          dir="rtl"
-          hideSearch
-        />
         {/* Mobile: horizontal scroll + min-width so text stays readable (matches deals table) */}
         <div
           className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-gutter:stable] sm:mx-0 sm:px-0 sm:pb-0"

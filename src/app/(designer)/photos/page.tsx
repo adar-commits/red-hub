@@ -8,7 +8,7 @@ export default async function PhotosPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-[var(--brand-red)]">תמונות פרויקט</h1>
+      <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl">תמונות פרויקט</h1>
       <p className="text-sm text-gray-600">העלאת תמונות לפרויקטים (לשימוש פנימי)</p>
       <PhotosClient designerCode={session.designerCode} />
     </div>

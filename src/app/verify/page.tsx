@@ -121,7 +121,20 @@ function VerifyForm() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">טוען...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[var(--main-shell-bg)] p-6">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-300 bg-white px-8 py-6 shadow-[var(--shadow-card)]">
+            <div
+              className="h-9 w-9 rounded-full border-2 border-[var(--brand-red)]/30 border-t-[var(--brand-red)] animate-spin"
+              style={{ animationDuration: "var(--motion-duration-slow, 0.8s)" }}
+              aria-hidden
+            />
+            <p className="text-sm font-medium text-gray-700">טוען…</p>
+          </div>
+        </div>
+      }
+    >
       <VerifyForm />
     </Suspense>
   );

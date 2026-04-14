@@ -8,7 +8,7 @@ export default async function ContactPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-[var(--brand-red)]">כתבו לנו</h1>
+      <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl">כתבו לנו</h1>
       <ContactForm designerCode={session.designerCode} />
     </div>
   );

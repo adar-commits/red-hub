@@ -220,19 +220,19 @@ export function DesignerShell({
 
       {/* Main content */}
       <main className={`flex-1 min-h-screen flex flex-col bg-[var(--main-shell-bg)] transition-[margin] duration-200 relative ${mainMargin}`}>
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 md:hidden">
-          <div className="relative flex items-center justify-center min-h-[3.25rem]">
+        <header className="sticky top-0 z-30 border-b border-gray-300 bg-white/98 backdrop-blur-md px-3 py-2.5 shadow-[0_1px_0_rgba(15,23,42,0.06)] md:hidden">
+          <div className="relative flex min-h-[3rem] items-center justify-center">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="absolute start-2 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-[5px] p-2.5 rounded-xl text-slate-800 hover:bg-slate-100 active:bg-slate-200/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
+              className="absolute start-1.5 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-1 rounded-lg p-2 text-slate-800 hover:bg-slate-100 active:bg-slate-200/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
               aria-expanded={mobileMenuOpen}
               aria-controls="designer-mobile-nav"
               aria-label="פתח תפריט"
             >
-              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
-              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
-              <span className="block h-0.5 w-[1.375rem] bg-current rounded-full" aria-hidden />
+              <span className="block h-0.5 w-5 rounded-full bg-current" aria-hidden />
+              <span className="block h-0.5 w-5 rounded-full bg-current" aria-hidden />
+              <span className="block h-0.5 w-5 rounded-full bg-current" aria-hidden />
             </button>
             <Link
               href="/dashboard"
@@ -244,13 +244,15 @@ export function DesignerShell({
                 alt=""
                 width={440}
                 height={176}
-                className="h-12 w-auto max-w-[min(240px,72vw)] sm:h-14 sm:max-w-[260px] object-contain object-center"
+                className="h-10 w-auto max-w-[min(220px,68vw)] object-contain object-center sm:h-12 sm:max-w-[240px]"
                 priority
               />
             </Link>
           </div>
         </header>
-        <div className="flex-1 p-4 md:p-6 animate-in-fade-up pb-[max(1rem,env(safe-area-inset-bottom))]">{children}</div>
+        <div className="flex-1 animate-in-fade-up px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
+          {children}
+        </div>
       </main>
 
       {/* Mobile slide-out nav */}
@@ -259,7 +261,7 @@ export function DesignerShell({
           type="button"
           aria-label="סגור תפריט"
           tabIndex={mobileMenuOpen ? 0 : -1}
-          className={`fixed inset-0 z-40 cursor-default border-0 bg-slate-900/45 backdrop-blur-[2px] transition-opacity duration-200 ${
+          className={`fixed inset-0 z-40 cursor-default border-0 bg-slate-800/35 backdrop-blur-[3px] transition-opacity duration-200 ${
             mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setMobileMenuOpen(false)}
@@ -269,7 +271,7 @@ export function DesignerShell({
           role="dialog"
           aria-modal="true"
           aria-label="תפריט ניווט"
-          className={`fixed top-0 bottom-0 right-0 z-50 flex w-[min(88vw,300px)] max-w-full flex-col border-s border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[-16px_0_48px_rgba(15,23,42,0.2)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          className={`fixed top-0 bottom-0 right-0 z-50 flex w-[min(88vw,280px)] max-w-full flex-col border-s-2 border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[-12px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
             mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
           }`}
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -292,10 +294,10 @@ export function DesignerShell({
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 hover:bg-white/90 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300/80 bg-white/80 text-lg text-slate-600 hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30"
               aria-label="סגור תפריט"
             >
-              <span className="text-2xl font-light leading-none" aria-hidden>
+              <span className="font-light leading-none" aria-hidden>
                 ×
               </span>
             </button>
@@ -315,7 +317,7 @@ export function DesignerShell({
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-3 py-3 text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] ${
+                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-3 py-2.5 text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] ${
                     active
                       ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-md"
                       : "text-slate-800 hover:bg-white/85 hover:text-slate-950"

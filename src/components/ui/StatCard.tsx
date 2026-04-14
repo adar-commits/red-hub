@@ -32,7 +32,7 @@ export function StatCard({
           ) : null}
         </div>
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${iconClassName}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-10 sm:w-10 sm:rounded-xl ${iconClassName}`}
         >
           {icon}
         </div>

@@ -25,7 +25,7 @@ export function FaqPageContent() {
   return (
     <div className="mx-auto max-w-3xl space-y-8" dir="rtl">
       <header className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold text-[var(--brand-red)] md:text-3xl">שאלות נפוצות</h1>
+        <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl md:text-3xl">שאלות נפוצות</h1>
         <p className="text-sm text-gray-600">סרטון הדרכה ושאלות נפוצות לשימוש בפורטל</p>
       </header>
 

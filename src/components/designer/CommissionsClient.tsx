@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { createPortal } from "react-dom";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+import { ExportCsvButton } from "@/components/ui/ExportCsvButton";
 import { StatCard } from "@/components/ui/StatCard";
 
 /** Line item (COMITEMS) for a commission certificate */
@@ -706,6 +707,14 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     <div dir="rtl" className="w-full text-right clear-both">
       {uploadModal}
 
+      <header className="mb-4 flex items-center gap-2 sm:gap-3">
+        <h1 className="min-w-0 flex-1 text-start text-xl font-bold text-[var(--brand-red)] sm:text-2xl">תעודות עמלה</h1>
+        <ExportCsvButton onClick={() => exportCsv("commissions.csv")} label="ייצוא" />
+      </header>
+      <p className="mb-4 text-start text-sm text-gray-600">
+        במסך זה יוצגו תעודות עמלה מ-12 החודשים האחרונים
+      </p>
+
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard
           title="עמלות בצבירה"
@@ -733,9 +742,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       <DataTableToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onExportCsv={() => exportCsv("commissions.csv")}
         searchPlaceholder={searchPlaceholder}
-        exportLabel="ייצוא"
         dir="rtl"
         afterSearch={
           <button
@@ -744,7 +751,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
             disabled={!canUploadInvoice}
             title={!canUploadInvoice ? UPLOAD_INVOICE_DISABLED_TOOLTIP : undefined}
             aria-disabled={!canUploadInvoice}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-normal text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-gray-400 bg-white px-2.5 py-2 text-xs font-medium text-gray-950 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-red)]/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white sm:min-h-10 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -754,7 +761,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="h-5 w-5 text-[var(--brand-red)]"
+              className="h-4 w-4 shrink-0 text-[var(--brand-red)] sm:h-5 sm:w-5"
               aria-hidden
             >
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />

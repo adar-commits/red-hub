@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { ReferralModal } from "./ReferralModal";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { DataTableToolbar } from "@/components/ui/DataTableToolbar";
+import { ExportCsvButton } from "@/components/ui/ExportCsvButton";
 
 interface DealRow {
   id?: string;
@@ -127,20 +128,27 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
         </div>
       )}
 
+      <header className="mb-4 flex items-center gap-2 sm:gap-3" dir="rtl">
+        <h1 className="min-w-0 flex-1 text-start text-xl font-bold text-[var(--brand-red)] sm:text-2xl">
+          העסקאות שלי
+        </h1>
+        <ExportCsvButton onClick={() => exportCsv("deals.csv")} label="ייצוא CSV" />
+      </header>
+      <p className="mb-4 text-sm text-gray-600 text-start">
+        במסך זה יוצגו כל ההזמנות המשויכות אליך, לאחר 14 יום הם ישוכיו אוטומטית לתעודת עמלה.
+      </p>
+
       <DataTableToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onExportCsv={() => exportCsv("deals.csv")}
         searchPlaceholder={searchPlaceholder}
-        exportLabel="ייצוא CSV"
         dir="rtl"
-        compactExportOnNarrow
         searchRowClassName="max-sm:gap-0"
         afterSearch={
           <button
             type="button"
             onClick={() => setReferralOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--brand-red)] px-3 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 sm:px-4 sm:py-2"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[var(--brand-red)] px-2.5 py-2 text-xs font-semibold text-white shadow-md transition-colors hover:bg-[var(--brand-red-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 sm:min-h-10 sm:px-4 sm:py-2 sm:text-sm"
           >
             הוספת עסקה חדשה
           </button>
