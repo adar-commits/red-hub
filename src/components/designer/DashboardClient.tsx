@@ -114,10 +114,33 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         setDealsThisMonthTotal(Number(statsData?.dealsThisMonthTotal) || 0);
         setAnnouncements(Array.isArray(annData) ? annData : []);
 
+        let commissions: Array<{ commission?: number; status?: string; recon_date?: string | null }> = [];
         const commissionsRaw = typeof window !== "undefined" ? sessionStorage.getItem("commissions") : null;
-        const commissions = commissionsRaw
-          ? (JSON.parse(commissionsRaw) as Array<{ commission?: number; status?: string; recon_date?: string | null }>)
-          : [];
+        if (commissionsRaw) {
+          try {
+            const parsed = JSON.parse(commissionsRaw) as unknown;
+            if (Array.isArray(parsed)) commissions = parsed as typeof commissions;
+          } catch {
+            commissions = [];
+          }
+        }
+        if (commissions.length === 0) {
+          try {
+            const cRes = await fetch("/api/commissions/certificates", {
+              cache: "no-store",
+              credentials: "same-origin",
+            });
+            if (cRes.ok) {
+              const data: unknown = await cRes.json();
+              if (Array.isArray(data) && data.length > 0) {
+                commissions = data as typeof commissions;
+                sessionStorage.setItem("commissions", JSON.stringify(data));
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
         const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
         const isReceived = (c: { status?: string; recon_date?: string | null }) => {
           const st = normalizedStatus(c.status);

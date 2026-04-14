@@ -247,38 +247,79 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
 
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("commissions");
-    const parsed: CertRow[] = raw ? (JSON.parse(raw) as CertRow[]) : [];
-    setCerts(parsed);
+    let cancelled = false;
 
-    const ממתין_לתשלום = "ממתין לתשלום";
-    const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
-    /** Matches ERP STATDES (e.g. שולמה, סופית) and recon — same rules as DashboardClient total earned */
-    const isPaidCommission = (c: CertRow) => {
-      const st = normalizedStatus(c.status);
-      return (
-        st === "סופית" ||
-        st === "שולמה" ||
-        (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת")
-      );
+    async function load() {
+      setLoading(true);
+      let rows: CertRow[] = [];
+
+      try {
+        const res = await fetch("/api/commissions/certificates", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+        if (res.ok) {
+          const data: unknown = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            rows = data as CertRow[];
+          }
+        }
+      } catch {
+        /* use session fallback */
+      }
+
+      if (rows.length === 0 && typeof window !== "undefined") {
+        const raw = sessionStorage.getItem("commissions");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as CertRow[];
+            if (Array.isArray(parsed)) rows = parsed;
+          } catch {
+            /* ignore corrupt sessionStorage */
+          }
+        }
+      } else if (rows.length > 0 && typeof window !== "undefined") {
+        sessionStorage.setItem("commissions", JSON.stringify(rows));
+      }
+
+      if (cancelled) return;
+
+      setCerts(rows);
+
+      const ממתין_לתשלום = "ממתין לתשלום";
+      const normalizedStatus = (s: string | null | undefined) => (s ?? "").trim();
+      /** Matches ERP STATDES (e.g. שולמה, סופית) and recon — same rules as DashboardClient total earned */
+      const isPaidCommission = (c: CertRow) => {
+        const st = normalizedStatus(c.status);
+        return (
+          st === "סופית" ||
+          st === "שולמה" ||
+          (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת")
+        );
+      };
+      const pendingList = rows.filter((c) => normalizedStatus(c.status) === STATUS_SENT_FOR_APPROVAL);
+      const pendingApproval = pendingList.length;
+      const pendingApprovalTotal = pendingList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
+      const unpaidList = rows.filter((c) => normalizedStatus(c.status) === ממתין_לתשלום);
+      const paidList = rows.filter(isPaidCommission);
+      const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
+      const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
+      setStats({
+        pendingApproval,
+        pendingApprovalTotal,
+        unpaid: unpaidList.length,
+        unpaidTotal,
+        paid: paidList.length,
+        paidTotal,
+      });
+
+      setLoading(false);
+    }
+
+    load();
+    return () => {
+      cancelled = true;
     };
-    const pendingList = parsed.filter((c) => normalizedStatus(c.status) === STATUS_SENT_FOR_APPROVAL);
-    const pendingApproval = pendingList.length;
-    const pendingApprovalTotal = pendingList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
-    const unpaidList = parsed.filter((c) => normalizedStatus(c.status) === ממתין_לתשלום);
-    const paidList = parsed.filter(isPaidCommission);
-    const unpaidTotal = unpaidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
-    const paidTotal = paidList.reduce((s, c) => s + (Number(c.commission) ?? 0), 0);
-    setStats({
-      pendingApproval,
-      pendingApprovalTotal,
-      unpaid: unpaidList.length,
-      unpaidTotal,
-      paid: paidList.length,
-      paidTotal,
-    });
-
-    setLoading(false);
   }, []);
 
   const certsWithCount = useMemo(

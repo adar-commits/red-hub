@@ -7,6 +7,7 @@ import {
 } from "@/lib/erp";
 import { generateOtp } from "@/lib/otp-store";
 import { getOtpSession } from "@/lib/session";
+import { saveCommissions } from "@/lib/agent-store";
 
 function mapCertToCommission(c: ErpOtpCertRecord) {
   return {
@@ -69,6 +70,12 @@ export async function POST(request: Request) {
     }
 
     const commissions = certs.map(mapCertToCommission);
+
+    try {
+      await saveCommissions(agentcode, commissions);
+    } catch (e) {
+      console.error("saveCommissions after send-otp:", e);
+    }
 
     const otpSession = await getOtpSession();
     otpSession.phone = phone;
