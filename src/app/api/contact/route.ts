@@ -9,9 +9,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await request.json();
+    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
     const message = typeof body.message === "string" ? body.message.trim() : "";
+    if (!subject) return NextResponse.json({ error: "נושא חסר" }, { status: 400 });
     if (!message) return NextResponse.json({ error: "הודעה חסרה" }, { status: 400 });
-    await erpContact(session.designerCode, message);
+    await erpContact(session.designerCode, message, subject);
     return NextResponse.json({ success: true });
   } catch (e) {
     if (String(e).includes("Missing env")) return NextResponse.json({ success: true });

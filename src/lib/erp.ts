@@ -277,12 +277,19 @@ export async function erpSubmitReferral(payload: {
   return parsed;
 }
 
-export async function erpContact(agentCode: string, message: string): Promise<void> {
+export async function erpContact(
+  agentCode: string,
+  message: string,
+  subject?: string | null
+): Promise<void> {
   const url = getEnv("ERP_CONTACT_WEBHOOK");
+  const payload: Record<string, string> = { agentCode, message };
+  const sub = typeof subject === "string" ? subject.trim() : "";
+  if (sub) payload.subject = sub;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ agentCode, message }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`ERP contact failed: ${res.status}`);
 }
