@@ -45,11 +45,32 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["announcements"]["Row"], "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["announcements"]["Insert"]>;
       };
+      designer_projects: {
+        Row: {
+          id: string;
+          designer_code: string;
+          project_name: string;
+          address: string | null;
+          photographer_name: string | null;
+          photographer_phone: string | null;
+          carpet_models: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["designer_projects"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["designer_projects"]["Insert"]>;
+      };
       project_photos: {
         Row: {
           id: string;
           designer_code: string;
-          image_url: string;
+          project_id: string;
+          storage_path: string;
+          image_url: string | null;
           description: string | null;
           created_at: string;
         };
@@ -74,5 +95,6 @@ export interface Database {
 
 export type Designer = Database["public"]["Tables"]["designers"]["Row"];
 export type Announcement = Database["public"]["Tables"]["announcements"]["Row"];
+export type DesignerProject = Database["public"]["Tables"]["designer_projects"]["Row"];
 export type ProjectPhoto = Database["public"]["Tables"]["project_photos"]["Row"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];

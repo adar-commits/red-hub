@@ -1,16 +1,29 @@
 import { redirect } from "next/navigation";
 import { getDesignerSession } from "@/lib/session";
-import { PhotosClient } from "@/components/designer/PhotosClient";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { ProjectsPhotosHome } from "@/components/designer/ProjectsPhotosHome";
+import type { DesignerProject } from "@/types/database";
 
 export default async function PhotosPage() {
   const session = await getDesignerSession();
   if (!session?.designerCode) redirect("/");
 
+  const supabase = createServerSupabaseClient();
+  const { data: projects } = await supabase
+    .from("designer_projects")
+    .select(
+      "id, designer_code, project_name, address, photographer_name, photographer_phone, carpet_models, created_at, updated_at"
+    )
+    .eq("designer_code", session.designerCode)
+    .order("created_at", { ascending: false });
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl">תמונות פרויקט</h1>
-      <p className="text-sm text-gray-600">העלאת תמונות לפרויקטים (לשימוש פנימי)</p>
-      <PhotosClient designerCode={session.designerCode} />
+      <p className="text-sm text-gray-600">
+        צרו פרויקט עם פרטים (כתובת, צלם, דגמים) והעלו תמונות לכל פרויקט בנפרד.
+      </p>
+      <ProjectsPhotosHome initialProjects={(projects ?? []) as DesignerProject[]} />
     </div>
   );
 }

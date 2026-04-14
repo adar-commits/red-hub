@@ -5,10 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const navItems = [
-  { href: "/admin/announcements", label: "הודעות" },
-  { href: "/admin/photos", label: "תמונות" },
-];
+const navItems = [{ href: "/admin/announcements", label: "הודעות" }];
 
 const settingsPath = "/admin/settings";
 
