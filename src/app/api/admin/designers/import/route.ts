@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { isAdminSettingsUser } from "@/lib/admin-settings-access";
 import { authOptions } from "@/lib/auth-options";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -7,6 +8,9 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isAdminSettingsUser(session.user?.email)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

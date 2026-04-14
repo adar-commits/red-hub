@@ -1,24 +1,66 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-
-/** Default matches product request; set ADMIN_ACCESS_CODE in env to rotate without code changes. */
-const ADMIN_ACCESS_CODE = process.env.ADMIN_ACCESS_CODE ?? "L1234!";
+import bcrypt from "bcryptjs";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",
-      name: "קוד גישה",
+      name: "אימייל וסיסמה",
       credentials: {
-        code: { label: "קוד גישה", type: "password" },
+        email: { label: "אימייל", type: "email" },
+        password: { label: "סיסמה", type: "password" },
       },
       async authorize(credentials) {
-        const code = credentials?.code?.trim();
-        if (!code || code !== ADMIN_ACCESS_CODE) return null;
-        return { id: "admin", name: "מנהל" };
+        const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
+        const password = typeof credentials?.password === "string" ? credentials.password : "";
+        if (!email || !password) return null;
+
+        try {
+          const supabase = createServerSupabaseClient();
+          const { data: row, error } = await supabase
+            .from("admin_portal_users")
+            .select("id, email, password_hash")
+            .eq("email", email)
+            .maybeSingle();
+
+          if (error || !row?.password_hash) {
+            if (error) console.error("admin_portal_users lookup", error.message);
+            return null;
+          }
+
+          const valid = await bcrypt.compare(password, row.password_hash);
+          if (!valid) return null;
+
+          return {
+            id: row.id,
+            email: row.email,
+            name: "מנהל",
+          };
+        } catch (e) {
+          console.error("authorize admin", e);
+          return null;
+        }
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = (token.id as string) ?? token.sub ?? "";
+        session.user.email = (token.email as string) ?? "";
+      }
+      return session;
+    },
+  },
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   secret: process.env.NEXTAUTH_SECRET ?? "red-hub-fallback-secret",
   pages: { signIn: "/admin" },

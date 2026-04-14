@@ -3,17 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { isAdminSettingsUser } from "@/lib/admin-settings-access";
 
-const navItems = [
-  { href: "/admin/announcements", label: "הודעות" },
-  { href: "/admin/settings/activity", label: "מעקב פעילות" },
-];
+const navItems = [{ href: "/admin/announcements", label: "הודעות" }];
 
 const settingsPath = "/admin/settings";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const showSettings = isAdminSettingsUser(session?.user?.email);
   const isSettings = pathname?.startsWith(settingsPath);
 
   return (
@@ -45,18 +45,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               {item.label}
             </Link>
           ))}
+          {showSettings ? (
+            <Link
+              href="/admin/settings/activity"
+              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === "/admin/settings/activity"
+                  ? "bg-[var(--brand-red)] text-white shadow-sm"
+                  : "text-[var(--sidebar-text)] hover:bg-gray-100"
+              }`}
+            >
+              מעקב פעילות
+            </Link>
+          ) : null}
         </nav>
         <div className="mt-auto p-2 border-t border-[var(--sidebar-border)] pt-2 space-y-1">
-          <Link
-            href={settingsPath}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isSettings ? "bg-gray-100 text-[var(--sidebar-text)]" : "text-[var(--sidebar-text)] hover:bg-gray-100"
-            }`}
-            aria-label="הגדרות"
-          >
-            <span className="text-lg" aria-hidden>⚙️</span>
-            <span>הגדרות</span>
-          </Link>
+          {showSettings ? (
+            <Link
+              href={settingsPath}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isSettings ? "bg-gray-100 text-[var(--sidebar-text)]" : "text-[var(--sidebar-text)] hover:bg-gray-100"
+              }`}
+              aria-label="הגדרות"
+            >
+              <span className="text-lg" aria-hidden>
+                ⚙️
+              </span>
+              <span>הגדרות</span>
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/admin" })}
