@@ -56,8 +56,8 @@ function VerifyForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8 animate-in-fade-up">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-[0_8px_30px_rgba(15,23,42,0.08)] animate-in-fade-up">
         <h1 className="text-2xl font-bold text-center mb-1 text-foreground">
           אימות קוד
         </h1>

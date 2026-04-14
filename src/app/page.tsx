@@ -42,19 +42,19 @@ export default function LoginPage() {
     "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative bg-gray-100">
-      {/* Background image as element so it loads reliably */}
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4 md:bg-gray-100">
+      {/* Photo backdrop: desktop only — on mobile it read as a harsh blue cast; use neutral gradient instead */}
       <img
         src={bgUrl}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-center md:block"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/50"
+        className="pointer-events-none absolute inset-0 hidden bg-gradient-to-b from-black/45 via-black/35 to-black/50 md:block"
         aria-hidden
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-[2px] animate-in-fade-up">
+      <div className="animate-in-fade-up relative z-10 w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-[0_8px_30px_rgba(15,23,42,0.08)] md:border-white/20 md:bg-white/95 md:shadow-2xl md:backdrop-blur-[2px]">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-10 px-4" aria-live="polite" aria-busy="true">
             <div
@@ -103,7 +103,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={terms}
                   onChange={(e) => setTerms(e.target.checked)}
-                  className="mt-1 rounded border-gray-300 text-[var(--brand-red)] focus:ring-[var(--brand-red)]"
+                  className="mt-1 size-4 shrink-0 rounded border-2 border-gray-400 bg-white text-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/30 md:border-gray-300 md:focus:ring-[var(--brand-red)]"
                 />
                 <span className="text-sm text-gray-700">
                   אני מאשר/ת שקראתי את{" "}
