@@ -81,7 +81,43 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        <div
+          className="md:hidden flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-200 bg-white px-4 py-3 text-sm font-medium"
+          aria-label="ניווט ניהול"
+        >
+          <Link
+            href="/admin/announcements"
+            className={pathname === "/admin/announcements" ? "text-[var(--brand-red)]" : "text-gray-700"}
+          >
+            הודעות
+          </Link>
+          {showSettings ? (
+            <>
+              <Link
+                href="/admin/settings/activity"
+                className={pathname === "/admin/settings/activity" ? "text-[var(--brand-red)]" : "text-gray-700"}
+              >
+                מעקב פעילות
+              </Link>
+              <Link
+                href={settingsPath}
+                className={isSettings ? "text-[var(--brand-red)]" : "text-gray-700"}
+              >
+                הגדרות
+              </Link>
+            </>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/admin" })}
+            className="text-gray-500 ms-auto"
+          >
+            התנתק
+          </button>
+        </div>
+        <main className="flex-1 p-6">{children}</main>
+      </div>
     </div>
   );
 }
