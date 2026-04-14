@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireDesignerSession } from "@/lib/designer-api-auth";
 import {
+  ensureProjectPhotosBucket,
   isProbablyImageFile,
   objectPathForPhoto,
   PROJECT_PHOTO_MAX_FILE_BYTES,
@@ -134,14 +135,22 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const path = objectPathForPhoto(auth.session.designerCode, projectId, file);
     const contentType = file.type || "application/octet-stream";
 
+    await ensureProjectPhotosBucket(supabase);
+
     const { error: upErr } = await supabase.storage.from(PROJECT_PHOTOS_BUCKET).upload(path, buffer, {
       contentType,
       upsert: false,
     });
 
     if (upErr) {
-      console.error("storage upload", upErr);
-      return NextResponse.json({ error: "העלאה לשרת האחסון נכשלה" }, { status: 502 });
+      console.error("storage upload", upErr.message, upErr);
+      return NextResponse.json(
+        {
+          error: "העלאה לשרת האחסון נכשלה",
+          detail: process.env.NODE_ENV === "development" ? upErr.message : undefined,
+        },
+        { status: 502 }
+      );
     }
 
     const { data: row, error: insErr } = await supabase
