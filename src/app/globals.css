@@ -35,6 +35,20 @@
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
   --radius-modal: 1rem;
   --radius-card: 0.75rem;
+  /* Designer shell sidebar (scoped on .designer-app-sidebar) */
+  --designer-sidebar-surface: #faf9f7;
+  --designer-sidebar-elevated: #ffffff;
+  --designer-sidebar-border: #e7e5e1;
+  --designer-sidebar-headline: #1c1917;
+  --designer-sidebar-headline-soft: #57534e;
+  --designer-sidebar-divider: #d6d3d1;
+}
+
+.designer-app-sidebar {
+  --sidebar-bg: var(--designer-sidebar-surface);
+  --sidebar-border: var(--designer-sidebar-border);
+  --sidebar-text: var(--designer-sidebar-headline);
+  --sidebar-text-muted: var(--designer-sidebar-headline-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {

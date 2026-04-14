@@ -4,8 +4,21 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SidebarGreeting } from "./SidebarGreeting";
 import { SidebarGlyph, type SidebarGlyphId } from "./SidebarIcons";
+import { SidebarUserHeadline } from "./SidebarUserHeadline";
+
+/** Pastel tiles + strong icon color (inactive). Active row uses brand red — icon goes light on red. */
+const NAV_ICON_TILE: Record<SidebarGlyphId, string> = {
+  home: "bg-sky-100/90 text-sky-700 border-sky-200/50",
+  deals: "bg-emerald-100/90 text-emerald-800 border-emerald-200/50",
+  commissions: "bg-amber-100/90 text-amber-800 border-amber-200/50",
+  business: "bg-violet-100/90 text-violet-800 border-violet-200/50",
+  photos: "bg-rose-100/90 text-rose-700 border-rose-200/50",
+  faq: "bg-cyan-100/90 text-cyan-800 border-cyan-200/50",
+  contact: "bg-teal-100/90 text-teal-800 border-teal-200/50",
+  admin: "bg-indigo-100/90 text-indigo-800 border-indigo-200/50",
+  logout: "bg-red-50 text-red-700 border-red-100",
+};
 
 const SIDEBAR_COLLAPSED_KEY = "redhub-sidebar-collapsed";
 
@@ -21,21 +34,13 @@ function SidebarCollapseToggle({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--sidebar-border)] bg-white/70 text-slate-600 shadow-sm hover:bg-white hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--designer-sidebar-border)] bg-[var(--designer-sidebar-elevated)] text-stone-600 shadow-sm transition-colors hover:border-stone-300 hover:bg-white hover:text-stone-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
       title={label}
       aria-label={label}
       aria-expanded={!collapsed}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        {collapsed ? (
-          <>
-            <path d="M15 18l-6-6 6-6" />
-          </>
-        ) : (
-          <>
-            <path d="M9 18l6-6-6-6" />
-          </>
-        )}
+        {collapsed ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
       </svg>
     </button>
   );
@@ -52,10 +57,15 @@ function AdminShortcutLink({
     <Link
       href="/admin"
       onClick={onNavigate}
-      className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2"}`}
+      className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-3"}`}
       title="ניהול"
     >
-      <SidebarGlyph id="admin" className="h-5 w-5" />
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${NAV_ICON_TILE.admin}`}
+        aria-hidden
+      >
+        <SidebarGlyph id="admin" className="h-5 w-5" />
+      </span>
       {!collapsed && <span>ניהול</span>}
     </Link>
   );
@@ -70,10 +80,15 @@ function LogoutButton({ collapsed }: { collapsed: boolean }) {
     <button
       type="button"
       onClick={handleLogout}
-      className={`flex items-center w-full px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-white/80 hover:text-slate-900 transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-2"}`}
+      className={`flex items-center w-full px-3 py-2.5 rounded-xl text-sm text-stone-700 hover:bg-white/90 hover:shadow-sm transition-colors duration-[var(--motion-duration-fast)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/25 ${collapsed ? "justify-center" : "gap-3"}`}
       title="התנתק"
     >
-      <SidebarGlyph id="logout" className="h-5 w-5" />
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${NAV_ICON_TILE.logout}`}
+        aria-hidden
+      >
+        <SidebarGlyph id="logout" className="h-5 w-5" />
+      </span>
       {!collapsed && <span>התנתק</span>}
     </button>
   );
@@ -152,17 +167,18 @@ export function DesignerShell({
     <div className="min-h-screen flex flex-col md:flex-row bg-[var(--main-shell-bg)]">
       {/* Sidebar — desktop */}
       <aside
-        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-[var(--sidebar-border)] border-e shadow-[4px_0_32px_rgba(15,23,42,0.08)] transition-[width] duration-200 ${sidebarW}`}
+        className={`designer-app-sidebar hidden md:flex md:flex-col md:fixed md:inset-y-0 md:rtl:right-0 md:rtl:left-auto bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] border-[var(--sidebar-border)] border-e shadow-[6px_0_28px_rgba(28,25,23,0.06)] transition-[width] duration-200 ${sidebarW}`}
       >
+        {/* flex-row-reverse: collapse control sits on inner (left) edge toward main content */}
         <div
-          className={`border-b border-[var(--sidebar-border)] bg-white/35 p-3 ${
-            collapsed ? "flex flex-col items-center gap-2 py-2.5" : "flex items-center gap-2"
+          className={`flex flex-row-reverse items-center gap-2 border-b border-[var(--sidebar-border)] bg-[var(--designer-sidebar-elevated)]/85 p-3 ${
+            collapsed ? "py-2.5" : ""
           }`}
         >
           <SidebarCollapseToggle collapsed={collapsed} onClick={toggleSidebar} />
           <Link
             href="/dashboard"
-            className={`block min-w-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 ${collapsed ? "" : "flex-1 flex justify-center"}`}
+            className={`block min-w-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30 ${collapsed ? "" : "flex-1 flex justify-center"}`}
             aria-label="HōM GROUP — מסך הבית"
           >
             <Image
@@ -170,49 +186,54 @@ export function DesignerShell({
               alt="HōM GROUP"
               width={571}
               height={241}
-              className={collapsed ? "h-10 w-auto max-w-[2.75rem] object-contain object-center" : "h-auto w-full max-h-[4.5rem] object-contain object-center"}
+              className={collapsed ? "h-10 w-auto max-w-[2.75rem] object-contain object-center" : "h-auto w-full max-h-[4.25rem] object-contain object-center"}
               priority
             />
           </Link>
         </div>
         {!collapsed && (
-          <div className="p-3 text-sm border-b border-[var(--sidebar-border)] bg-white/25">
-            <SidebarGreeting fullName={fullName} />
-            <p className="text-[var(--sidebar-text-muted)] mt-3 text-xs leading-relaxed border-t border-[var(--sidebar-border)]/60 pt-3">
-              קוד המעצב שלך <span className="font-mono font-semibold text-[var(--sidebar-text)] tabular-nums">{designerCode}</span>
-            </p>
+          <div className="px-3 py-3.5 border-b border-[var(--sidebar-border)] bg-[var(--designer-sidebar-surface)]">
+            <SidebarUserHeadline fullName={fullName} designerCode={designerCode} />
           </div>
         )}
         {collapsed && (
-          <div className="px-2 py-1 border-b border-[var(--sidebar-border)] text-center">
-            <p className="text-[var(--sidebar-text-muted)] text-xs truncate" title={`קוד ${designerCode}`}>
+          <div className="px-2 py-2 border-b border-[var(--sidebar-border)] bg-[var(--designer-sidebar-surface)] text-center">
+            <p className="text-[10px] font-mono font-bold tabular-nums text-[var(--brand-red)] truncate" title={designerCode}>
               {designerCode}
             </p>
           </div>
         )}
-        <nav className="flex-1 p-2.5 space-y-0.5 overflow-auto">
+        <nav className="flex-1 p-2.5 space-y-1 overflow-auto">
           {navItems.map((item) => {
             const active = pathname === item.href;
+            const tile = NAV_ICON_TILE[item.glyph];
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 title={item.label}
-                className={`flex items-center rounded-lg text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] border-e-[3px] border-transparent ${
-                  collapsed ? "justify-center px-0 py-2.5 min-w-[2.5rem]" : "gap-3 px-3 py-2.5"
+                className={`flex items-center rounded-xl text-sm font-medium transition-all duration-[var(--motion-duration-fast)] border-e-[3px] border-transparent ${
+                  collapsed ? "justify-center px-0 py-2 min-w-[2.5rem]" : "gap-3 px-2.5 py-2"
                 } ${
                   active
-                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-md"
-                    : "text-slate-800 hover:bg-white/80 hover:text-slate-950 border-transparent"
+                    ? "bg-[var(--brand-red)] text-white border-[var(--brand-red)] shadow-md ring-1 ring-black/5"
+                    : "text-stone-800 hover:bg-[var(--designer-sidebar-elevated)] hover:shadow-sm border-transparent"
                 }`}
               >
-                <SidebarGlyph id={item.glyph} className="h-5 w-5" />
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-colors ${
+                    active ? "border-white/25 bg-white/15 text-white" : tile
+                  }`}
+                  aria-hidden
+                >
+                  <SidebarGlyph id={item.glyph} className="h-[1.15rem] w-[1.15rem]" />
+                </span>
                 {!collapsed && <span className="leading-snug">{item.label}</span>}
               </Link>
             );
           })}
         </nav>
-        <div className="p-2 border-t border-[var(--sidebar-border)] bg-white/20 space-y-0.5">
+        <div className="p-2 border-t border-[var(--sidebar-border)] bg-[var(--designer-sidebar-elevated)]/70 space-y-1">
           <AdminShortcutLink collapsed={collapsed} />
           <LogoutButton collapsed={collapsed} />
         </div>
@@ -271,7 +292,7 @@ export function DesignerShell({
           role="dialog"
           aria-modal="true"
           aria-label="תפריט ניווט"
-          className={`fixed top-0 bottom-0 right-0 z-50 flex w-[min(88vw,280px)] max-w-full flex-col border-s-2 border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[-12px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          className={`designer-app-sidebar fixed top-0 bottom-0 right-0 z-50 flex w-[min(88vw,300px)] max-w-full flex-col border-s-2 border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[-16px_0_48px_rgba(28,25,23,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
             mobileMenuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
           }`}
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -302,34 +323,38 @@ export function DesignerShell({
               </span>
             </button>
           </div>
-          <div className="border-b border-[var(--sidebar-border)] bg-white/25 px-3 py-3 text-sm">
-            <SidebarGreeting fullName={fullName} />
-            <p className="mt-3 border-t border-[var(--sidebar-border)]/60 pt-3 text-xs leading-relaxed text-[var(--sidebar-text-muted)]">
-              קוד המעצב שלך{" "}
-              <span className="font-mono font-semibold tabular-nums text-[var(--sidebar-text)]">{designerCode}</span>
-            </p>
+          <div className="border-b border-[var(--sidebar-border)] bg-[var(--designer-sidebar-surface)] px-3 py-3.5">
+            <SidebarUserHeadline fullName={fullName} designerCode={designerCode} />
           </div>
-          <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-2.5">
+          <nav className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-2.5">
             {navItems.map((item) => {
               const active = pathname === item.href;
+              const tile = NAV_ICON_TILE[item.glyph];
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-3 py-2.5 text-sm font-medium transition-colors duration-[var(--motion-duration-fast)] ${
+                  className={`flex items-center gap-3 rounded-xl border-e-[3px] border-transparent px-2.5 py-2 text-sm font-medium transition-all duration-[var(--motion-duration-fast)] ${
                     active
-                      ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-md"
-                      : "text-slate-800 hover:bg-white/85 hover:text-slate-950"
+                      ? "border-[var(--brand-red)] bg-[var(--brand-red)] text-white shadow-md ring-1 ring-black/5"
+                      : "text-stone-800 hover:bg-[var(--designer-sidebar-elevated)] hover:shadow-sm"
                   }`}
                 >
-                  <SidebarGlyph id={item.glyph} className="h-5 w-5 shrink-0" />
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm ${
+                      active ? "border-white/25 bg-white/15 text-white" : tile
+                    }`}
+                    aria-hidden
+                  >
+                    <SidebarGlyph id={item.glyph} className="h-[1.15rem] w-[1.15rem]" />
+                  </span>
                   <span className="leading-snug">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
-          <div className="shrink-0 border-t border-[var(--sidebar-border)] bg-white/25 p-2 space-y-0.5">
+          <div className="shrink-0 border-t border-[var(--sidebar-border)] bg-[var(--designer-sidebar-elevated)]/80 p-2 space-y-1">
             <AdminShortcutLink collapsed={false} onNavigate={() => setMobileMenuOpen(false)} />
             <LogoutButton collapsed={false} />
           </div>

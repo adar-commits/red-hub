@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Minimal monochrome nav glyphs (stroke, currentColor). */
+/** Stroke nav glyphs (currentColor — tinted by parent tile / active state). */
 
 function Svg({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -11,7 +11,7 @@ function Svg({ children, className }: { children: ReactNode; className?: string 
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.75"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
