@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getDesignerSession, isSessionExpired } from "@/lib/session";
+import { recordDesignerActivity } from "@/lib/designer-activity";
 import { erpGetBusinessInfo, erpUpdateBusinessInfo } from "@/lib/erp";
+import { getDesignerSession, isSessionExpired } from "@/lib/session";
 
 export async function GET() {
   try {
@@ -47,6 +48,20 @@ export async function POST(request: Request) {
       bankNo: body.bankNo ?? "",
     };
     await erpUpdateBusinessInfo(payload);
+    const agentName =
+      typeof body.fullName === "string" && body.fullName.trim()
+        ? body.fullName.trim()
+        : session.fullName;
+    const phoneVal =
+      typeof body.phoneNumber === "string" && body.phoneNumber.trim()
+        ? body.phoneNumber.trim()
+        : session.phone;
+    void recordDesignerActivity({
+      activity_type: "business_update",
+      designer_code: session.designerCode,
+      agent_name: agentName,
+      phone: phoneVal,
+    });
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("business post", e);

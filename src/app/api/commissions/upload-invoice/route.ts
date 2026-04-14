@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordDesignerActivity } from "@/lib/designer-activity";
 import { getDesignerSession, isSessionExpired } from "@/lib/session";
 
 const MAKE_WEBHOOK_URL =
@@ -68,6 +69,14 @@ export async function POST(request: Request) {
         { status: 502 }
       );
     }
+
+    void recordDesignerActivity({
+      activity_type: "invoice_upload",
+      designer_code: session.designerCode,
+      agent_name: session.fullName,
+      phone: session.phone,
+      metadata: { certId: certId ?? null, fileName: file.name || "invoice.pdf" },
+    });
 
     const invoiceRef = `pdf-${Date.now()}`;
     return NextResponse.json({

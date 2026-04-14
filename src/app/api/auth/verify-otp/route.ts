@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordDesignerActivity } from "@/lib/designer-activity";
 import { getDesignerSession, getOtpSession } from "@/lib/session";
 
 export async function POST(request: Request) {
@@ -43,6 +44,13 @@ export async function POST(request: Request) {
     session.fullName = payload.fullName;
     session.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     await session.save();
+
+    void recordDesignerActivity({
+      activity_type: "login",
+      designer_code: payload.designerCode,
+      agent_name: payload.fullName,
+      phone,
+    });
 
     return NextResponse.json({ success: true });
   } catch (e) {

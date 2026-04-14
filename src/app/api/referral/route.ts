@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getDesignerSession, isSessionExpired } from "@/lib/session";
+import { recordDesignerActivity } from "@/lib/designer-activity";
 import { erpSubmitReferral } from "@/lib/erp";
+import { getDesignerSession, isSessionExpired } from "@/lib/session";
 
 export async function POST(request: Request) {
   try {
@@ -32,6 +33,17 @@ export async function POST(request: Request) {
       (typeof webhookResult?.response === "string" && webhookResult.response.trim()) ||
       (typeof webhookResult?.respond === "string" && webhookResult.respond.trim()) ||
       null;
+    void recordDesignerActivity({
+      activity_type: "commission_assignment_request",
+      designer_code: session.designerCode,
+      agent_name: session.fullName,
+      phone: session.phone,
+      metadata: {
+        validationPhone: validationPhone.slice(0, 48),
+        validationComSum: validationComSum.slice(0, 48),
+        validationfieldType: validationfieldType.slice(0, 64),
+      },
+    });
     return NextResponse.json({ success: true, message: description });
   } catch (e) {
     if (String(e).includes("Missing env")) {

@@ -1,25 +1,28 @@
 import Link from "next/link";
 
+const activityLogSubtitle =
+  "\u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA, \u05D4\u05E2\u05DC\u05D0\u05EA \u05D7\u05E9\u05D1\u05D5\u05E0\u05D9\u05EA, \u05E2\u05D3\u05DB\u05D5\u05DF \u05E2\u05E1\u05E7, \u05D1\u05E7\u05E9\u05EA \u05E9\u05D9\u05D5\u05DA \u05E2\u05DE\u05DC\u05D4";
+
 const cards = [
   {
     href: "/admin/settings/announcements",
     title: "ניהול עדכונים",
     subtitle: "ניהול עדכונים המוצגים במסך הבית של המעצבים",
-    icon: "📢",
+    icon: "\uD83D\uDCE2",
     iconBg: "bg-amber-500/20",
   },
   {
     href: "/admin/settings/general",
     title: "הגדרות כלליות",
     subtitle: "הגדרות מערכת כלליות",
-    icon: "☀️",
+    icon: "\u2600\uFE0F",
     iconBg: "bg-purple-500/20",
   },
   {
     href: "/admin/settings/activity",
     title: "מעקב פעילות",
-    subtitle: "התחברויות ובקשות הפניה",
-    icon: "📊",
+    subtitle: activityLogSubtitle,
+    icon: "\uD83D\uDCCA",
     iconBg: "bg-teal-500/20",
   },
 ];

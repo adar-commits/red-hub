@@ -5,7 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const navItems = [{ href: "/admin/announcements", label: "הודעות" }];
+const navItems = [
+  { href: "/admin/announcements", label: "הודעות" },
+  { href: "/admin/settings/activity", label: "מעקב פעילות" },
+];
 
 const settingsPath = "/admin/settings";
 
