@@ -9,7 +9,9 @@ const DEFAULT_LIMIT = 50;
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
+  const uid = session?.user?.id?.trim();
+  const email = session?.user?.email?.trim();
+  if (!session?.user || (!uid && !email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

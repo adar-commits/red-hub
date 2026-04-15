@@ -12,7 +12,8 @@ const settingsPath = "/admin/settings";
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const showSettings = status === "authenticated" && !!session?.user?.email;
+  // Server layout already requires a session; client `email` can be "" so never gate only on email.
+  const showSettings = status === "authenticated" && session?.user != null;
   const isSettings = pathname?.startsWith(settingsPath);
 
   return (

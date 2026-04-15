@@ -33,9 +33,14 @@ export const authOptions: NextAuthOptions = {
           const valid = await bcrypt.compare(password, row.password_hash);
           if (!valid) return null;
 
+          const rowEmail =
+            typeof row.email === "string" && row.email.trim()
+              ? row.email.trim().toLowerCase()
+              : email;
+
           return {
             id: row.id,
-            email: row.email,
+            email: rowEmail,
             name: "מנהל",
           };
         } catch (e) {
@@ -55,8 +60,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.id as string) ?? token.sub ?? "";
-        session.user.email = (token.email as string) ?? "";
+        const id = (token.id as string) ?? token.sub ?? "";
+        const tokenEmail = typeof token.email === "string" ? token.email.trim() : "";
+        session.user.id = id;
+        session.user.email = tokenEmail;
       }
       return session;
     },
