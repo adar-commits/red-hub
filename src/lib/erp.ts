@@ -277,19 +277,26 @@ export async function erpSubmitReferral(payload: {
   return parsed;
 }
 
+const DEFAULT_CONTACT_WEBHOOK_URL =
+  "https://hook.eu2.make.com/9yya0867dfwx3ivbx1au5wcqvmwl0pt5";
+
+/** Make.com / ERP contact: actionType contact + agentCode + subject + body */
 export async function erpContact(
   agentCode: string,
   message: string,
   subject?: string | null
 ): Promise<void> {
-  const url = getEnv("ERP_CONTACT_WEBHOOK");
-  const payload: Record<string, string> = { agentCode, message };
+  const url = process.env.ERP_CONTACT_WEBHOOK ?? DEFAULT_CONTACT_WEBHOOK_URL;
   const sub = typeof subject === "string" ? subject.trim() : "";
-  if (sub) payload.subject = sub;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      actionType: "contact",
+      agentCode,
+      subject: sub,
+      body: message,
+    }),
   });
   if (!res.ok) throw new Error(`ERP contact failed: ${res.status}`);
 }

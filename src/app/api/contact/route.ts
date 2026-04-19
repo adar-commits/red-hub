@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     await erpContact(session.designerCode, message, subject);
     return NextResponse.json({ success: true });
   } catch (e) {
-    if (String(e).includes("Missing env")) return NextResponse.json({ success: true });
     console.error("contact", e);
     return NextResponse.json({ error: "שגיאה בשליחה" }, { status: 500 });
   }
