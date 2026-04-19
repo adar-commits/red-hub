@@ -610,7 +610,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
                   </span>
                   <span>
                     הסכום <strong className="font-semibold text-indigo-900">תואם</strong> לסכומי העמלה ברשימת ״
-                    <span className="whitespace-nowrap text-amber-800">ממתין לתשלום</span>״.
+                    <span className="whitespace-nowrap text-orange-800">עמלות בצבירה</span>״.
                   </span>
                 </li>
               </ul>
