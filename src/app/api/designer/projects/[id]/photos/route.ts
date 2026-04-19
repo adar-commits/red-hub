@@ -13,6 +13,64 @@ import {
 
 const SIGNED_URL_TTL = 3600;
 
+/** Same default as commissions invoice; override per-event if needed. */
+const MAKE_PROJECT_PHOTOS_WEBHOOK_URL =
+  process.env.MAKE_PROJECT_PHOTOS_WEBHOOK_URL ??
+  "https://hook.eu2.make.com/9yya0867dfwx3ivbx1au5wcqvmwl0pt5";
+
+function appOriginFromRequest(request: Request): string {
+  try {
+    return new URL(request.url).origin;
+  } catch {
+    /* ignore */
+  }
+  const explicit = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_BASE_URL;
+  if (explicit) {
+    try {
+      return new URL(explicit).origin;
+    } catch {
+      /* ignore */
+    }
+  }
+  const vercel = process.env.VERCEL_URL;
+  if (vercel) {
+    return vercel.startsWith("http") ? new URL(vercel).origin : `https://${vercel}`;
+  }
+  return "";
+}
+
+async function notifyProjectPhotosUploaded(opts: {
+  request: Request;
+  projectId: string;
+  agentCode: string;
+}): Promise<void> {
+  const origin = appOriginFromRequest(opts.request);
+  if (!origin) {
+    console.warn(
+      "project-photos webhook: skip — set VERCEL_URL, NEXT_PUBLIC_APP_URL, or APP_BASE_URL to build project URL"
+    );
+    return;
+  }
+  const projectUrl = `${origin}/photos/${opts.projectId}`;
+  try {
+    const res = await fetch(MAKE_PROJECT_PHOTOS_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventType: "project-photos",
+        agentCode: opts.agentCode,
+        projectUrl,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error("project-photos webhook", res.status, text.slice(0, 500));
+    }
+  } catch (e) {
+    console.error("project-photos webhook fetch", e);
+  }
+}
+
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const auth = await requireDesignerSession();
   if (auth.error) return auth.error;
@@ -170,9 +228,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: "שמירת התמונה נכשלה" }, { status: 500 });
     }
 
-    const { data: signed } = await supabase.storage
-      .from(PROJECT_PHOTOS_BUCKET)
-      .createSignedUrl(row.storage_path, SIGNED_URL_TTL);
+    const [{ data: signed }] = await Promise.all([
+      supabase.storage.from(PROJECT_PHOTOS_BUCKET).createSignedUrl(row.storage_path, SIGNED_URL_TTL),
+      notifyProjectPhotosUploaded({
+        request,
+        projectId,
+        agentCode: auth.session.designerCode,
+      }),
+    ]);
 
     return NextResponse.json({
       id: row.id,
