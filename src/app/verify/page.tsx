@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { normalizeIsraeliPhone } from "@/lib/phone";
 
 const RESEND_COOLDOWN_SEC = 60;
 
@@ -11,7 +12,7 @@ const VERIFY_BG_URL =
 
 function VerifyForm() {
   const searchParams = useSearchParams();
-  const phone = searchParams.get("phone") || "";
+  const phone = normalizeIsraeliPhone(searchParams.get("phone") || "");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,8 +46,8 @@ function VerifyForm() {
       setError("חסר טלפון. חזור לדף ההתחברות.");
       return;
     }
-    if (code.length !== 5) {
-      setError("יש להזין 5 ספרות");
+    if (code.length !== 4) {
+      setError("יש להזין 4 ספרות");
       return;
     }
     setLoading(true);
@@ -100,10 +101,10 @@ function VerifyForm() {
               id="code"
               type="text"
               inputMode="numeric"
-              maxLength={5}
+              maxLength={4}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
-              placeholder="00000"
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="0000"
               className="w-full rounded-lg border-2 border-gray-400 px-4 py-3 text-xl text-center tracking-[0.4em] text-gray-950 placeholder:text-[color:var(--input-placeholder)] focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 outline-none bg-white"
               dir="ltr"
               autoComplete="one-time-code"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { normalizeIsraeliPhone } from "@/lib/phone";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -30,7 +31,8 @@ export default function LoginPage() {
       if (data.commissions) {
         sessionStorage.setItem("commissions", JSON.stringify(data.commissions));
       }
-      window.location.href = `/verify?phone=${encodeURIComponent(phone)}`;
+      const canonical = normalizeIsraeliPhone(phone) || phone.trim();
+      window.location.href = `/verify?phone=${encodeURIComponent(canonical)}`;
     } catch {
       setError("שגיאה בחיבור");
     } finally {

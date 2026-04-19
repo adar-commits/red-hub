@@ -105,23 +105,42 @@ function pickAgentname(w: { agentname?: string; [key: string]: unknown }): strin
   return typeof w.agentname === "string" && w.agentname.trim() ? w.agentname.trim() : null;
 }
 
+function pickAgentcode(w: Record<string, unknown>): string | null {
+  for (const key of ["agentcode", "agentCode", "AGENTCODE"] as const) {
+    const v = w[key];
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (t) return t;
+    }
+  }
+  return null;
+}
+
 export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
   if (raw == null) return { agentcode: null, agentname: null, certs: [] };
 
-  // Single wrapper object
-  if (
-    typeof raw === "object" &&
-    raw !== null &&
-    !Array.isArray(raw) &&
-    ("certificates" in raw || "commissionCertificates" in raw)
-  ) {
-    const w = raw as ErpOtpWrapperResponse;
-    const certs = (w.certificates ?? w.commissionCertificates ?? []) as ErpOtpCertRecord[];
-    return {
-      agentcode: typeof w.agentcode === "string" ? w.agentcode : null,
-      agentname: pickAgentname(w),
-      certs: Array.isArray(certs) ? certs : [],
-    };
+  // Single wrapper / success object (may omit certificate arrays — still valid login)
+  if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+    const w = raw as ErpOtpWrapperResponse & Record<string, unknown>;
+    const hasCertLists = "certificates" in w || "commissionCertificates" in w;
+    const agentcode = pickAgentcode(w);
+
+    if (hasCertLists) {
+      const certs = (w.certificates ?? w.commissionCertificates ?? []) as ErpOtpCertRecord[];
+      return {
+        agentcode,
+        agentname: pickAgentname(w),
+        certs: Array.isArray(certs) ? certs : [],
+      };
+    }
+
+    if (agentcode) {
+      return {
+        agentcode,
+        agentname: pickAgentname(w),
+        certs: [],
+      };
+    }
   }
 
   if (!Array.isArray(raw) || raw.length === 0) return { agentcode: null, agentname: null, certs: [] };
@@ -134,10 +153,10 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
     first !== null &&
     ("certificates" in first || "commissionCertificates" in first)
   ) {
-    const w = first as ErpOtpWrapperResponse;
+    const w = first as ErpOtpWrapperResponse & Record<string, unknown>;
     const certs = (w.certificates ?? w.commissionCertificates ?? []) as ErpOtpCertRecord[];
     return {
-      agentcode: typeof w.agentcode === "string" ? w.agentcode : null,
+      agentcode: pickAgentcode(w),
       agentname: pickAgentname(w),
       certs: Array.isArray(certs) ? certs : [],
     };
@@ -145,7 +164,7 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
 
   // Legacy: [{ agentcode, commissionCertificates }, ...]
   if (isLegacyItem(first)) {
-    const agentcode = typeof first.agentcode === "string" ? first.agentcode : null;
+    const agentcode = pickAgentcode(first as Record<string, unknown>);
     const agentname = pickAgentname(first);
     const certs = raw.flatMap((g: ErpOtpLegacyItem) =>
       Array.isArray(g.commissionCertificates) ? (g.commissionCertificates as ErpOtpCertRecord[]) : []

@@ -6,6 +6,7 @@ import {
   type ErpOtpCertRecord,
 } from "@/lib/erp";
 import { generateOtp } from "@/lib/otp-store";
+import { normalizeIsraeliPhone } from "@/lib/phone";
 import { getOtpSession } from "@/lib/session";
 import { saveCommissions } from "@/lib/agent-store";
 
@@ -28,34 +29,52 @@ function mapCertToCommission(c: ErpOtpCertRecord) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+    const rawPhone = typeof body.phone === "string" ? body.phone.trim() : "";
     const termsAccepted = body.termsAccepted === true;
 
-    if (!phone) {
+    if (!rawPhone) {
       return NextResponse.json({ error: "טלפון חסר" }, { status: 400 });
     }
     if (!termsAccepted) {
       return NextResponse.json({ error: "יש לאשר את תקנון המסחר והשימוש" }, { status: 400 });
     }
 
-    const normalized = phone.replace(/\D/g, "").replace(/^0/, "972") || phone;
-    const isIsraeli = /^05\d{8}$/.test(phone) || /^9725\d{8}$/.test(normalized);
-    if (!isIsraeli && phone.length < 9) {
+    const phone = normalizeIsraeliPhone(rawPhone);
+    if (!phone) {
+      return NextResponse.json({ error: "יש להזין טלפון בפורמט 05xxxxxxxx" }, { status: 400 });
+    }
+
+    const digits = rawPhone.replace(/\D/g, "");
+    const isIsraeli =
+      /^05\d{8}$/.test(digits) ||
+      /^5\d{8}$/.test(digits) ||
+      /^9725\d{8}$/.test(digits);
+    if (!isIsraeli && digits.replace(/^972/, "").length < 9) {
       return NextResponse.json({ error: "יש להזין טלפון בפורמט 05xxxxxxxx" }, { status: 400 });
     }
 
     const code = generateOtp();
 
-    const raw = await erpSendOtpWithData(phone, code);
+    const raw = await erpSendOtpWithData(rawPhone, code);
     const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
 
     let agentcode: string | null = parsedAgentcode;
     let fullName: string | null = agentname;
     if (!agentcode && certs.length > 0) {
       try {
-        const validated = await erpValidatePhone(phone);
-        agentcode =
-          typeof validated?.designerCode === "string" ? validated.designerCode : null;
+        const validated = await erpValidatePhone(rawPhone);
+        let fromValidate: string | null = null;
+        if (validated) {
+          const r = validated as Record<string, unknown>;
+          for (const k of ["designerCode", "agentCode", "AGENTCODE"]) {
+            const x = r[k];
+            if (typeof x === "string" && x.trim()) {
+              fromValidate = x.trim();
+              break;
+            }
+          }
+        }
+        agentcode = fromValidate || agentcode;
         if (!fullName && typeof validated?.fullName === "string") fullName = validated.fullName;
       } catch {
         agentcode = null;

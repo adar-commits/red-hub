@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { recordDesignerActivity } from "@/lib/designer-activity";
 import { ensureDesignerRowInDb } from "@/lib/ensure-designer-in-db";
+import { normalizeIsraeliPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getDesignerSession, getOtpSession } from "@/lib/session";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
+    const rawPhone = typeof body.phone === "string" ? body.phone.trim() : "";
+    const phone = normalizeIsraeliPhone(rawPhone);
     const code = typeof body.code === "string" ? body.code.replace(/\D/g, "") : "";
 
     if (!phone || !code) {
       return NextResponse.json({ error: "טלפון או קוד חסרים" }, { status: 400 });
     }
-    if (code.length !== 5) {
+    if (code.length !== 4) {
       return NextResponse.json({ error: "קוד לא תקין" }, { status: 400 });
     }
 
@@ -24,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "קוד לא תקין או שפג תוקפו" }, { status: 401 });
     }
 
-    const bypass = code === "00000";
+    const bypass = code === "0000";
     const codeMatch = otpSession.code === code;
     const notExpired = Date.now() <= (otpSession.expiresAt ?? 0);
 

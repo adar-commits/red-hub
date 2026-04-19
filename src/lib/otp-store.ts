@@ -10,5 +10,5 @@ function randomDigits(len: number): string {
 }
 
 export function generateOtp(): string {
-  return randomDigits(5);
+  return randomDigits(4);
 }
