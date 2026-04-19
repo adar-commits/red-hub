@@ -183,6 +183,16 @@ export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {
     return { agentcode, agentname: agentname?.trim() ?? null, certs };
   }
 
+  // ACK-only row from send-OTP webhook e.g. [{ success: true }] or [{ success: true, agentcode: "…" }]
+  if (typeof first === "object" && first !== null && "success" in first) {
+    const w = first as Record<string, unknown>;
+    return {
+      agentcode: pickAgentcode(w),
+      agentname: pickAgentname(w),
+      certs: [],
+    };
+  }
+
   return { agentcode: null, agentname: null, certs: [] };
 }
 

@@ -60,11 +60,12 @@ export async function POST(request: Request) {
 
     let agentcode: string | null = parsedAgentcode;
     let fullName: string | null = agentname;
-    if (!agentcode && certs.length > 0) {
+    // ERP often returns only [{ success: true }] with no agentcode — resolve designer by phone.
+    if (!agentcode) {
       try {
         const validated = await erpValidatePhone(rawPhone);
         let fromValidate: string | null = null;
-        if (validated) {
+        if (validated && validated.found !== false) {
           const r = validated as Record<string, unknown>;
           for (const k of ["designerCode", "agentCode", "AGENTCODE"]) {
             const x = r[k];
@@ -74,10 +75,10 @@ export async function POST(request: Request) {
             }
           }
         }
-        agentcode = fromValidate || agentcode;
+        agentcode = fromValidate ?? agentcode;
         if (!fullName && typeof validated?.fullName === "string") fullName = validated.fullName;
       } catch {
-        agentcode = null;
+        agentcode = parsedAgentcode;
       }
     }
 
