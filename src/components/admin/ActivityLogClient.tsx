@@ -249,16 +249,23 @@ export function ActivityLogClient() {
           יומן פעילות ({total})
         </h3>
         <div className="overflow-x-auto" dir="rtl">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full table-fixed border-collapse text-sm">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[14%]" />
+              <col className="w-[16%]" />
+              <col className="w-[22%]" />
+              <col className="w-[26%]" />
+            </colgroup>
             <thead>
               <tr className="bg-gray-50">
-                <th className="py-2.5 px-3 font-medium text-end">פעילות</th>
-                <th className="py-2.5 px-3 font-medium text-end">שם סוכן</th>
-                <th className="py-2.5 px-3 font-medium text-end">טלפון</th>
-                <th className="py-2.5 px-3 font-medium text-end">קוד סוכן</th>
-                <th className="py-2.5 px-3 font-medium text-end">
+                <th className="px-3 py-2.5 align-middle text-end font-medium">
                   {"\u05EA\u05D0\u05E8\u05D9\u05DA \u05D5\u05E9\u05E2\u05D4"}
                 </th>
+                <th className="px-3 py-2.5 align-middle text-end font-medium">קוד סוכן</th>
+                <th className="px-3 py-2.5 align-middle text-end font-medium">טלפון</th>
+                <th className="px-3 py-2.5 align-middle text-end font-medium">שם סוכן</th>
+                <th className="px-3 py-2.5 align-middle text-end font-medium">פעילות</th>
               </tr>
             </thead>
             <tbody>
@@ -277,16 +284,20 @@ export function ActivityLogClient() {
               ) : (
                 rows.map((row) => (
                   <tr key={row.id} className="border-t border-gray-100">
-                    <td className="py-2.5 px-3 text-end">
+                    <td className="px-3 py-2.5 align-middle text-end tabular-nums">
+                      <span dir="ltr" className="inline-block w-full text-end">
+                        {formatDateTime(row.created_at)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 align-middle text-end break-all">{row.designer_code}</td>
+                    <td className="px-3 py-2.5 align-middle text-end">
+                      <span dir="ltr" className="inline-block w-full text-end">
+                        {row.phone ?? "—"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 align-middle text-end">{row.agent_name ?? "—"}</td>
+                    <td className="px-3 py-2.5 align-middle text-end">
                       {ACTIVITY_LABELS[row.activity_type] ?? row.activity_type}
-                    </td>
-                    <td className="py-2.5 px-3 text-end">{row.agent_name ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-end" dir="ltr">
-                      {row.phone ?? "—"}
-                    </td>
-                    <td className="py-2.5 px-3 text-end">{row.designer_code}</td>
-                    <td className="py-2.5 px-3 text-end whitespace-nowrap" dir="ltr">
-                      {formatDateTime(row.created_at)}
                     </td>
                   </tr>
                 ))
