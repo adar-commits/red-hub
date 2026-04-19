@@ -57,15 +57,17 @@ export function StatCard({
       >
         <div className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-gray-100/80 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
       </div>
-      <div className="relative z-10 flex items-start justify-between gap-3">
+      <div className="relative z-10 flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <div className="inline-flex max-w-full min-w-0 flex-wrap items-center gap-1.5">
-            <p className="min-w-0 text-xs font-medium uppercase tracking-wide text-gray-700">{title}</p>
+          <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-1">
+            <p className="min-w-0 flex-1 truncate text-xs font-medium uppercase tracking-wide text-gray-700">
+              {title}
+            </p>
             {explanation ? (
               <div className="group/info relative inline-flex shrink-0" ref={infoWrapRef}>
                 <button
                   type="button"
-                  className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white/90 text-gray-600 shadow-sm transition-colors hover:border-gray-400 hover:bg-white hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white/90 text-gray-600 shadow-sm transition-colors hover:border-gray-400 hover:bg-white hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/35"
                   aria-label={`הסבר: ${title}`}
                   aria-expanded={tipOpen}
                   onClick={() => {
@@ -78,7 +80,7 @@ export function StatCard({
                 </button>
                 <div
                   role="tooltip"
-                  className={`pointer-events-none absolute end-0 top-full z-[100] mt-1.5 w-max max-w-[min(18rem,calc(100vw-2.5rem))] rounded-lg border border-gray-200 bg-white px-3 py-2 text-start text-xs font-normal normal-case leading-relaxed tracking-normal text-gray-700 shadow-lg ${
+                  className={`pointer-events-none absolute top-full z-[100] mt-1.5 w-max max-w-[min(18rem,calc(100vw-2.5rem))] rounded-lg border border-gray-200 bg-white px-3 py-2 text-start text-xs font-normal normal-case leading-relaxed tracking-normal text-gray-700 shadow-lg start-0 md:start-auto md:end-0 ${
                     tipOpen ? "visible opacity-100 max-md:block" : "invisible opacity-0 max-md:hidden"
                   } md:invisible md:opacity-0 md:group-hover/info:visible md:group-hover/info:opacity-100`}
                 >
@@ -90,7 +92,7 @@ export function StatCard({
           <p className="mt-1.5 text-lg font-bold leading-tight text-gray-950 tabular-nums">{value}</p>
         </div>
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-10 sm:w-10 sm:rounded-xl ${iconClassName}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm sm:h-9 sm:w-9 md:h-10 md:w-10 md:rounded-xl [&_svg]:h-[18px] [&_svg]:w-[18px] [&_svg]:shrink-0 sm:[&_svg]:h-[22px] sm:[&_svg]:w-[22px] ${iconClassName}`}
         >
           {icon}
         </div>
