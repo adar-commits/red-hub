@@ -1,60 +1,64 @@
 import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import GoogleProvider from "next-auth/providers/google";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      id: "credentials",
-      name: "אימייל וסיסמה",
-      credentials: {
-        email: { label: "אימייל", type: "email" },
-        password: { label: "סיסמה", type: "password" },
-      },
-      async authorize(credentials) {
-        const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
-        const password = typeof credentials?.password === "string" ? credentials.password : "";
-        if (!email || !password) return null;
+const googleId = process.env.GOOGLE_CLIENT_ID?.trim();
+const googleSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
 
+const googleProviders =
+  googleId && googleSecret
+    ? [
+        GoogleProvider({
+          clientId: googleId,
+          clientSecret: googleSecret,
+        }),
+      ]
+    : [];
+
+/** Same email must exist in admin_portal_users (seed/migrate in Supabase). */
+async function isAllowedAdminEmail(email: string): Promise<boolean> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return false;
+  try {
+    const supabase = createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("admin_portal_users")
+      .select("id")
+      .eq("email", normalized)
+      .maybeSingle();
+    if (error) console.error("admin_portal_users SSO lookup", error.message);
+    return Boolean(data);
+  } catch (e) {
+    console.error("isAllowedAdminEmail", e);
+    return false;
+  }
+}
+
+export const authOptions: NextAuthOptions = {
+  providers: googleProviders,
+  callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return false;
+      const email = typeof user?.email === "string" ? user.email : "";
+      return isAllowedAdminEmail(email);
+    },
+    async jwt({ token, user }) {
+      if (user?.email) {
+        const email = user.email.trim().toLowerCase();
         try {
           const supabase = createServerSupabaseClient();
-          const { data: row, error } = await supabase
+          const { data } = await supabase
             .from("admin_portal_users")
-            .select("id, email, password_hash")
+            .select("id, email")
             .eq("email", email)
             .maybeSingle();
-
-          if (error || !row?.password_hash) {
-            if (error) console.error("admin_portal_users lookup", error.message);
-            return null;
+          if (data) {
+            token.id = data.id;
+            token.email = typeof data.email === "string" ? data.email.trim().toLowerCase() : email;
           }
-
-          const valid = await bcrypt.compare(password, row.password_hash);
-          if (!valid) return null;
-
-          const rowEmail =
-            typeof row.email === "string" && row.email.trim()
-              ? row.email.trim().toLowerCase()
-              : email;
-
-          return {
-            id: row.id,
-            email: rowEmail,
-            name: "מנהל",
-          };
         } catch (e) {
-          console.error("authorize admin", e);
-          return null;
+          console.error("jwt admin SSO", e);
         }
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
       }
       return token;
     },
@@ -70,5 +74,8 @@ export const authOptions: NextAuthOptions = {
   },
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   secret: process.env.NEXTAUTH_SECRET ?? "red-hub-fallback-secret",
-  pages: { signIn: "/admin" },
+  pages: {
+    signIn: "/admin",
+    error: "/admin",
+  },
 };
