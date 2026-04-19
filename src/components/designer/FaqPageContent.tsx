@@ -1,4 +1,4 @@
-import { FAQ_SECTIONS, FAQ_YOUTUBE_VIDEO_ID } from "@/data/faq-content";
+import type { FaqDocumentPayload } from "@/lib/faq-shared";
 
 function ChevronIcon({ className }: { className?: string }) {
   return (
@@ -19,45 +19,51 @@ function ChevronIcon({ className }: { className?: string }) {
   );
 }
 
-export function FaqPageContent() {
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${FAQ_YOUTUBE_VIDEO_ID}?rel=0`;
+export function FaqPageContent({ data }: { data: FaqDocumentPayload }) {
+  const videoId = data.settings.youtube_video_id.trim();
+  const iframeTitle =
+    data.settings.video_iframe_title.trim() || "סרטון הדרכה — פורטל אדריכלים ומעצבים";
+  const embedUrl =
+    videoId.length > 0 ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8" dir="rtl">
       <header className="space-y-2 text-center">
-        <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl md:text-3xl">שאלות נפוצות</h1>
-        <p className="text-sm text-gray-600">סרטון הדרכה ושאלות נפוצות לשימוש בפורטל</p>
+        <h1 className="text-xl font-bold text-[var(--brand-red)] sm:text-2xl md:text-3xl">{data.settings.page_title}</h1>
+        <p className="text-sm text-gray-600">{data.settings.page_subtitle}</p>
       </header>
 
-      <section aria-labelledby="faq-video-heading" className="space-y-3">
-        <h2 id="faq-video-heading" className="sr-only">
-          סרטון הדרכה
-        </h2>
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-black shadow-[var(--shadow-card)]">
-          <div className="relative aspect-video w-full">
-            <iframe
-              className="absolute inset-0 h-full w-full"
-              src={embedUrl}
-              title="סרטון הדרכה — פורטל אדריכלים ומעצבים"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
+      {embedUrl ? (
+        <section aria-labelledby="faq-video-heading" className="space-y-3">
+          <h2 id="faq-video-heading" className="sr-only">
+            סרטון הדרכה
+          </h2>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-black shadow-[var(--shadow-card)]">
+            <div className="relative aspect-video w-full">
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src={embedUrl}
+                title={iframeTitle}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <div className="space-y-8">
-        {FAQ_SECTIONS.map((section) => (
-          <section key={section.heading} className="space-y-3">
+        {data.sections.map((section, si) => (
+          <section key={`faq-sec-${si}`} className="space-y-3">
             <h2 className="border-b border-gray-200 pb-2 text-lg font-bold text-gray-900">
               {section.heading}
             </h2>
             <div className="space-y-2">
               {section.items.map((item, idx) => (
                 <details
-                  key={item.title}
+                  key={`${si}-${idx}`}
                   open={idx === 0}
                   className="group rounded-xl border border-gray-200 bg-white shadow-sm"
                 >

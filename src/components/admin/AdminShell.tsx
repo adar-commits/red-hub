@@ -5,7 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
-const navItems = [{ href: "/admin/announcements", label: "הודעות" }];
+const navItems = [
+  { href: "/admin/announcements", label: "הודעות" },
+  { href: "/admin/faq", label: "שאלות נפוצות" },
+];
 
 const settingsPath = "/admin/settings";
 
@@ -92,6 +95,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             className={pathname === "/admin/announcements" ? "text-[var(--brand-red)]" : "text-gray-700"}
           >
             הודעות
+          </Link>
+          <Link
+            href="/admin/faq"
+            className={pathname === "/admin/faq" ? "text-[var(--brand-red)]" : "text-gray-700"}
+          >
+            שאלות נפוצות
           </Link>
           {showSettings ? (
             <>
