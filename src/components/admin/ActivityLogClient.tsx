@@ -91,6 +91,10 @@ type ActivityRow = {
   metadata: Record<string, unknown> | null;
 };
 
+/** Same grid template on header + every row — avoids RTL `<table>` / colgroup misalignment bugs. */
+const ACTIVITY_GRID_COLS =
+  "grid min-w-[720px] items-center grid-cols-[minmax(9rem,1.15fr)_minmax(5rem,0.65fr)_minmax(7rem,0.85fr)_minmax(8rem,1fr)_minmax(9rem,1.15fr)] gap-x-3";
+
 export function ActivityLogClient() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
   const [customFrom, setCustomFrom] = useState("");
@@ -249,82 +253,93 @@ export function ActivityLogClient() {
           יומן פעילות ({total})
         </h3>
         <div className="overflow-x-auto" dir="rtl">
-          <table className="w-full table-fixed border-collapse text-sm">
-            <colgroup>
-              <col className="w-[22%]" />
-              <col className="w-[14%]" />
-              <col className="w-[16%]" />
-              <col className="w-[22%]" />
-              <col className="w-[26%]" />
-            </colgroup>
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-3 py-2.5 align-middle text-end font-medium">
+          <div role="table" className="w-full text-sm">
+            <div role="rowgroup">
+              <div
+                role="row"
+                className={`${ACTIVITY_GRID_COLS} border-b border-gray-100 bg-gray-50 px-3 py-2.5 font-medium`}
+              >
+                <div role="columnheader" className="min-w-0 text-end">
                   {"\u05EA\u05D0\u05E8\u05D9\u05DA \u05D5\u05E9\u05E2\u05D4"}
-                </th>
-                <th className="px-3 py-2.5 align-middle text-end font-medium">קוד סוכן</th>
-                <th className="px-3 py-2.5 align-middle text-end font-medium">טלפון</th>
-                <th className="px-3 py-2.5 align-middle text-end font-medium">שם סוכן</th>
-                <th className="px-3 py-2.5 align-middle text-end font-medium">פעילות</th>
-              </tr>
-            </thead>
-            <tbody>
+                </div>
+                <div role="columnheader" className="min-w-0 text-end">
+                  קוד סוכן
+                </div>
+                <div role="columnheader" className="min-w-0 text-end">
+                  טלפון
+                </div>
+                <div role="columnheader" className="min-w-0 text-end">
+                  שם סוכן
+                </div>
+                <div role="columnheader" className="min-w-0 text-end">
+                  פעילות
+                </div>
+              </div>
+            </div>
+            <div role="rowgroup">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    טוען…
-                  </td>
-                </tr>
+                <div role="row" className="border-t border-gray-100 px-3 py-8 text-center text-gray-500">
+                  טוען…
+                </div>
               ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    אין נתונים בטווח הנבחר
-                  </td>
-                </tr>
+                <div role="row" className="border-t border-gray-100 px-3 py-8 text-center text-gray-500">
+                  אין נתונים בטווח הנבחר
+                </div>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id} className="border-t border-gray-100">
-                    <td className="px-3 py-2.5 align-middle text-end tabular-nums">
-                      <span dir="ltr" className="inline-block w-full text-end">
+                  <div
+                    key={row.id}
+                    role="row"
+                    className={`${ACTIVITY_GRID_COLS} border-t border-gray-100 px-3 py-2.5`}
+                  >
+                    <div role="cell" className="min-w-0 text-end align-middle tabular-nums">
+                      <span dir="ltr" className="block w-full text-end">
                         {formatDateTime(row.created_at)}
                       </span>
-                    </td>
-                    <td className="px-3 py-2.5 align-middle text-end break-all">{row.designer_code}</td>
-                    <td className="px-3 py-2.5 align-middle text-end">
-                      <span dir="ltr" className="inline-block w-full text-end">
+                    </div>
+                    <div role="cell" className="min-w-0 break-all text-end align-middle">
+                      {row.designer_code}
+                    </div>
+                    <div role="cell" className="min-w-0 text-end align-middle">
+                      <span dir="ltr" className="block w-full text-end">
                         {row.phone ?? "—"}
                       </span>
-                    </td>
-                    <td className="px-3 py-2.5 align-middle text-end">{row.agent_name ?? "—"}</td>
-                    <td className="px-3 py-2.5 align-middle text-end">
+                    </div>
+                    <div role="cell" className="min-w-0 text-end align-middle">
+                      {row.agent_name ?? "—"}
+                    </div>
+                    <div role="cell" className="min-w-0 text-end align-middle">
                       {ACTIVITY_LABELS[row.activity_type] ?? row.activity_type}
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
         {!loading && rows.length > 0 && (
-          <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-100">
+          <div
+            className="flex items-center justify-between gap-3 border-t border-gray-100 p-4"
+            dir="rtl"
+          >
             <button
               type="button"
-              disabled={offset === 0}
-              onClick={() => setOffset((o) => Math.max(0, o - limit))}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800 disabled:opacity-40"
+              disabled={nextOffset == null}
+              onClick={() => nextOffset != null && setOffset(nextOffset)}
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 disabled:opacity-40"
             >
-              הקודם
+              הבא
             </button>
             <span className="text-sm text-gray-600">
               {offset + 1}–{offset + rows.length} {"\u05DE\u05EA\u05D5\u05DA"} {total}
             </span>
             <button
               type="button"
-              disabled={nextOffset == null}
-              onClick={() => nextOffset != null && setOffset(nextOffset)}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-800 disabled:opacity-40"
+              disabled={offset === 0}
+              onClick={() => setOffset((o) => Math.max(0, o - limit))}
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 disabled:opacity-40"
             >
-              הבא
+              הקודם
             </button>
           </div>
         )}
