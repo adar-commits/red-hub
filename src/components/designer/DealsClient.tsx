@@ -77,7 +77,10 @@ export function DealsClient({ designerCode }: { designerCode: string }) {
     toggleSort,
     exportCsv,
     searchPlaceholder,
-  } = useSortAndFilter(deals, DEAL_COLUMNS, { searchPlaceholder: "חיפוש בעסקאות..." });
+  } = useSortAndFilter(deals, DEAL_COLUMNS, {
+    searchPlaceholder: "חיפוש בעסקאות...",
+    initialSort: { key: "invoice_date", dir: "desc" },
+  });
 
   if (loading) {
     return (
