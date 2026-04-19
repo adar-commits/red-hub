@@ -39,19 +39,23 @@ function appOriginFromRequest(request: Request): string {
   return "";
 }
 
-async function notifyProjectPhotosUploaded(opts: {
-  request: Request;
-  projectId: string;
-  agentCode: string;
-}): Promise<void> {
-  const origin = appOriginFromRequest(opts.request);
+/** Public URL of the designer photos workspace for this project (`/photos/[projectId]`). */
+function projectUrlFromRequest(request: Request, projectId: string): string | null {
+  const origin = appOriginFromRequest(request);
   if (!origin) {
     console.warn(
-      "project-photos webhook: skip — set VERCEL_URL, NEXT_PUBLIC_APP_URL, or APP_BASE_URL to build project URL"
+      "projectUrl: could not resolve app origin — set VERCEL_URL, NEXT_PUBLIC_APP_URL, or APP_BASE_URL"
     );
-    return;
+    return null;
   }
-  const projectUrl = `${origin}/photos/${opts.projectId}`;
+  return `${origin}/photos/${projectId}`;
+}
+
+async function notifyProjectPhotosUploaded(opts: {
+  projectUrl: string | null;
+  agentCode: string;
+}): Promise<void> {
+  if (!opts.projectUrl) return;
   try {
     const res = await fetch(MAKE_PROJECT_PHOTOS_WEBHOOK_URL, {
       method: "POST",
@@ -59,7 +63,7 @@ async function notifyProjectPhotosUploaded(opts: {
       body: JSON.stringify({
         eventType: "project-photos",
         agentCode: opts.agentCode,
-        projectUrl,
+        projectUrl: opts.projectUrl,
       }),
     });
     if (!res.ok) {
@@ -228,11 +232,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: "שמירת התמונה נכשלה" }, { status: 500 });
     }
 
+    const projectUrl = projectUrlFromRequest(request, projectId);
+
     const [{ data: signed }] = await Promise.all([
       supabase.storage.from(PROJECT_PHOTOS_BUCKET).createSignedUrl(row.storage_path, SIGNED_URL_TTL),
       notifyProjectPhotosUploaded({
-        request,
-        projectId,
+        projectUrl,
         agentCode: auth.session.designerCode,
       }),
     ]);
@@ -241,6 +246,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       id: row.id,
       url: signed?.signedUrl ?? null,
       created_at: row.created_at,
+      projectUrl,
     });
   } catch (e) {
     console.error("photos post", e);
