@@ -146,11 +146,13 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
           const st = normalizedStatus(c.status);
           return st === "סופית" || st === "שולמה" || (c.recon_date != null && c.recon_date !== "" && st !== "מבוטלת");
         };
+        const ממתין_לתשלום = "ממתין לתשלום";
         const totalE = commissions
           .filter(isReceived)
           .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
+        /** Match CommissionsClient unpaid total: only תעודות עם סטטוס ממתין לתשלום */
         const pending = commissions
-          .filter((c) => !isReceived(c))
+          .filter((c) => normalizedStatus(c.status) === ממתין_לתשלום)
           .reduce((sum, c) => sum + (Number(c.commission) || 0), 0);
         setTotalEarned(totalE);
         setPendingCommission(pending);
