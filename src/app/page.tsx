@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { normalizeIsraeliPhone } from "@/lib/phone";
 
-export default function LoginPage() {
+const LOGIN_BG_URL =
+  "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const skipParam = searchParams.get("Skip") ?? searchParams.get("skip");
+  const skipOtp = skipParam === "1";
+
   const [phone, setPhone] = useState("");
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,6 +26,21 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
+      if (skipOtp) {
+        const res = await fetch("/api/auth/login-skip-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, termsAccepted: terms, skip: 1 }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "שגיאה");
+          return;
+        }
+        window.location.href = "/dashboard";
+        return;
+      }
+
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,14 +63,10 @@ export default function LoginPage() {
     }
   }
 
-  const bgUrl =
-    "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
-
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4 md:bg-gray-100">
-      {/* Photo backdrop: desktop only — on mobile it read as a harsh blue cast; use neutral gradient instead */}
       <img
-        src={bgUrl}
+        src={LOGIN_BG_URL}
         alt=""
         className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-center md:block"
         aria-hidden
@@ -65,11 +84,13 @@ export default function LoginPage() {
               aria-hidden
             />
             <p className="mt-5 text-lg font-semibold text-[var(--brand-red)]">
-              מאמתים ומכינים את הנתונים...
+              {skipOtp ? "מתחברים…" : "מאמתים ומכינים את הנתונים..."}
             </p>
-            <p className="mt-2 text-sm text-gray-500 text-center">
-              נשלח אליך קוד ב-WhatsApp בעוד רגע
-            </p>
+            {!skipOtp && (
+              <p className="mt-2 text-sm text-gray-500 text-center">
+                נשלח אליך קוד ב-WhatsApp בעוד רגע
+              </p>
+            )}
           </div>
         ) : (
           <>
@@ -122,12 +143,43 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-3 rounded-lg bg-[var(--brand-red)] text-white font-semibold text-lg hover:bg-[var(--brand-red-hover)] disabled:opacity-60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)] focus-visible:ring-offset-2 active:scale-[0.99]"
               >
-                שלח קוד
+                {skipOtp ? "התחבר" : "שלח קוד"}
               </button>
             </form>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-b from-stone-100 via-neutral-50 to-stone-100 p-4 md:bg-gray-100">
+          <img
+            src={LOGIN_BG_URL}
+            alt=""
+            className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover object-center md:block"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-b from-black/45 via-black/35 to-black/50 md:block"
+            aria-hidden
+          />
+          <div className="relative z-10 flex flex-col items-center gap-3 rounded-2xl border border-gray-200 bg-white p-8 shadow-[0_8px_30px_rgba(15,23,42,0.08)]">
+            <div
+              className="h-9 w-9 rounded-full border-2 border-[var(--brand-red)]/30 border-t-[var(--brand-red)] animate-spin"
+              style={{ animationDuration: "var(--motion-duration-slow, 0.8s)" }}
+              aria-hidden
+            />
+            <p className="text-sm font-medium text-gray-700">טוען…</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
