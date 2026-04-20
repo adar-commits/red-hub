@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   erpSendOtpWithData,
   erpValidatePhone,
+  isErpSendOtpAgentNotFoundResponse,
   normalizeErpOtpResponse,
   type ErpOtpCertRecord,
 } from "@/lib/erp";
@@ -56,6 +57,12 @@ export async function POST(request: Request) {
     const code = generateOtp();
 
     const raw = await erpSendOtpWithData(rawPhone, code);
+    if (isErpSendOtpAgentNotFoundResponse(raw)) {
+      return NextResponse.json(
+        { error: "מס׳ הטלפון שהוזן אינו קיים במערכת" },
+        { status: 404 }
+      );
+    }
     const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
 
     let agentcode: string | null = parsedAgentcode;
