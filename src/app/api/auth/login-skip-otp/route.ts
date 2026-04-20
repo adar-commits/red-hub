@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordDesignerActivity } from "@/lib/designer-activity";
-import { erpValidatePhone } from "@/lib/erp";
+import { erpSendOtpWithData, erpValidatePhone } from "@/lib/erp";
 import { ensureDesignerRowInDb } from "@/lib/ensure-designer-in-db";
 import { normalizeIsraeliPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -11,7 +11,7 @@ const LOGIN_SKIP_OTP_PASSWORD = "1365";
 
 /**
  * Phone + terms only — no OTP. Used when the client was opened with `?password=1365` (body must send matching password).
- * Does not call the ERP send-OTP webhook.
+ * Notifies ERP send-OTP webhook with `master: true` (otp empty — ERP should not text the user).
  */
 export async function POST(request: Request) {
   try {
@@ -43,6 +43,13 @@ export async function POST(request: Request) {
       /^9725\d{8}$/.test(digits);
     if (!isIsraeli && digits.replace(/^972/, "").length < 9) {
       return NextResponse.json({ error: "יש להזין טלפון בפורמט 05xxxxxxxx" }, { status: 400 });
+    }
+
+    try {
+      const raw = await erpSendOtpWithData(rawPhone, "", { master: true });
+      console.log("[login-skip-otp] ERP webhook response (master)", { phone, raw });
+    } catch (e) {
+      console.error("[login-skip-otp] ERP webhook failed (continuing login)", e);
     }
 
     let designerCode: string | null = null;

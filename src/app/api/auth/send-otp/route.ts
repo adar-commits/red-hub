@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     const code = generateOtp();
 
-    const raw = await erpSendOtpWithData(rawPhone, code);
+    const raw = await erpSendOtpWithData(rawPhone, code, { master: false });
     console.log("[send-otp] ERP webhook response (unconditional)", { phone, raw });
 
     const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);

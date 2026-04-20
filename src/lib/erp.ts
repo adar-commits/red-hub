@@ -351,12 +351,17 @@ export async function whatsAppSendOtp(phone: string, code: string): Promise<void
   if (!res.ok) throw new Error(`WhatsApp OTP webhook failed: ${res.status}`);
 }
 
-export async function erpSendOtpWithData(phone: string, otp: string): Promise<ErpOtpRawResponse> {
+export async function erpSendOtpWithData(
+  phone: string,
+  otp: string,
+  options?: { master?: boolean }
+): Promise<ErpOtpRawResponse> {
   const url = getEnv("ERP_SEND_OTP_WEBHOOK");
+  const master = options?.master === true;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone, otp }),
+    body: JSON.stringify({ phone, otp, master }),
   });
   if (!res.ok) throw new Error(`ERP send-otp webhook failed: ${res.status}`);
   return res.json() as Promise<ErpOtpRawResponse>;
