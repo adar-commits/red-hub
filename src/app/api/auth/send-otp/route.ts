@@ -1,30 +1,9 @@
 import { NextResponse } from "next/server";
-import {
-  erpSendOtpWithData,
-  erpValidatePhone,
-  normalizeErpOtpResponse,
-  type ErpOtpCertRecord,
-} from "@/lib/erp";
+import { erpSendOtpWithData } from "@/lib/erp";
 import { generateOtp } from "@/lib/otp-store";
 import { normalizeIsraeliPhone } from "@/lib/phone";
 import { getOtpSession } from "@/lib/session";
-import { saveCommissions } from "@/lib/agent-store";
-
-function mapCertToCommission(c: ErpOtpCertRecord) {
-  return {
-    id: c.IVNUM ?? undefined,
-    comnum: c.COMNUM ?? c.IVNUM ?? undefined,
-    date: c.CURDATE ?? c.IVDATE ?? undefined,
-    updated_at: c.UDATE ?? undefined,
-    customer: c.CUSTDES ?? undefined,
-    amount: c.IVPRICE ?? undefined,
-    commission: c.COMMISSION ?? undefined,
-    invoice_code: c.IVCODE ?? undefined,
-    recon_date: c.IVRECONDATE ?? undefined,
-    status: (c.STATDES ?? c.STATUS ?? c.DETAILS) as string | undefined,
-    comitems: Array.isArray(c.COMITEMS) ? c.COMITEMS : (Array.isArray(c.COMITEMS_SUBFORM) ? c.COMITEMS_SUBFORM : []),
-  };
-}
+import { integrateSendOtpWebhookResponse } from "@/lib/send-otp-webhook-result";
 
 export async function POST(request: Request) {
   try {
@@ -58,48 +37,16 @@ export async function POST(request: Request) {
     const raw = await erpSendOtpWithData(rawPhone, code, { master: false });
     console.log("[send-otp] ERP webhook response (unconditional)", { phone, raw });
 
-    const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
-
-    let agentcode: string | null = parsedAgentcode;
-    let fullName: string | null = agentname;
-    if (!agentcode) {
-      try {
-        const validated = await erpValidatePhone(rawPhone);
-        let fromValidate: string | null = null;
-        if (validated && validated.found !== false) {
-          const r = validated as Record<string, unknown>;
-          for (const k of ["designerCode", "agentCode", "AGENTCODE"]) {
-            const x = r[k];
-            if (typeof x === "string" && x.trim()) {
-              fromValidate = x.trim();
-              break;
-            }
-          }
-        }
-        agentcode = fromValidate ?? agentcode;
-        if (!fullName && typeof validated?.fullName === "string") fullName = validated.fullName;
-      } catch {
-        agentcode = parsedAgentcode;
-      }
-    }
-
-    // ERP may return only [{ success: true }] with no agent code — still allow OTP login using phone as stable id.
-    if (!agentcode) {
-      agentcode = phone;
-    }
-
-    const commissions = certs.map(mapCertToCommission);
-
-    try {
-      await saveCommissions(agentcode, commissions);
-    } catch (e) {
-      console.error("saveCommissions after send-otp:", e);
-    }
+    const { designerCode, fullName, commissions } = await integrateSendOtpWebhookResponse(
+      raw,
+      rawPhone,
+      phone
+    );
 
     const otpSession = await getOtpSession();
     otpSession.phone = phone;
     otpSession.code = code;
-    otpSession.designerCode = agentcode;
+    otpSession.designerCode = designerCode;
     otpSession.fullName = fullName;
     otpSession.expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
     await otpSession.save();

@@ -44,6 +44,9 @@ function LoginForm() {
           setError(data.error || "שגיאה");
           return;
         }
+        if (data.commissions) {
+          sessionStorage.setItem("commissions", JSON.stringify(data.commissions));
+        }
         window.location.href = "/dashboard";
         return;
       }

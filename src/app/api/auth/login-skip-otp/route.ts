@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { recordDesignerActivity } from "@/lib/designer-activity";
-import { erpSendOtpWithData, erpValidatePhone } from "@/lib/erp";
+import { erpSendOtpWithData } from "@/lib/erp";
 import { ensureDesignerRowInDb } from "@/lib/ensure-designer-in-db";
 import { normalizeIsraeliPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getDesignerSession } from "@/lib/session";
+import { integrateSendOtpWebhookResponse } from "@/lib/send-otp-webhook-result";
 
 /** Same value as URL `?password=…` and OTP bypass in `verify-otp`. */
 const LOGIN_SKIP_OTP_PASSWORD = "1365";
 
 /**
  * Phone + terms only — no OTP. Used when the client was opened with `?password=1365` (body must send matching password).
- * Notifies ERP send-OTP webhook with `master: true` (otp empty — ERP should not text the user).
+ * Waits for ERP send-OTP webhook (`master: true`) and uses the same response handling as normal send-otp for dashboard data.
  */
 export async function POST(request: Request) {
   try {
@@ -45,35 +46,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "יש להזין טלפון בפורמט 05xxxxxxxx" }, { status: 400 });
     }
 
-    try {
-      const raw = await erpSendOtpWithData(rawPhone, "", { master: true });
-      console.log("[login-skip-otp] ERP webhook response (master)", { phone, raw });
-    } catch (e) {
-      console.error("[login-skip-otp] ERP webhook failed (continuing login)", e);
-    }
+    const raw = await erpSendOtpWithData(rawPhone, "", { master: true });
+    console.log("[login-skip-otp] ERP webhook response (master)", { phone, raw });
 
-    let designerCode: string | null = null;
-    let fullName: string | null = null;
-    try {
-      const validated = await erpValidatePhone(rawPhone);
-      if (validated && validated.found !== false) {
-        const r = validated as Record<string, unknown>;
-        for (const k of ["designerCode", "agentCode", "AGENTCODE"]) {
-          const x = r[k];
-          if (typeof x === "string" && x.trim()) {
-            designerCode = x.trim();
-            break;
-          }
-        }
-        if (typeof validated.fullName === "string") fullName = validated.fullName;
-      }
-    } catch (e) {
-      console.error("login-skip-otp erpValidatePhone:", e);
-    }
-
-    if (!designerCode) {
-      designerCode = phone;
-    }
+    const { designerCode, fullName, commissions } = await integrateSendOtpWebhookResponse(
+      raw,
+      rawPhone,
+      phone
+    );
 
     console.log("[login-skip-otp] direct session", { phone, designerCode });
 
@@ -104,9 +84,11 @@ export async function POST(request: Request) {
       metadata: { skipOtpUrl: true },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, commissions });
   } catch (e) {
     console.error("login-skip-otp", e);
-    return NextResponse.json({ error: "שגיאה בהתחברות" }, { status: 500 });
+    const isDev = process.env.NODE_ENV === "development";
+    const message = isDev ? String(e) : "שגיאה בהתחברות. נסה שוב.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
