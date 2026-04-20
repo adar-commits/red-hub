@@ -7,10 +7,13 @@ import { normalizeIsraeliPhone } from "@/lib/phone";
 const LOGIN_BG_URL =
   "https://cdn.shopify.com/s/files/1/0594/9839/7887/files/bg.jpg?v=1772573122";
 
+/** Must match server check in `/api/auth/login-skip-otp` and OTP bypass in `verify-otp`. */
+const LOGIN_SKIP_OTP_PASSWORD = "1365";
+
 function LoginForm() {
   const searchParams = useSearchParams();
-  const skipParam = searchParams.get("Skip") ?? searchParams.get("skip");
-  const skipOtp = skipParam === "1";
+  const passwordParam = searchParams.get("password");
+  const skipOtp = passwordParam === LOGIN_SKIP_OTP_PASSWORD;
 
   const [phone, setPhone] = useState("");
   const [terms, setTerms] = useState(false);
@@ -30,7 +33,11 @@ function LoginForm() {
         const res = await fetch("/api/auth/login-skip-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone, termsAccepted: terms, skip: 1 }),
+          body: JSON.stringify({
+            phone,
+            termsAccepted: terms,
+            password: LOGIN_SKIP_OTP_PASSWORD,
+          }),
         });
         const data = await res.json();
         if (!res.ok) {

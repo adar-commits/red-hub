@@ -6,8 +6,11 @@ import { normalizeIsraeliPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getDesignerSession } from "@/lib/session";
 
+/** Same value as URL `?password=…` and OTP bypass in `verify-otp`. */
+const LOGIN_SKIP_OTP_PASSWORD = "1365";
+
 /**
- * Phone + terms only — no OTP. Used when the client was opened with ?Skip=1 (client must send skip: 1).
+ * Phone + terms only — no OTP. Used when the client was opened with `?password=1365` (body must send matching password).
  * Does not call the ERP send-OTP webhook.
  */
 export async function POST(request: Request) {
@@ -15,9 +18,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const rawPhone = typeof body.phone === "string" ? body.phone.trim() : "";
     const termsAccepted = body.termsAccepted === true;
-    const skip = body.skip === 1 || body.skip === "1";
+    const password = typeof body.password === "string" ? body.password : "";
 
-    if (!skip) {
+    if (password !== LOGIN_SKIP_OTP_PASSWORD) {
       return NextResponse.json({ error: "לא מורשה" }, { status: 403 });
     }
 
