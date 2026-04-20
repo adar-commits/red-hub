@@ -124,7 +124,8 @@ BEGIN
     video_iframe_title = EXCLUDED.video_iframe_title,
     updated_at = now();
 
-  DELETE FROM public.faq_sections;
+  -- Supabase rejects unqualified DELETE; WHERE true preserves same semantics (delete all rows).
+  DELETE FROM public.faq_sections WHERE true;
 
   IF p_sections IS NULL OR jsonb_typeof(p_sections) != 'array' THEN
     RETURN;
