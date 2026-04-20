@@ -91,9 +91,6 @@ type ActivityRow = {
   metadata: Record<string, unknown> | null;
 };
 
-/** Same grid template on header + every row — avoids RTL `<table>` / colgroup misalignment bugs. */
-const ACTIVITY_GRID_COLS =
-  "grid min-w-[720px] items-center grid-cols-[minmax(9rem,1.15fr)_minmax(5rem,0.65fr)_minmax(7rem,0.85fr)_minmax(8rem,1fr)_minmax(9rem,1.15fr)] gap-x-3";
 
 export function ActivityLogClient() {
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
@@ -252,69 +249,83 @@ export function ActivityLogClient() {
         <h3 className="text-lg font-semibold text-[var(--brand-red)] p-4 border-b border-gray-100">
           יומן פעילות ({total})
         </h3>
-        <div className="overflow-x-auto" dir="rtl">
-          <div role="table" className="w-full text-sm">
-            <div role="rowgroup">
-              <div
-                role="row"
-                className={`${ACTIVITY_GRID_COLS} border-b border-gray-100 bg-gray-50 px-3 py-2.5 font-medium`}
-              >
-                <div role="columnheader" className="min-w-0 text-end">
-                  {"\u05EA\u05D0\u05E8\u05D9\u05DA \u05D5\u05E9\u05E2\u05D4"}
-                </div>
-                <div role="columnheader" className="min-w-0 text-end">
-                  קוד סוכן
-                </div>
-                <div role="columnheader" className="min-w-0 text-end">
-                  טלפון
-                </div>
-                <div role="columnheader" className="min-w-0 text-end">
-                  שם סוכן
-                </div>
-                <div role="columnheader" className="min-w-0 text-end">
-                  פעילות
-                </div>
-              </div>
-            </div>
-            <div role="rowgroup">
-              {loading ? (
-                <div role="row" className="border-t border-gray-100 px-3 py-8 text-center text-gray-500">
-                  טוען…
-                </div>
-              ) : rows.length === 0 ? (
-                <div role="row" className="border-t border-gray-100 px-3 py-8 text-center text-gray-500">
-                  אין נתונים בטווח הנבחר
-                </div>
-              ) : (
-                rows.map((row) => (
-                  <div
-                    key={row.id}
-                    role="row"
-                    className={`${ACTIVITY_GRID_COLS} border-t border-gray-100 px-3 py-2.5`}
-                  >
-                    <div role="cell" className="min-w-0 text-end align-middle tabular-nums">
-                      <span dir="ltr" className="block w-full text-end">
+        <div
+          className="overflow-x-auto pb-1 [scrollbar-gutter:stable]"
+          dir="rtl"
+        >
+          <div className="inline-block min-w-full align-top">
+            <table
+              dir="rtl"
+              className="w-max min-w-full border-collapse text-right text-sm text-gray-900"
+            >
+              <colgroup>
+                <col style={{ minWidth: "11rem" }} />
+                <col style={{ minWidth: "5.5rem" }} />
+                <col style={{ minWidth: "11rem" }} />
+                <col style={{ minWidth: "8rem" }} />
+                <col style={{ minWidth: "10rem" }} />
+              </colgroup>
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-4 py-2.5 text-right font-medium align-middle whitespace-nowrap">
+                    תאריך ושעה
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium align-middle whitespace-nowrap">
+                    קוד סוכן
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium align-middle whitespace-nowrap">
+                    טלפון
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium align-middle whitespace-nowrap">
+                    שם סוכן
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium align-middle whitespace-nowrap">
+                    פעילות
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      טוען…
+                    </td>
+                  </tr>
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      אין נתונים בטווח הנבחר
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.id} className="border-t border-gray-100">
+                      <td
+                        className="px-4 py-2.5 text-right align-middle tabular-nums whitespace-nowrap"
+                        dir="ltr"
+                      >
                         {formatDateTime(row.created_at)}
-                      </span>
-                    </div>
-                    <div role="cell" className="min-w-0 break-all text-end align-middle">
-                      {row.designer_code}
-                    </div>
-                    <div role="cell" className="min-w-0 text-end align-middle">
-                      <span dir="ltr" className="block w-full text-end">
+                      </td>
+                      <td className="px-4 py-2.5 text-right align-middle whitespace-nowrap">
+                        {row.designer_code}
+                      </td>
+                      <td
+                        className="px-4 py-2.5 text-right align-middle tabular-nums whitespace-nowrap"
+                        dir="ltr"
+                      >
                         {row.phone ?? "—"}
-                      </span>
-                    </div>
-                    <div role="cell" className="min-w-0 text-end align-middle">
-                      {row.agent_name ?? "—"}
-                    </div>
-                    <div role="cell" className="min-w-0 text-end align-middle">
-                      {ACTIVITY_LABELS[row.activity_type] ?? row.activity_type}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-right align-middle break-words leading-snug">
+                        {row.agent_name ?? "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-right align-middle">
+                        {ACTIVITY_LABELS[row.activity_type] ?? row.activity_type}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
         {!loading && rows.length > 0 && (
