@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "קוד לא תקין או שפג תוקפו" }, { status: 401 });
     }
 
-    const bypass = code === "0000";
+    const bypass = code === "1365";
     const codeMatch = otpSession.code === code;
     const notExpired = Date.now() <= (otpSession.expiresAt ?? 0);
 

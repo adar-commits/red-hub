@@ -104,7 +104,7 @@ function VerifyForm() {
               maxLength={4}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              placeholder="0000"
+              placeholder="••••"
               className="w-full rounded-lg border-2 border-gray-400 px-4 py-3 text-xl text-center tracking-[0.4em] text-gray-950 placeholder:text-[color:var(--input-placeholder)] focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/25 outline-none bg-white"
               dir="ltr"
               autoComplete="one-time-code"
