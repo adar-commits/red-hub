@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FaqDocumentPayload } from "@/lib/faq-shared";
 
 type LocalItem = { localId: string; title: string; body: string };
@@ -55,9 +55,19 @@ export function FaqAdminClient({ initial }: { initial: FaqDocumentPayload }) {
   const [sections, setSections] = useState<LocalSection[]>(initialLocal.sections);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
 
-  const markDirty = useCallback(() => setDirty(true), []);
+  const markDirty = useCallback(() => {
+    setDirty(true);
+    setSaveSuccess(false);
+  }, []);
+
+  useEffect(() => {
+    if (!saveSuccess) return;
+    const t = window.setTimeout(() => setSaveSuccess(false), 5000);
+    return () => window.clearTimeout(t);
+  }, [saveSuccess]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -76,6 +86,7 @@ export function FaqAdminClient({ initial }: { initial: FaqDocumentPayload }) {
       setSettings(loc.settings);
       setSections(loc.sections);
       setDirty(false);
+      setSaveSuccess(true);
     } catch (e) {
       alert(e instanceof Error ? e.message : "שגיאה בשמירה");
     } finally {
@@ -158,9 +169,20 @@ export function FaqAdminClient({ initial }: { initial: FaqDocumentPayload }) {
   return (
     <div className="space-y-8" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-600">
-          {dirty ? "יש שינויים שלא נשמרו." : "כל השינויים נשמרו."}
-        </p>
+        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <p className="text-sm text-gray-600">
+            {dirty ? "יש שינויים שלא נשמרו." : "כל השינויים נשמרו."}
+          </p>
+          {saveSuccess && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm font-medium text-green-700"
+            >
+              השמירה בוצעה בהצלחה.
+            </p>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => void handleSave()}
