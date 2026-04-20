@@ -105,35 +105,15 @@ function pickAgentname(w: { agentname?: string; [key: string]: unknown }): strin
   return typeof w.agentname === "string" && w.agentname.trim() ? w.agentname.trim() : null;
 }
 
-function isErpAgentNotFoundToken(v: string): boolean {
-  return v.trim().toLowerCase() === "not found";
-}
-
 function pickAgentcode(w: Record<string, unknown>): string | null {
   for (const key of ["agentcode", "agentCode", "AGENTCODE"] as const) {
     const v = w[key];
     if (typeof v === "string") {
       const t = v.trim();
-      if (t && !isErpAgentNotFoundToken(t)) return t;
+      if (t) return t;
     }
   }
   return null;
-}
-
-/** Send-OTP webhook returns e.g. [{ "agentcode": "not found" }] when the phone is not registered in ERP. */
-export function isErpSendOtpAgentNotFoundResponse(raw: unknown): boolean {
-  const row =
-    typeof raw === "object" && raw !== null && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : Array.isArray(raw) && raw.length > 0 && typeof raw[0] === "object" && raw[0] !== null
-        ? (raw[0] as Record<string, unknown>)
-        : null;
-  if (!row) return false;
-  for (const key of ["agentcode", "agentCode", "AGENTCODE"] as const) {
-    const v = row[key];
-    if (typeof v === "string" && isErpAgentNotFoundToken(v)) return true;
-  }
-  return false;
 }
 
 export function normalizeErpOtpResponse(raw: unknown): ErpOtpNormalized {

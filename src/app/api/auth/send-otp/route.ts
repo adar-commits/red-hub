@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import {
   erpSendOtpWithData,
   erpValidatePhone,
-  isErpSendOtpAgentNotFoundResponse,
   normalizeErpOtpResponse,
   type ErpOtpCertRecord,
 } from "@/lib/erp";
@@ -57,17 +56,12 @@ export async function POST(request: Request) {
     const code = generateOtp();
 
     const raw = await erpSendOtpWithData(rawPhone, code);
-    if (isErpSendOtpAgentNotFoundResponse(raw)) {
-      return NextResponse.json(
-        { error: "מס׳ הטלפון שהוזן אינו קיים במערכת" },
-        { status: 404 }
-      );
-    }
+    console.log("[send-otp] ERP webhook response (unconditional)", { phone, raw });
+
     const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
 
     let agentcode: string | null = parsedAgentcode;
     let fullName: string | null = agentname;
-    // ERP often returns only [{ success: true }] with no agentcode — resolve designer by phone.
     if (!agentcode) {
       try {
         const validated = await erpValidatePhone(rawPhone);
@@ -89,11 +83,9 @@ export async function POST(request: Request) {
       }
     }
 
+    // ERP may return only [{ success: true }] with no agent code — still allow OTP login using phone as stable id.
     if (!agentcode) {
-      return NextResponse.json(
-        { error: "לא נמצא במערכת. יש ליצור קשר עם החברה להרשמה." },
-        { status: 404 }
-      );
+      agentcode = phone;
     }
 
     const commissions = certs.map(mapCertToCommission);
