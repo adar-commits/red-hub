@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       (typeof webhookResult?.response === "string" && webhookResult.response.trim()) ||
       (typeof webhookResult?.respond === "string" && webhookResult.respond.trim()) ||
       null;
-    void recordDesignerActivity({
+    await recordDesignerActivity({
       activity_type: "commission_assignment_request",
       designer_code: session.designerCode,
       agent_name: session.fullName,
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         validationPhone: validationPhone.slice(0, 48),
         validationComSum: validationComSum.slice(0, 48),
         validationfieldType: validationfieldType.slice(0, 64),
+        ...(description ? { webhookMessage: description.slice(0, 500) } : {}),
       },
     });
     return NextResponse.json({ success: true, message: description });

@@ -19,8 +19,7 @@ const ACTIVITY_LABELS: Record<DesignerActivityType, string> = {
   login: "התחברות למערכת",
   invoice_upload: "העלאת חשבונית",
   business_update: "עדכון פרטי עסק",
-  commission_assignment_request:
-    "\u05D1\u05E7\u05E9\u05EA \u05E9\u05D9\u05D5\u05DA \u05E2\u05DE\u05DC\u05D4",
+  commission_assignment_request: "הוספת עסקה חדשה",
 };
 
 const TYPE_FILTER_OPTIONS: { value: "" | DesignerActivityType; label: string }[] = [
