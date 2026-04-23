@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSortAndFilter, type SortFilterColumn } from "@/hooks/useSortAndFilter";
 import { ExportCsvButton } from "@/components/ui/ExportCsvButton";
 import { StatCard } from "@/components/ui/StatCard";
@@ -10,6 +11,7 @@ interface Announcement {
   title: string;
   content: string | null;
   image_url: string | null;
+  link_href: string | null;
   created_at: string;
 }
 
@@ -22,6 +24,48 @@ interface DealRow {
   commission?: number;
   status?: string;
   seller_name?: string;
+}
+
+function AnnouncementCard({ a }: { a: Announcement }) {
+  const href = (a.link_href ?? "").trim();
+  const style = { boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" } as const;
+  const baseClass =
+    "p-4 rounded-xl bg-[var(--card-bg)] border border-gray-300 transition-shadow hover:shadow-[var(--shadow-card)]";
+  const inner = (
+    <>
+      <h3 className="font-medium text-gray-950">{a.title}</h3>
+      {a.content && <p className="text-sm text-gray-800 mt-1">{a.content}</p>}
+    </>
+  );
+  if (!href) {
+    return (
+      <div className={baseClass} style={style}>
+        {inner}
+      </div>
+    );
+  }
+  if (href.startsWith("/")) {
+    return (
+      <Link
+        href={href}
+        className={`${baseClass} block no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30`}
+        style={style}
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${baseClass} block no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-red)]/30`}
+      style={style}
+    >
+      {inner}
+    </a>
+  );
 }
 
 const DASHBOARD_DEAL_COLUMNS: SortFilterColumn<DealRow>[] = [
@@ -201,14 +245,7 @@ export function DashboardClient({ designerCode }: { designerCode: string }) {
         {(announcements ?? []).length > 0 ? (
           <div className="space-y-3">
             {(announcements ?? []).map((a) => (
-              <div
-                key={a.id}
-                className="p-4 rounded-xl bg-[var(--card-bg)] border border-gray-300 transition-shadow hover:shadow-[var(--shadow-card)]"
-                style={{ boxShadow: "var(--shadow-card)", borderRadius: "var(--radius-card)" }}
-              >
-                <h3 className="font-medium text-gray-950">{a.title}</h3>
-                {a.content && <p className="text-sm text-gray-800 mt-1">{a.content}</p>}
-              </div>
+              <AnnouncementCard key={a.id} a={a} />
             ))}
           </div>
         ) : (

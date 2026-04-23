@@ -40,6 +40,7 @@ export interface Database {
           content: string | null;
           image_url: string | null;
           is_published: boolean;
+          link_href: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["announcements"]["Row"], "id" | "created_at"> & { id?: string; created_at?: string };

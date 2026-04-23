@@ -16,6 +16,15 @@ export async function GET() {
   return NextResponse.json(data ?? []);
 }
 
+function normalizeLinkHref(s: string | null | undefined): string | null {
+  if (!s || typeof s !== "string") return null;
+  const t = s.trim();
+  if (!t) return null;
+  if (t.startsWith("/")) return t;
+  if (t.startsWith("https://") || t.startsWith("http://")) return t;
+  return t.startsWith("www.") ? `https://${t}` : null;
+}
+
 function parseDisplayAt(s: string | null | undefined): string | null {
   if (!s || typeof s !== "string") return null;
   const trimmed = s.trim();
@@ -52,6 +61,8 @@ export async function POST(request: Request) {
     sort_order: nextSort,
     updated_at: new Date().toISOString(),
   };
+  const href = normalizeLinkHref(body.link_href ?? body.href);
+  if (href) insert.link_href = href;
   const displayAt = parseDisplayAt(body.display_at ?? body.displayAt);
   if (displayAt) insert.display_at = displayAt;
   const { data, error } = await supabase.from("announcements").insert(insert).select().single();
@@ -72,6 +83,10 @@ export async function PATCH(request: Request) {
     is_published: body.is_published,
     updated_at: new Date().toISOString(),
   };
+  if (body.link_href !== undefined || body.href !== undefined) {
+    const h = normalizeLinkHref(body.link_href ?? body.href);
+    update.link_href = h;
+  }
   const displayAt = parseDisplayAt(body.display_at ?? body.displayAt);
   if (displayAt != null) update.display_at = displayAt;
   const { data, error } = await supabase.from("announcements").update(update).eq("id", id).select().single();

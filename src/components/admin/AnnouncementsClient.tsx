@@ -7,6 +7,7 @@ interface AnnouncementRow {
   title: string;
   content: string | null;
   is_published: boolean;
+  link_href?: string | null;
   created_at: string;
   updated_at?: string | null;
   sort_order?: number | null;
@@ -134,6 +135,7 @@ export function AnnouncementsClient({ initialList }: { initialList: Announcement
           title: editing.title,
           content: editing.content,
           is_published: editing.is_published,
+          link_href: editing.link_href?.trim() ?? "",
         }),
       });
       if (!res.ok) throw new Error("שגיאה");
@@ -161,6 +163,7 @@ export function AnnouncementsClient({ initialList }: { initialList: Announcement
             title: "",
             content: "",
             is_published: false,
+            link_href: "",
             created_at: "",
             updated_at: null,
             sort_order: null,
@@ -202,6 +205,24 @@ export function AnnouncementsClient({ initialList }: { initialList: Announcement
               placeholder="כתבו כאן את תוכן ההודעה…"
               rows={16}
               className="min-h-[22rem] w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm leading-relaxed text-gray-950"
+            />
+          </div>
+          <div>
+            <label htmlFor="ann-href" className="mb-1 block text-sm font-medium text-gray-700">
+              קישור (אופציונלי)
+            </label>
+            <p className="mb-1 text-xs text-gray-500">
+              כל הכרטיס יהפוך ללחיץ. URL מלא (https://…) או עמוד באתר (למשל <span dir="ltr">/faq</span>).
+            </p>
+            <input
+              id="ann-href"
+              type="text"
+              inputMode="url"
+              value={editing.link_href ?? ""}
+              onChange={(e) => setEditing((x) => (x ? { ...x, link_href: e.target.value } : null))}
+              placeholder="https://… ‏או ‏/faq"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm text-gray-950"
+              dir="ltr"
             />
           </div>
           <label className="flex items-center gap-2">
@@ -267,9 +288,15 @@ export function AnnouncementsClient({ initialList }: { initialList: Announcement
                   )}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500">
                 נוצר: {formatDateTime(a.created_at)}
                 {a.updated_at && a.updated_at !== a.created_at ? ` · עודכן: ${formatDateTime(a.updated_at)}` : null}
+                {a.link_href?.trim() ? (
+                  <span className="ms-1" dir="ltr">
+                    {" "}
+                    · קישור: {a.link_href.trim()}
+                  </span>
+                ) : null}
               </p>
             </div>
             <button

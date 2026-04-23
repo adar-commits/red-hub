@@ -7,6 +7,7 @@ interface AnnouncementRow {
   title: string;
   content: string | null;
   is_published: boolean;
+  link_href?: string | null;
   created_at: string;
   display_at?: string | null;
   sort_order?: number | null;
@@ -61,6 +62,7 @@ export function SettingsAnnouncementsClient({
             content: row.content ?? "",
             subtitle: row.content ?? "",
             is_published: row.is_published,
+            link_href: row.link_href?.trim() ?? "",
             display_at: row.display_at ? formatDisplayDateTime(row.display_at) : undefined,
           }),
         });
@@ -140,6 +142,7 @@ export function SettingsAnnouncementsClient({
             title: "",
             content: "",
             is_published: false,
+            link_href: "",
             created_at: "",
             display_at: formatDisplayDateTime(new Date().toISOString()),
           })
@@ -204,6 +207,23 @@ export function SettingsAnnouncementsClient({
               className="w-full rounded-lg border border-gray-300 px-3 py-2"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">קישור (אופציונלי)</label>
+            <p className="text-xs text-gray-500 mb-1">
+              כל הכרטיס במסך הבית יהפוך ללחיץ — URL או נתיב כמו <span dir="ltr">/faq</span>
+            </p>
+            <input
+              type="text"
+              inputMode="url"
+              value={editing.link_href ?? ""}
+              onChange={(e) =>
+                setEditing((x) => (x ? { ...x, link_href: e.target.value } : null))
+              }
+              placeholder="https://…"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
+              dir="ltr"
+            />
+          </div>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -255,6 +275,12 @@ export function SettingsAnnouncementsClient({
               <p className="text-sm text-gray-500">
                 {formatDisplayDateTime(a.display_at || a.created_at)} ·{" "}
                 {a.is_published ? "פעיל" : "לא פעיל"}
+                {a.link_href?.trim() ? (
+                  <span className="ms-1" dir="ltr">
+                    {" "}
+                    · {a.link_href.trim()}
+                  </span>
+                ) : null}
               </p>
             </div>
             <button
