@@ -1,9 +1,6 @@
 import { saveCommissions } from "@/lib/agent-store";
-import {
-  erpValidatePhone,
-  normalizeErpOtpResponse,
-  type ErpOtpCertRecord,
-} from "@/lib/erp";
+import { normalizeErpOtpResponse, type ErpOtpCertRecord } from "@/lib/erp";
+import { isDesignerCodePhoneFallback, resolveAgentCodeViaErpValidate } from "@/lib/erp-agent-code";
 
 export function mapCertToCommission(c: ErpOtpCertRecord) {
   return {
@@ -35,26 +32,19 @@ export async function integrateSendOtpWebhookResponse(
 }> {
   const { agentcode: parsedAgentcode, agentname, certs } = normalizeErpOtpResponse(raw);
 
-  let agentcode: string | null = parsedAgentcode;
+  let agentcode: string | null = parsedAgentcode?.trim() || null;
   let fullName: string | null = agentname;
-  if (!agentcode) {
-    try {
-      const validated = await erpValidatePhone(rawPhone);
-      let fromValidate: string | null = null;
-      if (validated && validated.found !== false) {
-        const r = validated as Record<string, unknown>;
-        for (const k of ["designerCode", "agentCode", "AGENTCODE"]) {
-          const x = r[k];
-          if (typeof x === "string" && x.trim()) {
-            fromValidate = x.trim();
-            break;
-          }
-        }
+
+  if (!agentcode || isDesignerCodePhoneFallback(agentcode, phone)) {
+    const { code, fullName: fn } = await resolveAgentCodeViaErpValidate(rawPhone, phone);
+    if (code) {
+      if (!isDesignerCodePhoneFallback(code, phone)) {
+        agentcode = code;
+        if (fn) fullName = fullName || fn;
+      } else if (!agentcode) {
+        agentcode = code;
+        if (fn) fullName = fullName || fn;
       }
-      agentcode = fromValidate ?? agentcode;
-      if (!fullName && typeof validated?.fullName === "string") fullName = validated.fullName;
-    } catch {
-      agentcode = parsedAgentcode;
     }
   }
 
