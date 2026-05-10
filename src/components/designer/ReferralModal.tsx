@@ -5,7 +5,10 @@ import { Modal } from "@/components/ui/Modal";
 
 const TERMS_URL = "https://www.carpetshop.co.il/policies/terms-of-service";
 
+const COM_SUM_FIELD = "סכום עסקה";
+
 const VALIDATION_FIELD_TYPES = [
+  COM_SUM_FIELD,
   "שם מלא לקוח",
   "טלפון משני",
   "סניף",
@@ -24,22 +27,19 @@ export function ReferralModal({
   onSuccess: (message?: string | null) => void;
 }) {
   const [phone, setPhone] = useState("");
-  const [commissionSum, setCommissionSum] = useState("");
   const [fieldType, setFieldType] = useState("");
   const [fieldValue, setFieldValue] = useState("");
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isComSumField = fieldType === COM_SUM_FIELD;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (!phone.trim()) {
       setError("יש להזין טלפון");
-      return;
-    }
-    if (!commissionSum.trim()) {
-      setError("יש להזין סכום");
       return;
     }
     if (!fieldType.trim()) {
@@ -56,14 +56,15 @@ export function ReferralModal({
     }
     setLoading(true);
     try {
+      const trimmedValue = fieldValue.trim();
       const res = await fetch("/api/referral", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           validationPhone: phone.trim(),
-          validationComSum: commissionSum.trim(),
+          validationComSum: isComSumField ? trimmedValue : "",
           validationfieldType: fieldType,
-          validationfieldValue: fieldValue.trim(),
+          validationfieldValue: trimmedValue,
         }),
       });
       let data: { success?: boolean; error?: string; message?: string | null; response?: string; respond?: string } = {};
@@ -88,7 +89,6 @@ export function ReferralModal({
       onSuccess(okMessage);
       onClose();
       setPhone("");
-      setCommissionSum("");
       setFieldType("");
       setFieldValue("");
       setDeclarationAccepted(false);
@@ -150,20 +150,6 @@ export function ReferralModal({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
-            סכום עסקה <span className="text-red-500" aria-hidden>*</span>
-          </label>
-          <input
-            type="number"
-            value={commissionSum}
-            onChange={(e) => setCommissionSum(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
-            dir="ltr"
-            min="0"
-            step="0.01"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 text-right">
             בחר שדה אימות נוסף <span className="text-red-500" aria-hidden>*</span>
           </label>
           <select
@@ -171,7 +157,7 @@ export function ReferralModal({
             onChange={(e) => {
               const v = e.target.value;
               setFieldType(v);
-              if (!v) setFieldValue("");
+              setFieldValue("");
             }}
             className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
           >
@@ -187,10 +173,13 @@ export function ReferralModal({
               {fieldType} <span className="text-red-500" aria-hidden>*</span>
             </label>
             <input
-              type="text"
+              type={isComSumField ? "number" : "text"}
               value={fieldValue}
               onChange={(e) => setFieldValue(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-[var(--brand-red)] focus:ring-2 focus:ring-[var(--brand-red)]/20 outline-none transition-colors text-right"
+              {...(isComSumField
+                ? { dir: "ltr", min: "0", step: "0.01", inputMode: "decimal" as const }
+                : {})}
             />
           </div>
         ) : null}

@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     const validationfieldValue = typeof body.validationfieldValue === "string" ? body.validationfieldValue.trim() : "";
 
     if (!validationPhone) return NextResponse.json({ error: "טלפון חסר" }, { status: 400 });
-    if (!validationComSum) return NextResponse.json({ error: "סכום חסר" }, { status: 400 });
     if (!validationfieldType) return NextResponse.json({ error: "שדה אימות חסר" }, { status: 400 });
     if (!validationfieldValue) return NextResponse.json({ error: "ערך שדה אימות חסר" }, { status: 400 });
 
