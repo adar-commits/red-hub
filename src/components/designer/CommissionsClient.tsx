@@ -100,7 +100,6 @@ function StatIconPaidCert({ className }: { className?: string }) {
 }
 
 const STATUS_SENT_FOR_APPROVAL = "נשלחה לאישור";
-const VAT_FACTOR = 1.18;
 const MIN_INVOICE_UPLOAD_ACCRUAL_ILS = 200;
 const UPLOAD_INVOICE_DISABLED_TOOLTIP = `ניתן להעלות חשבונית רק כאשר יתרה היא לפחות ${MIN_INVOICE_UPLOAD_ACCRUAL_ILS} ש״ח`;
 /** StatCard (i) tooltip — must stay aligned with MIN_INVOICE_UPLOAD_ACCRUAL_ILS. */
@@ -364,14 +363,18 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
     initialSort: { key: "date", dir: "desc" },
   });
 
-  const accrualTotalVatInclusive = useMemo(() => {
+  /** Same basis as the «עמלות בצבירה» card (ERP commission, ex-VAT) — must match upload threshold. */
+  const pendingAccrualCerts = useMemo(() => {
     const norm = (s: string | null | undefined) => (s ?? "").trim();
-    return certsWithCount
-      .filter((c) => norm(c.status) === STATUS_SENT_FOR_APPROVAL)
-      .reduce((sum, c) => sum + (Number(c.commission) || 0) * VAT_FACTOR, 0);
+    return certsWithCount.filter((c) => norm(c.status) === STATUS_SENT_FOR_APPROVAL);
   }, [certsWithCount]);
 
-  const canUploadInvoice = accrualTotalVatInclusive >= MIN_INVOICE_UPLOAD_ACCRUAL_ILS;
+  const accrualTotalExVat = useMemo(
+    () => pendingAccrualCerts.reduce((sum, c) => sum + (Number(c.commission) || 0), 0),
+    [pendingAccrualCerts]
+  );
+
+  const canUploadInvoice = accrualTotalExVat >= MIN_INVOICE_UPLOAD_ACCRUAL_ILS;
 
   const PDF_ONLY_MESSAGE = "ניתן להעלות רק קבצים מסוג PDF בלבד";
 
@@ -722,7 +725,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
         <StatCard
           title="עמלות בצבירה"
-          value={`${stats.pendingApproval} תעודות · ${formatCertCurrency(stats.pendingApprovalTotal)}`}
+          value={`${pendingAccrualCerts.length} תעודות · ${formatCertCurrency(accrualTotalExVat)}`}
           explanation={ACCRUAL_STAT_TOOLTIP}
           icon={<StatIconApproval className="text-orange-700" />}
           iconClassName="bg-orange-50 ring-1 ring-orange-200/80"
