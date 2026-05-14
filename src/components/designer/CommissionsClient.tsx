@@ -102,8 +102,10 @@ function StatIconPaidCert({ className }: { className?: string }) {
 const STATUS_SENT_FOR_APPROVAL = "נשלחה לאישור";
 const VAT_FACTOR = 1.18;
 const MIN_INVOICE_UPLOAD_ACCRUAL_ILS = 200;
-const UPLOAD_INVOICE_DISABLED_TOOLTIP =
-  "ניתן להעלות חשבונית רק כאשר יתרה היא לפחות 200 ש״ח";
+const UPLOAD_INVOICE_DISABLED_TOOLTIP = `ניתן להעלות חשבונית רק כאשר יתרה היא לפחות ${MIN_INVOICE_UPLOAD_ACCRUAL_ILS} ש״ח`;
+/** StatCard (i) tooltip — must stay aligned with MIN_INVOICE_UPLOAD_ACCRUAL_ILS. */
+const ACCRUAL_STAT_TOOLTIP = `בצבירה: העמלות שצברת עד כה. לתשלום נדרש סכום מצטבר של לפחות ${MIN_INVOICE_UPLOAD_ACCRUAL_ILS} ש״ח.`;
+const MODAL_INVOICE_MINIMUM_NOTE = `ניתן להעלות חשבונית לתשלום אך ורק במידה וסכום העמלות הממתינות לתשלום הינו לפחות ${MIN_INVOICE_UPLOAD_ACCRUAL_ILS} ש״ח`;
 
 const COMMISSION_STATUS_TABLE_DISPLAY: Record<string, string> = {
   [STATUS_SENT_FOR_APPROVAL]: "עמלה בצבירה",
@@ -562,9 +564,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
           <div className="space-y-4 p-5">
             <div className="rounded-xl border-e-4 border-[var(--brand-red)] bg-gradient-to-l from-red-50/90 to-white pe-4 ps-3 py-3">
               <h3 className="text-base font-bold text-gray-900">העלאת חשבונית לתשלום</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-700">
-                ניתן להעלות חשבונית לתשלום אך ורק במידה וסכום העמלות הממתינות לתשלום הינו לפחות 200 ש״ח
-              </p>
+              <p className="mt-2 text-sm leading-relaxed text-gray-700">{MODAL_INVOICE_MINIMUM_NOTE}</p>
             </div>
 
             <input
@@ -723,7 +723,7 @@ export function CommissionsClient({ designerCode }: { designerCode: string }) {
         <StatCard
           title="עמלות בצבירה"
           value={`${stats.pendingApproval} תעודות · ${formatCertCurrency(stats.pendingApprovalTotal)}`}
-          explanation={"בצבירה: העמלות שצברת עד כה. לתשלום נדרש סכום מצטבר של לפחות 200 ש״ח."}
+          explanation={ACCRUAL_STAT_TOOLTIP}
           icon={<StatIconApproval className="text-orange-700" />}
           iconClassName="bg-orange-50 ring-1 ring-orange-200/80"
         />
