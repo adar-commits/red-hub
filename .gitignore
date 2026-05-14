@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Local nested repo / Cursor work area (do not commit)
 /cursor-tg/
+
+# Supabase CLI local link state (machine-specific)
+supabase/.temp/
