@@ -8,6 +8,7 @@ import { signOut, useSession } from "next-auth/react";
 const navItems = [
   { href: "/admin/announcements", label: "הודעות" },
   { href: "/admin/faq", label: "שאלות נפוצות" },
+  { href: "/admin/project-photos", label: "תמונות פרויקטים" },
 ];
 
 const settingsPath = "/admin/settings";
@@ -101,6 +102,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             className={pathname === "/admin/faq" ? "text-[var(--brand-red)]" : "text-gray-700"}
           >
             שאלות נפוצות
+          </Link>
+          <Link
+            href="/admin/project-photos"
+            className={pathname === "/admin/project-photos" ? "text-[var(--brand-red)]" : "text-gray-700"}
+          >
+            תמונות פרויקטים
           </Link>
           {showSettings ? (
             <>
