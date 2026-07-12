@@ -6,6 +6,7 @@ const ADMIN_SETTINGS_EMAILS = new Set([
   "test@carpetshop.co.il",
   "noa@carpetshop.co.il",
   "designers@carpetshop.co.il",
+  "photographer@carpetshop.co.il",
 ]);
 
 export function isAdminSettingsUser(email: string | null | undefined): boolean {
