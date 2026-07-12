@@ -1,31 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useRef, useState } from "react";
-import { isProbablyImageFile, PROJECT_PHOTO_MAX_FILE_BYTES } from "@/lib/designer-project-photos-shared";
-
-export type AdminProjectPhoto = {
-  id: string;
-  url: string | null;
-  storage_path: string;
-  designer_code: string;
-  project_id: string;
-  project_name: string | null;
-  description: string | null;
-  created_at: string;
-};
-
-export type AdminProjectOption = {
-  id: string;
-  designer_code: string;
-  project_name: string;
-  created_at: string;
-};
+import { useCallback, useState } from "react";
+import type { AdminProjectPhotoRow } from "@/lib/admin-project-photos";
 
 function formatDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString("he-IL", {
-      dateStyle: "short",
+      dateStyle: "medium",
       timeStyle: "short",
     });
   } catch {
@@ -33,143 +15,58 @@ function formatDateTime(iso: string): string {
   }
 }
 
-export function ProjectPhotosAdminClient({
-  initialPhotos,
-  initialProjects,
-}: {
-  initialPhotos: AdminProjectPhoto[];
-  initialProjects: AdminProjectOption[];
-}) {
+function designerLabel(photo: AdminProjectPhotoRow): string {
+  if (photo.designer_name) {
+    return `${photo.designer_name} (${photo.designer_code})`;
+  }
+  return photo.designer_code;
+}
+
+function MetaRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{label}</span>
+      <span className="text-sm text-gray-900 break-words">{value}</span>
+    </div>
+  );
+}
+
+export function ProjectPhotosAdminClient({ initialPhotos }: { initialPhotos: AdminProjectPhotoRow[] }) {
   const [photos, setPhotos] = useState(initialPhotos);
-  const [projects] = useState(initialProjects);
-  const [selectedProjectId, setSelectedProjectId] = useState(initialProjects[0]?.id ?? "");
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/admin/project-photos");
-    if (!res.ok) return;
-    const data = (await res.json()) as { photos?: AdminProjectPhoto[] };
-    if (data.photos) setPhotos(data.photos);
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/project-photos");
+      if (!res.ok) return;
+      const data = (await res.json()) as { photos?: AdminProjectPhotoRow[] };
+      if (data.photos) setPhotos(data.photos);
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
-  const handleUpload = useCallback(async () => {
-    const file = fileRef.current?.files?.[0];
-    setUploadError(null);
-    setUploadSuccess(null);
-
-    if (!selectedProjectId) {
-      setUploadError("יש לבחור פרויקט");
-      return;
-    }
-    if (!file) {
-      setUploadError("יש לבחור קובץ תמונה");
-      return;
-    }
-    if (!isProbablyImageFile(file)) {
-      setUploadError("קובץ לא נתמך — יש לבחור תמונה");
-      return;
-    }
-    if (file.size > PROJECT_PHOTO_MAX_FILE_BYTES) {
-      setUploadError("הקובץ גדול מדי (מקסימום 12MB)");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("projectId", selectedProjectId);
-      form.append("file", file);
-      const res = await fetch("/api/admin/project-photos", { method: "POST", body: form });
-      const data = (await res.json()) as AdminProjectPhoto & { error?: string; detail?: string };
-      if (!res.ok) {
-        setUploadError(data.detail ? `${data.error ?? "שגיאה"}: ${data.detail}` : (data.error ?? "העלאה נכשלה"));
-        return;
-      }
-      const project = projects.find((p) => p.id === selectedProjectId);
-      const newPhoto: AdminProjectPhoto = {
-        id: data.id,
-        url: data.url,
-        storage_path: data.storage_path,
-        designer_code: data.designer_code,
-        project_id: data.project_id,
-        project_name: project?.project_name ?? null,
-        description: data.description,
-        created_at: data.created_at,
-      };
-      setPhotos((prev) => [newPhoto, ...prev]);
-      setUploadSuccess("התמונה הועלתה בהצלחה");
-      if (fileRef.current) fileRef.current.value = "";
-      await refresh();
-    } catch {
-      setUploadError("שגיאת רשת");
-    } finally {
-      setUploading(false);
-    }
-  }, [projects, refresh, selectedProjectId]);
-
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">העלאת בדיקה</h2>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-gray-600">
-          {photos.length === 0
-            ? "אין תמונות במערכת. נסו להעלות תמונת בדיקה לפרויקט קיים כדי לוודא שהאחסון עובד."
-            : `${photos.length} תמונות במערכת.`}
+          {photos.length === 0 ? "אין תמונות שהועלו עדיין." : `${photos.length} תמונות`}
         </p>
-        {projects.length === 0 ? (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            אין פרויקטים במערכת — מעצב צריך ליצור פרויקט לפני העלאת תמונות.
-          </p>
-        ) : (
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-gray-700">פרויקט</span>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 min-w-[14rem] bg-white"
-              >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.project_name} ({p.designer_code})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium text-gray-700">קובץ תמונה</span>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="text-sm file:me-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => void handleUpload()}
-              disabled={uploading}
-              className="rounded-lg bg-[var(--brand-red)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {uploading ? "מעלה…" : "העלה תמונת בדיקה"}
-            </button>
-          </div>
-        )}
-        {uploadError ? (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{uploadError}</p>
-        ) : null}
-        {uploadSuccess ? (
-          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            {uploadSuccess}
-          </p>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          disabled={refreshing}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {refreshing ? "מרענן…" : "רענון"}
+        </button>
       </div>
 
       {photos.length === 0 ? (
-        <p className="text-gray-500 text-sm">אין תמונות להצגה.</p>
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center text-gray-500 text-sm">
+          כשמעצבים יעלו תמונות לפרויקטים, הן יופיעו כאן עם פרטי הפרויקט, המעצב והתאריך.
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {photos.map((photo) => (
@@ -193,12 +90,39 @@ export function ProjectPhotosAdminClient({
                   </div>
                 )}
               </div>
-              <div className="p-3 space-y-1 text-sm">
-                <p className="font-medium text-gray-900">{photo.project_name ?? "—"}</p>
-                <p className="text-gray-600">מעצב: {photo.designer_code}</p>
-                <p className="text-gray-500 text-xs">{formatDateTime(photo.created_at)}</p>
-                {photo.description ? <p className="text-gray-600 text-xs">{photo.description}</p> : null}
-                <p className="text-gray-400 text-xs break-all font-mono">{photo.storage_path}</p>
+
+              <div className="p-4 flex flex-col gap-3 flex-1">
+                <MetaRow label="פרויקט" value={photo.project_name ?? "—"} />
+                <MetaRow label="הועלה על ידי" value={designerLabel(photo)} />
+                {photo.designer_phone ? (
+                  <MetaRow label="טלפון" value={photo.designer_phone} />
+                ) : null}
+                <MetaRow label="תאריך העלאה" value={formatDateTime(photo.created_at)} />
+
+                <div className="mt-auto pt-2">
+                  <a
+                    href={photo.download_url}
+                    download={photo.filename}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    הורדה
+                  </a>
+                </div>
               </div>
             </article>
           ))}
